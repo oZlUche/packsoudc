@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="3600" height="3730" viewBox="0 0 3600 3730" role="img" aria-labelledby="title" aria-describedby="desc">
+<title id="title">用好 AI：怎样划定与调整委托范围</title>
+<desc id="desc">在已确认的双回路上深化。整件任务先拆到一小步，检查是否有独立核验办法；不能核验时，补原文、请能判断的人帮助或再拆小，AI可帮助找线索，但不直接采用结论。能核验时，按目标分流：成果路线让AI生成候选，接受外部核验与总成本检查；学习路线只委托提示与反馈，自己的练习明确留在委托框外，并撤去AI检查独立表现。验收不过关就缩小委托、补依据或补练习；小样验收稳定且收益值得总成本时，外层回路返回任务选择，考虑下一轮试着扩大一小步。出错后果重大时缩小授权、逐步确认。边界表示委托的动作，不按框宽编码能力、概率或效果大小。这是已有研究的使用建议综合，不是实测或通用最优流程。</desc>
+<style data-vt-theme="">:root{--vt-bg:#191A18;--vt-ink:#EFEEE7;--vt-muted:#B0B2A8;--vt-accent:#EFEEE7;--vt-surface:#272925;--vt-secondary:#383B34;--vt-line:1.8;}text{font-family:"PingFang SC","Noto Sans CJK SC","Source Han Sans SC","Microsoft YaHei","Helvetica Neue",sans-serif}</style>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto" markerUnits="userSpaceOnUse"><path d="M2 2L10 6L2 10" fill="none" stroke="var(--vt-ink)" stroke-width="1.5" stroke-linejoin="miter"/></marker></defs>
+<rect width="3600" height="3730" fill="var(--vt-bg)" data-decoration="background"/>
+<text x="140" y="170" font-size="88" font-weight="600" fill="var(--vt-ink)" text-anchor="start">用好 AI：先划清委托的边界</text>
+<text x="140" y="254" font-size="48" font-weight="400" fill="var(--vt-muted)" text-anchor="start">How much should you delegate to AI?</text>
+<path data-decoration="semantic-boundary" d="M140 310H1900" fill="none" stroke="var(--vt-muted)" stroke-opacity="0.55" stroke-width="1.4"/>
+<text x="140" y="368" font-size="33" font-weight="400" fill="var(--vt-muted)" text-anchor="start">先拆任务，再看能否核验；目标不同，交出的步骤也不同。</text>
+<g transform="translate(0 180)">
+<text x="2350" y="532" font-size="31" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">小样表现稳定，收益值得总成本 → 下一轮试着扩大一小步 [1,3,4]</text>
+<path id="scope-expansion" data-edge="" data-from="usable-work" d="M3280 1020V592A12 12 0 0 0 3268 580H642A12 12 0 0 0 630 592V970" fill="none" stroke="var(--vt-ink)" stroke-width="2" stroke-dasharray="6 10"/>
+<circle id="whole-task" data-node="" cx="280" cy="1500" r="140" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="2.5"/>
+<text x="280" y="1490" font-size="42" font-weight="500" fill="var(--vt-ink)" text-anchor="middle" data-in-node="whole-task" data-padding="14">整件任务</text>
+<text x="280" y="1548" font-size="30" font-weight="400" fill="var(--vt-muted)" text-anchor="middle" data-in-node="whole-task" data-padding="14">先拆开</text>
+<text x="280" y="1280" font-size="29" font-weight="500" fill="var(--vt-ink)" text-anchor="middle">拆到能单独检查的一步</text>
+<rect id="selected-step" data-node="" x="500" y="1380" width="260" height="240" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="2"/>
+<text x="630" y="1454" font-size="40" font-weight="500" fill="var(--vt-ink)" text-anchor="middle" data-in-node="selected-step" data-padding="14">选一小步</text>
+<text x="630" y="1514" font-size="27" font-weight="400" fill="var(--vt-muted)" text-anchor="middle" data-in-node="selected-step" data-padding="14">明确输入与输出</text>
+<text x="630" y="1573" font-size="25" font-weight="400" fill="var(--vt-muted)" text-anchor="middle" data-in-node="selected-step" data-padding="14">如：提取原文要点</text>
+<path id="select-step" data-edge="" data-from="whole-task" data-to="selected-step" d="M435 1500H485" fill="none" stroke="var(--vt-ink)" stroke-width="2" marker-end="url(#arrow)"/>
+<circle id="can-verify" data-node="" cx="970" cy="1500" r="135" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="2.5"/>
+<text x="970" y="1493" font-size="41" font-weight="500" fill="var(--vt-ink)" text-anchor="middle" data-in-node="can-verify" data-padding="14">验得了？</text>
+<text x="970" y="1542" font-size="24" font-weight="400" fill="var(--vt-muted)" text-anchor="middle" data-in-node="can-verify" data-padding="14">原文／计算／实做</text>
+<path id="check-scope" data-edge="" data-from="selected-step" data-to="can-verify" d="M775 1500H820" fill="none" stroke="var(--vt-ink)" stroke-width="2" marker-end="url(#arrow)"/>
+<rect id="build-verification" data-node="" x="720" y="850" width="500" height="240" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="2"/>
+<text x="970" y="922" font-size="38" font-weight="500" fill="var(--vt-ink)" text-anchor="middle" data-in-node="build-verification" data-padding="14">先补核验办法</text>
+<text x="970" y="982" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="middle" data-in-node="build-verification" data-padding="14">查原文／找能核验的人帮忙</text>
+<text x="970" y="1040" font-size="27" font-weight="400" fill="var(--vt-muted)" text-anchor="middle" data-in-node="build-verification" data-padding="14">AI 可找线索；结论暂不采用。</text>
+<path id="cannot-verify" data-edge="" data-from="can-verify" data-to="build-verification" d="M970 1350V1105" fill="none" stroke="var(--vt-ink)" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="1010" y="1232" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="start">不能</text>
+<path id="revise-before-delegation" data-edge="" data-from="build-verification" d="M705 970H630" fill="none" stroke="var(--vt-ink)" stroke-width="2"/>
+<circle cx="630" cy="970" r="5" fill="var(--vt-ink)" data-decoration="junction"/>
+<path id="scope-to-step" data-edge="" data-to="selected-step" d="M630 970V1365" fill="none" stroke="var(--vt-ink)" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="590" y="1210" font-size="29" font-weight="400" fill="var(--vt-muted)" text-anchor="end">再拆小</text>
+<text x="590" y="1740" font-size="27" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">两个目标可同时存在</text>
+<path id="yes-verify" data-edge="" data-from="can-verify" d="M1120 1500H1160" fill="none" stroke="var(--vt-ink)" stroke-width="2"/>
+<text x="1135" y="1455" font-size="27" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">能</text>
+<path id="goal-work" data-edge="" data-to="ai-work" d="M1160 1500V1122A12 12 0 0 1 1172 1110H1430" fill="none" stroke="var(--vt-ink)" stroke-width="2" marker-end="url(#arrow)"/>
+<path id="goal-learning" data-edge="" data-to="ai-learn" d="M1160 1500V1898A12 12 0 0 0 1172 1910H1430" fill="none" stroke="var(--vt-ink)" stroke-width="2" marker-end="url(#arrow)"/>
+<circle cx="1160" cy="1500" r="5" fill="var(--vt-ink)" data-decoration="junction"/>
+<text x="1240" y="991" font-size="36" font-weight="500" fill="var(--vt-ink)" text-anchor="start">交付成果</text>
+<text x="1240" y="1041" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="start">AI 可先做</text>
+<text x="1240" y="1791" font-size="36" font-weight="500" fill="var(--vt-ink)" text-anchor="start">形成能力</text>
+<text x="1240" y="1841" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="start">自己要练</text>
+<rect id="work-delegation" data-decoration="semantic-boundary" x="1400" y="865" width="900" height="700" fill="none" stroke="var(--vt-muted)" stroke-opacity="0.65" stroke-width="1.5"/>
+<text x="1850" y="785" font-size="38" font-weight="500" fill="var(--vt-ink)" text-anchor="middle">可委托：做出候选</text>
+<text x="1850" y="838" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">提供目标、材料、限制与合格标准 [8]</text>
+<rect id="learning-delegation" data-decoration="semantic-boundary" x="1400" y="1710" width="410" height="605" fill="none" stroke="var(--vt-muted)" stroke-opacity="0.65" stroke-width="1.5"/>
+<text x="1605" y="1640" font-size="35" font-weight="500" fill="var(--vt-ink)" text-anchor="middle">可委托：提示与反馈</text>
+<text x="1605" y="1691" font-size="27" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">不交出要练会的那一步</text>
+<text x="2100" y="1738" font-size="32" font-weight="500" fill="var(--vt-ink)" text-anchor="middle">留给自己的练习</text>
+<path data-decoration="semantic-boundary" d="M2420 867V2350" fill="none" stroke="var(--vt-muted)" stroke-opacity="0.65" stroke-width="1.4" stroke-dasharray="4 10"/>
+<text x="2420" y="787" font-size="35" font-weight="500" fill="var(--vt-ink)" text-anchor="middle">独立验收</text>
+<text x="2420" y="837" font-size="26" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">不靠 AI 自评</text>
+<circle id="ai-work" data-node="" cx="1600" cy="1110" r="155" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="2.5"/>
+<text x="1600" y="1100" font-size="56" font-weight="500" fill="var(--vt-ink)" text-anchor="middle" data-in-node="ai-work" data-padding="14">AI</text>
+<text x="1600" y="1164" font-size="33" font-weight="400" fill="var(--vt-ink)" text-anchor="middle" data-in-node="ai-work" data-padding="14">起草／改写</text>
+<rect id="draft" data-node="" x="1950" y="1035" width="300" height="150" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="2"/>
+<text x="2100" y="1126" font-size="40" font-weight="500" fill="var(--vt-ink)" text-anchor="middle" data-in-node="draft" data-padding="14">候选成品</text>
+<path id="generate" data-edge="" data-from="ai-work" data-to="draft" d="M1770 1110H1935" fill="none" stroke="var(--vt-ink)" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="1860" y="1065" font-size="27" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">生成</text>
+<text x="2100" y="1285" font-size="27" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">候选 ≠ 可靠成果 [1]</text>
+<rect id="work-check" data-node="" x="2560" y="970" width="420" height="280" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="2"/>
+<text x="2770" y="1040" font-size="43" font-weight="500" fill="var(--vt-ink)" text-anchor="middle" data-in-node="work-check" data-padding="14">核对成品</text>
+<text x="2770" y="1118" font-size="30" font-weight="400" fill="var(--vt-ink)" text-anchor="middle" data-in-node="work-check" data-padding="14">回原文 · 重算 · 运行</text>
+<text x="2770" y="1172" font-size="29" font-weight="400" fill="var(--vt-muted)" text-anchor="middle" data-in-node="work-check" data-padding="14">按目标与真实条件验收</text>
+<text x="2770" y="1223" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="middle" data-in-node="work-check" data-padding="14">外部证据 [7,9]</text>
+<path id="draft-to-check" data-edge="" data-from="draft" data-to="work-check" d="M2265 1110H2545" fill="none" stroke="var(--vt-ink)" stroke-width="2" marker-end="url(#arrow)"/>
+<rect id="external-evidence" data-node="" x="2560" y="650" width="420" height="145" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="2"/>
+<text x="2770" y="706" font-size="30" font-weight="500" fill="var(--vt-ink)" text-anchor="middle" data-in-node="external-evidence" data-padding="14">原文／计算／运行结果</text>
+<text x="2770" y="763" font-size="27" font-weight="400" fill="var(--vt-muted)" text-anchor="middle" data-in-node="external-evidence" data-padding="14">能用来发现错误的依据</text>
+<path id="independent-evidence" data-edge="" data-from="external-evidence" data-to="work-check" d="M2770 810V955" fill="none" stroke="var(--vt-ink)" stroke-width="2" marker-end="url(#arrow)"/>
+<rect id="usable-work" data-node="" x="3150" y="1035" width="260" height="150" fill="var(--vt-ink)" stroke="var(--vt-ink)" stroke-width="2"/>
+<text x="3280" y="1126" font-size="42" font-weight="500" fill="var(--vt-bg)" text-anchor="middle" data-in-node="usable-work" data-padding="14">可用成果</text>
+<path id="work-passes" data-edge="" data-from="work-check" data-to="usable-work" d="M2995 1110H3135" fill="none" stroke="var(--vt-ink)" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="3060" y="1064" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">过关</text>
+<text x="3280" y="1276" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">再算总成本 [3,4]</text>
+<text x="3280" y="1324" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">含等待、核验与返工</text>
+<path id="work-revision" data-edge="" data-from="work-check" data-to="ai-work" d="M2770 1265V1418A12 12 0 0 1 2758 1430H1612A12 12 0 0 1 1600 1418V1280" fill="none" stroke="var(--vt-ink)" stroke-width="2" stroke-dasharray="6 10" marker-end="url(#arrow)"/>
+<text x="2100" y="1389" font-size="30" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">未过关：缩小这一步／补依据</text>
+<text x="2100" y="1501" font-size="27" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">看不准／后果重大：缩小授权。[9]</text>
+<circle id="ai-learn" data-node="" cx="1600" cy="1910" r="155" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="2.5"/>
+<text x="1600" y="1900" font-size="56" font-weight="500" fill="var(--vt-ink)" text-anchor="middle" data-in-node="ai-learn" data-padding="14">AI</text>
+<text x="1600" y="1964" font-size="33" font-weight="400" fill="var(--vt-ink)" text-anchor="middle" data-in-node="ai-learn" data-padding="14">提示／反馈</text>
+<circle id="own-practice" data-node="" cx="2100" cy="1910" r="120" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="2.5"/>
+<text x="2100" y="1903" font-size="50" font-weight="500" fill="var(--vt-ink)" text-anchor="middle" data-in-node="own-practice" data-padding="14">你</text>
+<text x="2100" y="1960" font-size="30" font-weight="400" fill="var(--vt-ink)" text-anchor="middle" data-in-node="own-practice" data-padding="14">亲自练习</text>
+<path id="practice-support" data-edge="" data-from="ai-learn" data-to="own-practice" d="M1770 1910H1965" fill="none" stroke="var(--vt-ink)" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="1860" y="1864" font-size="27" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">辅助</text>
+<text x="2100" y="2122" font-size="27" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">练习完成 ≠ 独立掌握 [5,6]</text>
+<rect id="learning-check" data-node="" x="2560" y="1770" width="420" height="280" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="2"/>
+<text x="2770" y="1845" font-size="40" font-weight="500" fill="var(--vt-ink)" text-anchor="middle" data-in-node="learning-check" data-padding="14">关掉 AI 再做</text>
+<text x="2770" y="1920" font-size="29" font-weight="400" fill="var(--vt-ink)" text-anchor="middle" data-in-node="learning-check" data-padding="14">解释原理／做一道新题</text>
+<text x="2770" y="1974" font-size="27" font-weight="400" fill="var(--vt-muted)" text-anchor="middle" data-in-node="learning-check" data-padding="14">不看答案，检验自己 [5,6]</text>
+<text x="2770" y="2026" font-size="27" font-weight="400" fill="var(--vt-muted)" text-anchor="middle" data-in-node="learning-check" data-padding="14">随后还需检查保持与迁移</text>
+<path id="practice-to-check" data-edge="" data-from="own-practice" data-to="learning-check" d="M2235 1910H2545" fill="none" stroke="var(--vt-ink)" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="2380" y="1855" font-size="27" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">撤去辅助</text>
+<rect id="independent-skill" data-node="" x="3150" y="1835" width="260" height="150" fill="var(--vt-ink)" stroke="var(--vt-ink)" stroke-width="2"/>
+<text x="3280" y="1926" font-size="42" font-weight="500" fill="var(--vt-bg)" text-anchor="middle" data-in-node="independent-skill" data-padding="14">独立表现</text>
+<path id="learning-passes" data-edge="" data-from="learning-check" data-to="independent-skill" d="M2995 1910H3135" fill="none" stroke="var(--vt-ink)" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="3060" y="1864" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">能做</text>
+<text x="3280" y="2076" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">新题／延后复测</text>
+<text x="3280" y="2124" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">一次会做，仍需再检查</text>
+<path id="learning-revision" data-edge="" data-from="learning-check" data-to="ai-learn" d="M2770 2065V2268A12 12 0 0 1 2758 2280H1612A12 12 0 0 1 1600 2268V2080" fill="none" stroke="var(--vt-ink)" stroke-width="2" stroke-dasharray="6 10" marker-end="url(#arrow)"/>
+<text x="2100" y="2239" font-size="30" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">做不出：定位缺口，再练一次</text>
+<text x="1850" y="2460" font-size="33" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">同样写文章：可以委托整理材料；若要练论证，就把论证那一步留给自己。</text>
+</g>
+<path data-decoration="semantic-boundary" d="M140 2990H3460" fill="none" stroke="var(--vt-muted)" stroke-opacity="0.55" stroke-width="1.4"/>
+<text x="3460" y="3075" font-size="48" font-weight="500" fill="var(--vt-ink)" text-anchor="end">委托的单位是一小步；验收与练习决定边界。</text>
+<text x="3460" y="3140" font-size="32" font-weight="400" fill="var(--vt-muted)" text-anchor="end">实线：本轮怎样做。虚线：根据结果，调整下一轮的范围或练习。</text>
+<text x="140" y="3245" font-size="27" font-weight="400" fill="var(--vt-muted)" text-anchor="start">依据｜编号对应图底来源。此图为研究综合后的使用建议；框的宽度不表示委托比例、模型能力或效果大小。</text>
+<text x="140" y="3320" font-size="25" font-weight="400" fill="var(--vt-muted)" text-anchor="start">[1] Dell’Acqua et al. (2026). Navigating the Jagged Technological Frontier.</text>
+<text x="140" y="3356" font-size="22" font-weight="400" fill="var(--vt-muted)" text-anchor="start">Organization Science · doi:10.1287/orsc.2025.21838</text>
+<text x="140" y="3395" font-size="25" font-weight="400" fill="var(--vt-muted)" text-anchor="start">[2] Vaccaro et al. (2024). When combinations of humans and AI are useful.</text>
+<text x="140" y="3431" font-size="22" font-weight="400" fill="var(--vt-muted)" text-anchor="start">Nature Human Behaviour · doi:10.1038/s41562-024-02024-1</text>
+<text x="140" y="3470" font-size="25" font-weight="400" fill="var(--vt-muted)" text-anchor="start">[3,4] METR (2025; 2026). Developer productivity trial &amp; update.</text>
+<text x="140" y="3506" font-size="22" font-weight="400" fill="var(--vt-muted)" text-anchor="start">metr.org/Early_2025_AI_Experienced_OS_Devs_Study-paper.pdf · /blog/2026-02-24-uplift-update/</text>
+<text x="140" y="3545" font-size="25" font-weight="400" fill="var(--vt-muted)" text-anchor="start">[5] Bastani et al. (2025). Generative AI without guardrails can harm learning.</text>
+<text x="140" y="3581" font-size="22" font-weight="400" fill="var(--vt-muted)" text-anchor="start">PNAS · doi:10.1073/pnas.2422633122</text>
+<text x="1870" y="3320" font-size="25" font-weight="400" fill="var(--vt-muted)" text-anchor="start">[6] Kestin et al. (2025). AI tutoring outperforms in-class active learning.</text>
+<text x="1870" y="3356" font-size="22" font-weight="400" fill="var(--vt-muted)" text-anchor="start">Scientific Reports · doi:10.1038/s41598-025-97652-6</text>
+<text x="1870" y="3395" font-size="25" font-weight="400" fill="var(--vt-muted)" text-anchor="start">[7] Liu et al. (2023). Evaluating Verifiability in Generative Search Engines.</text>
+<text x="1870" y="3431" font-size="22" font-weight="400" fill="var(--vt-muted)" text-anchor="start">EMNLP Findings · aclanthology.org/2023.findings-emnlp.467/</text>
+<text x="1870" y="3470" font-size="25" font-weight="400" fill="var(--vt-muted)" text-anchor="start">[8] Anthropic (2025). Effective context engineering for AI agents.</text>
+<text x="1870" y="3506" font-size="22" font-weight="400" fill="var(--vt-muted)" text-anchor="start">工程建议 · anthropic.com/research/effective-context-engineering-for-ai-agents</text>
+<text x="1870" y="3545" font-size="25" font-weight="400" fill="var(--vt-muted)" text-anchor="start">[9] NIST (2024). Generative Artificial Intelligence Profile.</text>
+<text x="1870" y="3581" font-size="22" font-weight="400" fill="var(--vt-muted)" text-anchor="start">风险管理指南 · doi:10.6028/NIST.AI.600-1</text>
+<text x="140" y="3650" font-size="26" font-weight="400" fill="var(--vt-muted)" text-anchor="start">边界：这些条件不能保证所有任务有效；当前任务、模型与核验成本仍须实际检查。没有进行新的用户对照实验。</text>
+<text x="140" y="3700" font-size="25" font-weight="400" fill="var(--vt-muted)" text-anchor="start">图形为自主组合；两个目标可以兼有。“扩大一小步”为本图的谨慎试用建议，不是研究验证过的统一最优规则。来源与阅读范围见案例说明。</text>
+</svg>

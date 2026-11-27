@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2800" height="2550" viewBox="0 0 2800 2550" role="img" aria-labelledby="title" aria-describedby="desc">
+<title id="title">相似的圆图，究竟在表达什么？</title>
+<desc id="desc">本轮工作分类的六种关系：嵌套集合、利益相关者参与范围、生态情境与联系、多层屏障、累计可达阈值、径向层级。六个小图均为自主几何示意，不是官方模板或数量数据。区分每层含义、可做的判断和不适用条件；本图不是穷尽的圆图分类。</desc>
+<style data-vt-theme="">:root{--vt-bg:#191A18;--vt-ink:#EFEEE7;--vt-muted:#B0B2A8;--vt-accent:#EFEEE7;--vt-surface:#272925;--vt-secondary:#383B34;--vt-line:1.8;}text{font-family:"PingFang SC","Noto Sans CJK SC","Source Han Sans SC","Microsoft YaHei","Helvetica Neue",sans-serif}</style>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="11" markerHeight="11" orient="auto" markerUnits="userSpaceOnUse"><path d="M2 2L10 6L2 10" fill="none" stroke="var(--vt-ink)" stroke-width="1.5"/></marker></defs>
+<rect width="2800" height="2550" fill="var(--vt-bg)" data-decoration="background"/>
+<text x="120" y="160" font-size="76" font-weight="600" fill="var(--vt-ink)" text-anchor="start">相似的圆图，究竟在表达什么？</text>
+<text x="120" y="239" font-size="40" font-weight="400" fill="var(--vt-muted)" text-anchor="start">Similar circles, different thinking tasks</text>
+<path data-decoration="annotation" d="M120 288H2350" fill="none" stroke="var(--vt-muted)" stroke-width="1.5"/>
+<text x="120" y="347" font-size="30" font-weight="400" fill="var(--vt-muted)" text-anchor="start">先辨认每层增加了什么关系，再决定能否使用同心圆。</text>
+<text x="520" y="560" font-size="42" font-weight="500" fill="var(--vt-ink)" text-anchor="middle">包含</text>
+<text x="520" y="1065" font-size="33" font-weight="400" fill="var(--vt-ink)" text-anchor="middle">对象属于哪一层？</text>
+<text x="520" y="1122" font-size="27" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">集合必须真实包含。[1]</text>
+<text x="1400" y="560" font-size="42" font-weight="500" fill="var(--vt-ink)" text-anchor="middle">参与范围</text>
+<text x="1400" y="1065" font-size="33" font-weight="400" fill="var(--vt-ink)" text-anchor="middle">还漏掉了谁的诉求？</text>
+<text x="1400" y="1122" font-size="27" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">圈距不是重要性。[2]</text>
+<text x="2280" y="560" font-size="42" font-weight="500" fill="var(--vt-ink)" text-anchor="middle">生态情境</text>
+<text x="2280" y="1065" font-size="33" font-weight="400" fill="var(--vt-ink)" text-anchor="middle">哪些条件随情境改变？</text>
+<text x="2280" y="1122" font-size="27" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">同级情境与联系要可见。[3,4]</text>
+<text x="520" y="1340" font-size="42" font-weight="500" fill="var(--vt-ink)" text-anchor="middle">屏障</text>
+<text x="520" y="1845" font-size="33" font-weight="400" fill="var(--vt-ink)" text-anchor="middle">这条错误能穿过哪些层？</text>
+<text x="520" y="1902" font-size="27" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">数量不等于独立防护。[5–7]</text>
+<text x="1400" y="1340" font-size="42" font-weight="500" fill="var(--vt-ink)" text-anchor="middle">累计可达</text>
+<text x="1400" y="1845" font-size="33" font-weight="400" fill="var(--vt-ink)" text-anchor="middle">改阈值，哪些对象被纳入？</text>
+<text x="1400" y="1902" font-size="27" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">真实范围需要相应数据。[8]</text>
+<text x="2280" y="1340" font-size="42" font-weight="500" fill="var(--vt-ink)" text-anchor="middle">径向层级</text>
+<text x="2280" y="1845" font-size="33" font-weight="400" fill="var(--vt-ink)" text-anchor="middle">父子分支如何组成整体？</text>
+<text x="2280" y="1902" font-size="27" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">分区可编码数量，须明口径。[9,10]</text>
+<circle data-decoration="semantic-boundary" cx="520" cy="830" r="145" fill="none" stroke="var(--vt-ink)" stroke-width="2"/>
+<circle data-decoration="semantic-boundary" cx="520" cy="830" r="98" fill="none" stroke="var(--vt-ink)" stroke-width="2"/>
+<circle data-decoration="semantic-boundary" cx="520" cy="830" r="50" fill="none" stroke="var(--vt-ink)" stroke-width="2"/>
+<circle id="set-dot" data-node="" cx="520" cy="830" r="6" fill="var(--vt-ink)" stroke="var(--vt-ink)" stroke-width="1.9"/>
+<circle data-decoration="semantic-boundary" cx="1400" cy="830" r="145" fill="none" stroke="var(--vt-ink)" stroke-width="2"/>
+<circle data-decoration="semantic-boundary" cx="1400" cy="830" r="98" fill="none" stroke="var(--vt-ink)" stroke-width="2"/>
+<circle data-decoration="semantic-boundary" cx="1400" cy="830" r="50" fill="none" stroke="var(--vt-ink)" stroke-width="2"/>
+<circle id="role-0" data-node="" cx="1400" cy="830" r="7" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="1.9"/>
+<circle id="role-1" data-node="" cx="1473" cy="830" r="7" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="1.9"/>
+<circle id="role-2" data-node="" cx="1310" cy="910" r="7" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="1.9"/>
+<circle data-decoration="semantic-boundary" cx="2280" cy="830" r="155" fill="none" stroke="var(--vt-ink)" stroke-width="2"/>
+<circle data-decoration="semantic-boundary" cx="2205" cy="865" r="57" fill="none" stroke="var(--vt-ink)" stroke-width="1.7"/>
+<circle data-decoration="semantic-boundary" cx="2355" cy="865" r="57" fill="none" stroke="var(--vt-ink)" stroke-width="1.7"/>
+<path data-decoration="annotation" d="M2269 865H2291" fill="none" stroke="var(--vt-muted)" stroke-width="1.5" stroke-dasharray="6 10"/>
+<circle id="context-a" data-node="" cx="2205" cy="865" r="6" fill="var(--vt-ink)" stroke="var(--vt-ink)" stroke-width="1.9"/>
+<circle id="context-b" data-node="" cx="2355" cy="865" r="6" fill="var(--vt-ink)" stroke="var(--vt-ink)" stroke-width="1.9"/>
+<rect id="context-indirect" data-node="" x="2240" y="718" width="80" height="38" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="1.8"/>
+<path data-decoration="annotation" d="M2240 737H2205V800" fill="none" stroke="var(--vt-muted)" stroke-width="1.5" stroke-dasharray="6 10"/>
+<path data-decoration="semantic-boundary" d="M378.716 1577.382A145 145 0 1 1 378.716 1642.618" fill="none" stroke="var(--vt-ink)" stroke-width="2.1"/>
+<path data-decoration="semantic-boundary" d="M424.512 1587.955A98 98 0 1 1 424.512 1632.045" fill="none" stroke="var(--vt-ink)" stroke-width="2.1"/>
+<circle data-decoration="semantic-boundary" cx="520" cy="1610" r="50" fill="none" stroke="var(--vt-ink)" stroke-width="2"/>
+<path data-decoration="annotation" d="M320 1610H459" fill="none" stroke="var(--vt-ink)" stroke-width="2" stroke-dasharray="6 10"/>
+<path data-decoration="annotation" d="M459 1594V1626" fill="none" stroke="var(--vt-ink)" stroke-width="2"/>
+<polygon data-decoration="semantic-boundary" points="1250,1565 1332.5,1460 1430,1490 1550,1520 1520,1655 1460,1760 1355,1700 1265,1715" fill="none" stroke="var(--vt-ink)" stroke-width="1.8"/>
+<polygon data-decoration="semantic-boundary" points="1300,1580 1355,1510 1420,1530 1500,1550 1480,1640 1440,1710 1370,1670 1310,1680" fill="none" stroke="var(--vt-ink)" stroke-width="1.8"/>
+<polygon data-decoration="semantic-boundary" points="1350,1595 1377.5,1560 1410,1570 1450,1580 1440,1625 1420,1660 1385,1640 1355,1645" fill="none" stroke="var(--vt-ink)" stroke-width="1.8"/>
+<circle id="origin" data-node="" cx="1400" cy="1610" r="6" fill="var(--vt-ink)" stroke="var(--vt-ink)" stroke-width="1.9"/>
+<circle data-decoration="semantic-boundary" cx="2280" cy="1610" r="45" fill="none" stroke="var(--vt-ink)" stroke-width="1.8"/>
+<circle data-decoration="semantic-boundary" cx="2280" cy="1610" r="95" fill="none" stroke="var(--vt-ink)" stroke-width="1.8"/>
+<circle data-decoration="semantic-boundary" cx="2280" cy="1610" r="145" fill="none" stroke="var(--vt-ink)" stroke-width="1.8"/>
+<path data-decoration="annotation" d="M2325 1610L2425 1610" fill="none" stroke="var(--vt-muted)" stroke-width="1.8"/>
+<path data-decoration="annotation" d="M2257.5 1648.97L2207.5 1735.57" fill="none" stroke="var(--vt-muted)" stroke-width="1.8"/>
+<path data-decoration="annotation" d="M2257.5 1571.03L2207.5 1484.43" fill="none" stroke="var(--vt-muted)" stroke-width="1.8"/>
+<path data-decoration="annotation" d="M2327.5 1692.27L2352.5 1735.57" fill="none" stroke="var(--vt-muted)" stroke-width="1.8"/>
+<path data-decoration="annotation" d="M2185 1610L2135 1610" fill="none" stroke="var(--vt-muted)" stroke-width="1.8"/>
+<path data-decoration="annotation" d="M2327.5 1527.73L2352.5 1484.43" fill="none" stroke="var(--vt-muted)" stroke-width="1.8"/>
+<path data-decoration="annotation" d="M120 2160H2680" fill="none" stroke="var(--vt-muted)" stroke-width="1.5"/>
+<text x="2680" y="2235" font-size="43" font-weight="500" fill="var(--vt-ink)" text-anchor="end">同心只是画法；边界、路径与尺度才决定怎样思考。</text>
+<text x="120" y="2308" font-size="21" font-weight="400" fill="var(--vt-muted)" text-anchor="start">[1] Kent · Euler diagrams · cs.kent.ac.uk/events/conf/2004/euler/eulerdiagrams.html</text>
+<text x="120" y="2340" font-size="21" font-weight="400" fill="var(--vt-muted)" text-anchor="start">[2] Alexander (2004) · Stakeholders · scenarioplus.org.uk/papers/stakeholders/a_better_fit.htm</text>
+<text x="120" y="2372" font-size="21" font-weight="400" fill="var(--vt-muted)" text-anchor="start">[3,4] Bronfenbrenner (1977) · doi:10.1037/0003-066X.32.7.513；CDC (2025) · Social-Ecological Model</text>
+<text x="120" y="2404" font-size="21" font-weight="400" fill="var(--vt-muted)" text-anchor="start">[5–7] Reason (2000) · doi:10.1136/bmj.320.7237.768；NIST · Defense-in-depth / SP 800-207</text>
+<text x="120" y="2436" font-size="21" font-weight="400" fill="var(--vt-muted)" text-anchor="start">[8] Mapbox · Isochrone API · docs.mapbox.com/api/navigation/isochrone/</text>
+<text x="120" y="2468" font-size="21" font-weight="400" fill="var(--vt-muted)" text-anchor="start">[9,10] D3 · Partition / Pack；Stasko et al. (2000) · doi:10.1006/ijhc.2000.0420</text>
+<text x="120" y="2520" font-size="23" font-weight="400" fill="var(--vt-muted)" text-anchor="start">用途区分，非穷尽分类；小图仅示意关系，无实测数量或地图数据。完整来源及限制见配套分层研究。</text>
+</svg>

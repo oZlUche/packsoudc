@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="2360" viewBox="0 0 1600 2360" role="img" aria-labelledby="title" aria-describedby="desc">
+  <title id="title">策划一场旧书交换会 · 5W1H 示范草案</title>
+  <desc id="desc">沿用N04大问题地图：中心圆是同一场拟议的旧书交换会，六个方形内容区分别承载参与者、内容、时间、地点、目的和组织方式。20位参与者、周末两小时与社区场地都是示范设计条件，并非用户已确认需求。每区有可执行的建议和必要的待确认项；改变人数时，回看场地、组织与玩法。连线表示共同主题，不表示顺序或因果。</desc>
+  <style data-vt-theme="">:root{--vt-bg:#191A18;--vt-ink:#EFEEE7;--vt-muted:#B0B2A8;--vt-accent:#EFEEE7;--vt-surface:#272925;--vt-secondary:#383B34;--vt-line:1.8;--vt-title:53px;--vt-section:34px;--vt-label:22px;--vt-note:18px;}text{font-family:"PingFang SC","Noto Sans CJK SC","Source Han Sans SC","Microsoft YaHei","Helvetica Neue",sans-serif}</style>
+  <rect width="1600" height="2360" fill="var(--vt-bg)" data-decoration="background" />
+  <rect id="who" data-node="" data-vt-geometry="inquiry-region" x="90" y="620" width="360" height="320" fill="var(--vt-bg)" stroke="var(--vt-muted)" stroke-width="1.4" />
+  <rect id="what" data-node="" data-vt-geometry="inquiry-region" x="1150" y="620" width="360" height="320" fill="var(--vt-bg)" stroke="var(--vt-muted)" stroke-width="1.4" />
+  <rect id="when" data-node="" data-vt-geometry="inquiry-region" x="90" y="1040" width="360" height="320" fill="var(--vt-bg)" stroke="var(--vt-muted)" stroke-width="1.4" />
+  <rect id="where" data-node="" data-vt-geometry="inquiry-region" x="1150" y="1040" width="360" height="320" fill="var(--vt-bg)" stroke="var(--vt-muted)" stroke-width="1.4" />
+  <rect id="why" data-node="" data-vt-geometry="inquiry-region" x="90" y="1460" width="360" height="320" fill="var(--vt-bg)" stroke="var(--vt-muted)" stroke-width="1.4" />
+  <rect id="how" data-node="" data-vt-geometry="inquiry-region" x="1150" y="1460" width="360" height="320" fill="var(--vt-bg)" stroke="var(--vt-muted)" stroke-width="1.4" />
+  <circle id="question" data-node="" data-vt-geometry="shared-question" cx="800" cy="1200" r="145" fill="var(--vt-ink)" />
+  <circle id="left-branch" data-node="" cx="550" cy="1200" r="3" fill="var(--vt-ink)" />
+  <circle id="right-branch" data-node="" cx="1050" cy="1200" r="3" fill="var(--vt-ink)" />
+  <path id="question-left" data-edge="" data-from="question" data-to="left-branch" d="M655 1200H550" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)" />
+  <path id="question-right" data-edge="" data-from="question" data-to="right-branch" d="M945 1200H1050" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)" />
+  <path id="to-who" data-edge="" data-from="left-branch" data-to="who" d="M550 1200V792A12 12 0 0 0 538 780H450" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)" />
+  <path id="to-when" data-edge="" data-from="left-branch" data-to="when" d="M550 1200H450" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)" />
+  <path id="to-why" data-edge="" data-from="left-branch" data-to="why" d="M550 1200V1608A12 12 0 0 1 538 1620H450" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)" />
+  <path id="to-what" data-edge="" data-from="right-branch" data-to="what" d="M1050 1200V792A12 12 0 0 1 1062 780H1150" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)" />
+  <path id="to-where" data-edge="" data-from="right-branch" data-to="where" d="M1050 1200H1150" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)" />
+  <path id="to-how" data-edge="" data-from="right-branch" data-to="how" d="M1050 1200V1608A12 12 0 0 0 1062 1620H1150" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)" />
+  <text x="90" y="119" font-size="53" fill="var(--vt-ink)" font-weight="600" text-anchor="start">策划一场旧书交换会</text>
+  <text x="90" y="176" font-size="28" fill="var(--vt-muted)" font-weight="400" text-anchor="start">Planning a neighborhood book swap</text>
+  <path d="M90 213H1010" stroke="var(--vt-muted)" stroke-opacity=".42" stroke-width="1" fill="none" data-decoration="guide" />
+  <text x="118" y="681" font-size="34" fill="var(--vt-ink)" font-weight="500" text-anchor="start" data-in-node="who" data-padding="16">谁</text>
+  <text x="422" y="678" font-size="19" fill="var(--vt-muted)" font-weight="400" text-anchor="end" data-in-node="who" data-padding="16">WHO</text>
+  <text x="118" y="739" font-size="24" fill="var(--vt-ink)" font-weight="400" text-anchor="start" data-in-node="who" data-padding="16">暂按20位参与者试办</text>
+  <text x="118" y="783" font-size="22" fill="var(--vt-muted)" font-weight="400" text-anchor="start" data-in-node="who" data-padding="16">附近愿意交换、分享书的人</text>
+  <text x="118" y="827" font-size="22" fill="var(--vt-muted)" font-weight="400" text-anchor="start" data-in-node="who" data-padding="16">主持1人，现场协助1人</text>
+  <text x="118" y="897" font-size="19" fill="var(--vt-muted)" font-weight="400" text-anchor="start" data-in-node="who" data-padding="16">待确认：组织者与报名情况</text>
+  <text x="1178" y="681" font-size="34" fill="var(--vt-ink)" font-weight="500" text-anchor="start" data-in-node="what" data-padding="16">什么</text>
+  <text x="1482" y="678" font-size="19" fill="var(--vt-muted)" font-weight="400" text-anchor="end" data-in-node="what" data-padding="16">WHAT</text>
+  <text x="1178" y="739" font-size="24" fill="var(--vt-ink)" font-weight="400" text-anchor="start" data-in-node="what" data-padding="16">每人带1–3本旧书</text>
+  <text x="1178" y="783" font-size="22" fill="var(--vt-muted)" font-weight="400" text-anchor="start" data-in-node="what" data-padding="16">书况良好，附一句推荐</text>
+  <text x="1178" y="827" font-size="22" fill="var(--vt-muted)" font-weight="400" text-anchor="start" data-in-node="what" data-padding="16">交换或赠送，不强求等价</text>
+  <text x="1178" y="897" font-size="19" fill="var(--vt-muted)" font-weight="400" text-anchor="start" data-in-node="what" data-padding="16">没换出的书，由本人带回</text>
+  <text x="118" y="1101" font-size="34" fill="var(--vt-ink)" font-weight="500" text-anchor="start" data-in-node="when" data-padding="16">何时</text>
+  <text x="422" y="1098" font-size="19" fill="var(--vt-muted)" font-weight="400" text-anchor="end" data-in-node="when" data-padding="16">WHEN</text>
+  <text x="118" y="1159" font-size="24" fill="var(--vt-ink)" font-weight="400" text-anchor="start" data-in-node="when" data-padding="16">拟周末14:00–16:00</text>
+  <text x="118" y="1203" font-size="22" fill="var(--vt-muted)" font-weight="400" text-anchor="start" data-in-node="when" data-padding="16">提前一周开放报名</text>
+  <text x="118" y="1247" font-size="22" fill="var(--vt-muted)" font-weight="400" text-anchor="start" data-in-node="when" data-padding="16">13:30布场，16:30前撤完</text>
+  <text x="118" y="1317" font-size="19" fill="var(--vt-muted)" font-weight="400" text-anchor="start" data-in-node="when" data-padding="16">待确认：日期与场地档期</text>
+  <text x="1178" y="1101" font-size="34" fill="var(--vt-ink)" font-weight="500" text-anchor="start" data-in-node="where" data-padding="16">何地</text>
+  <text x="1482" y="1098" font-size="19" fill="var(--vt-muted)" font-weight="400" text-anchor="end" data-in-node="where" data-padding="16">WHERE</text>
+  <text x="1178" y="1159" font-size="24" fill="var(--vt-ink)" font-weight="400" text-anchor="start" data-in-node="where" data-padding="16">先洽谈社区公共活动室</text>
+  <text x="1178" y="1203" font-size="22" fill="var(--vt-muted)" font-weight="400" text-anchor="start" data-in-node="where" data-padding="16">坐得下20人，能围坐交谈</text>
+  <text x="1178" y="1247" font-size="22" fill="var(--vt-muted)" font-weight="400" text-anchor="start" data-in-node="where" data-padding="16">一张展示桌，入口便于找书</text>
+  <text x="1178" y="1317" font-size="19" fill="var(--vt-muted)" font-weight="400" text-anchor="start" data-in-node="where" data-padding="16">待核：档期、场租与使用规则</text>
+  <text x="118" y="1521" font-size="34" fill="var(--vt-ink)" font-weight="500" text-anchor="start" data-in-node="why" data-padding="16">为什么</text>
+  <text x="422" y="1518" font-size="19" fill="var(--vt-muted)" font-weight="400" text-anchor="end" data-in-node="why" data-padding="16">WHY</text>
+  <text x="118" y="1579" font-size="24" fill="var(--vt-ink)" font-weight="400" text-anchor="start" data-in-node="why" data-padding="16">让闲置书找到下一位读者</text>
+  <text x="118" y="1623" font-size="22" fill="var(--vt-muted)" font-weight="400" text-anchor="start" data-in-node="why" data-padding="16">让参与者认识新的书友</text>
+  <text x="118" y="1667" font-size="22" fill="var(--vt-muted)" font-weight="400" text-anchor="start" data-in-node="why" data-padding="16">离场目标：一本想读的书</text>
+  <text x="118" y="1737" font-size="19" fill="var(--vt-muted)" font-weight="400" text-anchor="start" data-in-node="why" data-padding="16">复盘：大家是否愿意再来？</text>
+  <text x="1178" y="1521" font-size="34" fill="var(--vt-ink)" font-weight="500" text-anchor="start" data-in-node="how" data-padding="16">如何</text>
+  <text x="1482" y="1518" font-size="19" fill="var(--vt-muted)" font-weight="400" text-anchor="end" data-in-node="how" data-padding="16">HOW</text>
+  <text x="1178" y="1579" font-size="24" fill="var(--vt-ink)" font-weight="400" text-anchor="start" data-in-node="how" data-padding="16">15′入场 · 20′介绍</text>
+  <text x="1178" y="1623" font-size="22" fill="var(--vt-muted)" font-weight="400" text-anchor="start" data-in-node="how" data-padding="16">40′换书 · 30′小组分享</text>
+  <text x="1178" y="1667" font-size="22" fill="var(--vt-muted)" font-weight="400" text-anchor="start" data-in-node="how" data-padding="16">15′书单与收尾（共120′）</text>
+  <text x="1178" y="1737" font-size="19" fill="var(--vt-muted)" font-weight="400" text-anchor="start" data-in-node="how" data-padding="16">预算：场租＋物料；收费待定</text>
+  <text x="800" y="1178" font-size="31" fill="var(--vt-bg)" font-weight="600" text-anchor="middle" data-in-node="question" data-padding="16">旧书交换会</text>
+  <text x="800" y="1230" font-size="17" fill="var(--vt-bg)" font-weight="400" text-anchor="middle" data-in-node="question" data-padding="16">周末 · 线下 · 试办</text>
+  <path d="M660 2130H1510" stroke="var(--vt-muted)" stroke-opacity=".42" stroke-width="1" fill="none" data-decoration="guide" />
+  <text x="1510" y="2180" font-size="27" fill="var(--vt-ink)" font-weight="500" text-anchor="end">如果报名变成40人，哪些地方要一起改？</text>
+  <text x="1510" y="2224" font-size="20" fill="var(--vt-muted)" font-weight="400" text-anchor="end">沿六区重看：场地装得下吗？两位组织者够吗？分享还来得及吗？</text>
+  <text x="1510" y="2271" font-size="20" fill="var(--vt-muted)" font-weight="400" text-anchor="end">示范草案：人数、日期、场地与费用均为拟议条件。</text>
+  <text x="1510" y="2316" font-size="17" fill="var(--vt-muted)" font-weight="400" text-anchor="end">N04 · 5W1H｜中心与六区保持同一主题；连线不表示先后或因果。</text>
+</svg>

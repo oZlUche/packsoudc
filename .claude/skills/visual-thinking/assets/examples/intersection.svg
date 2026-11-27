@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="1160" viewBox="0 0 1100 1160" role="img" aria-labelledby="vt-title" aria-describedby="vt-desc"><title id="vt-title">AI 辅助创作 · 通用示例</title><desc id="vt-desc">三个条件相交，用交集定位分享案例，再把同一案例展开，检查材料是否真的同时满足条件。</desc><defs><marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L7 4L0 8" fill="none" stroke="#EEEEE8" /></marker><clipPath id="c1"><circle cx="418" cy="449" r="205" /></clipPath><clipPath id="c2"><circle cx="682" cy="449" r="205" /></clipPath><pattern id="h" width="9" height="9" patternUnits="userSpaceOnUse"><path d="M0 9L9 0" stroke="#EEEEE8" stroke-width="1" /></pattern></defs><rect width="1100" height="1160" fill="#191A18" />
+<g fill="#EEEEE8" font-family="PingFang SC,Noto Sans CJK SC,Source Han Sans SC,Microsoft YaHei,Helvetica Neue,sans-serif">
+<text x="64" y="92" font-size="28" fill="#A5A69F">AI 辅助创作 · 通用示例</text>
+<text x="60" y="169" font-size="59" font-weight="600">这场分享，什么值得你来讲？</text>
+<text x="64" y="213" font-size="22" fill="#A5A69F">先在交集里找切口，再用一个真实案例展开。</text>
+<g fill="none" stroke="#EEEEE8" stroke-width="1.7"><circle cx="418" cy="449" r="205" /><circle cx="682" cy="449" r="205" /><circle cx="550" cy="636" r="205" /></g>
+<g clip-path="url(#c1)"><g clip-path="url(#c2)"><circle cx="550" cy="636" r="205" fill="url(#h)" opacity=".55" /></g></g>
+<g font-size="30" font-weight="500" text-anchor="middle">
+<text x="356" y="397">我亲自做过</text><text x="356" y="438">什么？</text>
+<text x="746" y="397">听众正在为</text><text x="746" y="438">什么发愁？</text>
+<text x="550" y="694">AI 改变了</text><text x="550" y="735">哪一个环节？</text>
+</g>
+<g font-size="18" fill="#A5A69F" text-anchor="middle"><text x="550" y="777">做法、成本，还是判断？</text></g>
+<circle cx="550" cy="516" r="7" fill="#EEEEE8" />
+<path d="M558 516H928V568" fill="none" stroke="#EEEEE8" stroke-width="1.4" />
+<text x="928" y="600" text-anchor="middle" font-size="23">找一个同时</text><text x="928" y="632" text-anchor="middle" font-size="23">连接三者的案例</text>
+<path d="M550 846V909" stroke="#EEEEE8" stroke-width="1.6" marker-end="url(#a)" />
+<text x="64" y="899" font-size="18" fill="#A5A69F">把交集展开成故事</text>
+<path d="M116 976H978" stroke="#EEEEE8" fill="none" stroke-width="1.6" marker-end="url(#a)" />
+<g fill="#191A18" stroke="#EEEEE8" stroke-width="1.6"><circle cx="152" cy="976" r="8" /><circle cx="550" cy="976" r="8" /><circle cx="948" cy="976" r="8" /></g>
+<g font-size="27" text-anchor="middle" font-weight="500"><text x="152" y="947">原来怎样做</text><text x="550" y="947">我为什么改变</text><text x="948" y="947">后来发生什么</text></g>
+<g font-size="19" fill="#A5A69F" text-anchor="middle"><text x="152" y="1022">卡在哪里？</text><text x="550" y="1022">AI 做了什么，我决定了什么？</text><text x="948" y="1022">什么能被验证？</text></g>
+<path d="M64 1070H1036" stroke="#555750" />
+<text x="64" y="1111" font-size="21">最后留给听众：换成我的处境，哪一步值得试，哪一步不能照搬？</text>
+</g></svg>

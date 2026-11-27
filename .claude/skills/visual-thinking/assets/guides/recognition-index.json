@@ -1,0 +1,348 @@
+{
+  "version": 1,
+  "purpose": "按骨架编号查视觉辨认参考；不是生成模板或效果证据",
+  "items": [
+    {
+      "id": "01",
+      "family": "routes",
+      "guide_svg": "assets/guides/recognize-routes.svg",
+      "guide_png": "assets/guides/recognize-routes.png",
+      "skeleton": "assets/skeletons/01-居中分流—汇合.svg",
+      "nearest_distinction": "辨别：02拆层级；本图检查后汇回。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "02",
+      "family": "routes",
+      "guide_svg": "assets/guides/recognize-routes.svg",
+      "guide_png": "assets/guides/recognize-routes.png",
+      "skeleton": "assets/skeletons/02-层级拆解.svg",
+      "nearest_distinction": "辨别：分类、组成、汇报不要混用。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "03",
+      "family": "routes",
+      "guide_svg": "assets/guides/recognize-routes.svg",
+      "guide_png": "assets/guides/recognize-routes.png",
+      "skeleton": "assets/skeletons/03-横向主干与扇形分流.svg",
+      "nearest_distinction": "辨别：不是层级，也不按线粗猜流量。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "04",
+      "family": "routes",
+      "guide_svg": "assets/guides/recognize-routes.svg",
+      "guide_png": "assets/guides/recognize-routes.png",
+      "skeleton": "assets/skeletons/04-命题关系与跨分支连接.svg",
+      "nearest_distinction": "辨别：02只有层级；本图可跨分支。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "05",
+      "family": "comparison",
+      "guide_svg": "assets/guides/recognize-comparison.svg",
+      "guide_png": "assets/guides/recognize-comparison.png",
+      "skeleton": "assets/skeletons/05-共有与独有.svg",
+      "nearest_distinction": "辨别：08中央是标准，不是共同点。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "06",
+      "family": "comparison",
+      "guide_svg": "assets/guides/recognize-comparison.svg",
+      "guide_png": "assets/guides/recognize-comparison.png",
+      "skeleton": "assets/skeletons/06-交集与边界.svg",
+      "nearest_distinction": "辨别：05比较属性；本图判断归属。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "07",
+      "family": "comparison",
+      "guide_svg": "assets/guides/recognize-comparison.svg",
+      "guide_png": "assets/guides/recognize-comparison.png",
+      "skeleton": "assets/skeletons/07-四重交集与整体校核.svg",
+      "nearest_distinction": "辨别：34生成需求；本图检验方案。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "08",
+      "family": "comparison",
+      "guide_svg": "assets/guides/recognize-comparison.svg",
+      "guide_png": "assets/guides/recognize-comparison.png",
+      "skeleton": "assets/skeletons/08-共同标准比较图.svg",
+      "nearest_distinction": "辨别：05中央放共同点，本图放尺子。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "09",
+      "family": "comparison",
+      "guide_svg": "assets/guides/recognize-comparison.svg",
+      "guide_png": "assets/guides/recognize-comparison.png",
+      "skeleton": "assets/skeletons/09-关系类比.svg",
+      "nearest_distinction": "辨别：08比较表现；本图迁移关系。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "10",
+      "family": "learning",
+      "guide_svg": "assets/guides/recognize-learning.svg",
+      "guide_png": "assets/guides/recognize-learning.png",
+      "skeleton": "assets/skeletons/10-四区概念界定.svg",
+      "nearest_distinction": "辨别：11重点解释每个实例的理由。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "11",
+      "family": "learning",
+      "guide_svg": "assets/guides/recognize-learning.svg",
+      "guide_png": "assets/guides/recognize-learning.png",
+      "skeleton": "assets/skeletons/11-概念定义图.svg",
+      "nearest_distinction": "辨别：每个实例还要接归类理由框。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "12",
+      "family": "learning",
+      "guide_svg": "assets/guides/recognize-learning.svg",
+      "guide_png": "assets/guides/recognize-learning.png",
+      "skeleton": "assets/skeletons/12-大问题地图5W1H.svg",
+      "nearest_distinction": "辨别：六问不是步骤、原因或答案。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "13",
+      "family": "learning",
+      "guide_svg": "assets/guides/recognize-learning.svg",
+      "guide_png": "assets/guides/recognize-learning.png",
+      "skeleton": "assets/skeletons/13-四栏学习框架.svg",
+      "nearest_distinction": "辨别：14检查研究依据；本图回看学习。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "14",
+      "family": "learning",
+      "guide_svg": "assets/guides/recognize-learning.svg",
+      "guide_png": "assets/guides/recognize-learning.png",
+      "skeleton": "assets/skeletons/14-研究V图.svg",
+      "nearest_distinction": "辨别：V不是漏斗，计划不是结果。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "15",
+      "family": "learning",
+      "guide_svg": "assets/guides/recognize-learning.svg",
+      "guide_png": "assets/guides/recognize-learning.png",
+      "skeleton": "assets/skeletons/15-主张—依据—例外.svg",
+      "nearest_distinction": "辨别：证据支持不是原因导致。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "16",
+      "family": "causes",
+      "guide_svg": "assets/guides/recognize-causes.svg",
+      "guide_png": "assets/guides/recognize-causes.png",
+      "skeleton": "assets/skeletons/16-原因主干.svg",
+      "nearest_distinction": "辨别：分支是候选，不是已证实根因。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "17",
+      "family": "causes",
+      "guide_svg": "assets/guides/recognize-causes.svg",
+      "guide_png": "assets/guides/recognize-causes.png",
+      "skeleton": "assets/skeletons/17-原因—事件—后果.svg",
+      "nearest_distinction": "辨别：先后发生不能直接画成因果。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "18",
+      "family": "causes",
+      "guide_svg": "assets/guides/recognize-causes.svg",
+      "guide_png": "assets/guides/recognize-causes.png",
+      "skeleton": "assets/skeletons/18-逆向追溯.svg",
+      "nearest_distinction": "辨别：倒查方向不同于实际发生方向。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "19",
+      "family": "causes",
+      "guide_svg": "assets/guides/recognize-causes.svg",
+      "guide_png": "assets/guides/recognize-causes.png",
+      "skeleton": "assets/skeletons/19-分层屏障与失效路径.svg",
+      "nearest_distinction": "辨别：21表示包含；本图检查失效。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "21",
+      "family": "scope",
+      "guide_svg": "assets/guides/recognize-scope.svg",
+      "guide_png": "assets/guides/recognize-scope.png",
+      "skeleton": "assets/skeletons/21-嵌套范围.svg",
+      "nearest_distinction": "辨别：22查漏角色，不比较真假等级。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "22",
+      "family": "scope",
+      "guide_svg": "assets/guides/recognize-scope.svg",
+      "guide_png": "assets/guides/recognize-scope.png",
+      "skeleton": "assets/skeletons/22-参与范围洋葱.svg",
+      "nearest_distinction": "辨别：靠近中心不代表更重要。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "23",
+      "family": "scope",
+      "guide_svg": "assets/guides/recognize-scope.svg",
+      "guide_png": "assets/guides/recognize-scope.png",
+      "skeleton": "assets/skeletons/23-生态情境与联系.svg",
+      "nearest_distinction": "辨别：家与学校不能画成彼此包含。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "24",
+      "family": "scope",
+      "guide_svg": "assets/guides/recognize-scope.svg",
+      "guide_png": "assets/guides/recognize-scope.png",
+      "skeleton": "assets/skeletons/24-扩大观察尺度.svg",
+      "nearest_distinction": "辨别：21比较集合；本图改变观察范围。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "25",
+      "family": "decisions",
+      "guide_svg": "assets/guides/recognize-decisions.svg",
+      "guide_png": "assets/guides/recognize-decisions.png",
+      "skeleton": "assets/skeletons/25-过去投入与未来分岔.svg",
+      "nearest_distinction": "辨别：28看新增一份；本图比未来路径。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "26",
+      "family": "decisions",
+      "guide_svg": "assets/guides/recognize-decisions.svg",
+      "guide_png": "assets/guides/recognize-decisions.png",
+      "skeleton": "assets/skeletons/26-双维定位.svg",
+      "nearest_distinction": "辨别：27看整批分布；本图看成对位置。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "27",
+      "family": "decisions",
+      "guide_svg": "assets/guides/recognize-decisions.svg",
+      "guide_png": "assets/guides/recognize-decisions.png",
+      "skeleton": "assets/skeletons/27-结果分布与尾部.svg",
+      "nearest_distinction": "辨别：频数、密度、累计比例要分开。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "28",
+      "family": "decisions",
+      "guide_svg": "assets/guides/recognize-decisions.svg",
+      "guide_png": "assets/guides/recognize-decisions.png",
+      "skeleton": "assets/skeletons/28-新增与边际变化.svg",
+      "nearest_distinction": "辨别：不是总投入，也非必然递减。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "29",
+      "family": "decisions",
+      "guide_svg": "assets/guides/recognize-decisions.svg",
+      "guide_png": "assets/guides/recognize-decisions.png",
+      "skeleton": "assets/skeletons/29-指标与真实目标.svg",
+      "nearest_distinction": "辨别：指标变化本身不证明目标变化。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "30",
+      "family": "decisions",
+      "guide_svg": "assets/guides/recognize-decisions.svg",
+      "guide_png": "assets/guides/recognize-decisions.png",
+      "skeleton": "assets/skeletons/30-80-20模型.svg",
+      "nearest_distinction": "辨别：项目数与贡献量是不同分母。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "31",
+      "family": "decisions",
+      "guide_svg": "assets/guides/recognize-decisions.svg",
+      "guide_png": "assets/guides/recognize-decisions.png",
+      "skeleton": "assets/skeletons/31-数量构成与因素联动.svg",
+      "nearest_distinction": "辨别：数量恒等式不是因果证据。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "32",
+      "family": "situations",
+      "guide_svg": "assets/guides/recognize-situations.svg",
+      "guide_png": "assets/guides/recognize-situations.png",
+      "skeleton": "assets/skeletons/32-分层螺旋与版本迭代.svg",
+      "nearest_distinction": "辨别：重复不天然进步，环径不是质量。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "33",
+      "family": "situations",
+      "guide_svg": "assets/guides/recognize-situations.svg",
+      "guide_png": "assets/guides/recognize-situations.png",
+      "skeleton": "assets/skeletons/33-情境人物与事件变化.svg",
+      "nearest_distinction": "辨别：38补事件全貌；本图追人物变化。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "34",
+      "family": "situations",
+      "guide_svg": "assets/guides/recognize-situations.svg",
+      "guide_png": "assets/guides/recognize-situations.png",
+      "skeleton": "assets/skeletons/34-共同场景与多重生活关系.svg",
+      "nearest_distinction": "辨别：07校核方案；本图发现需求。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "35",
+      "family": "situations",
+      "guide_svg": "assets/guides/recognize-situations.svg",
+      "guide_png": "assets/guides/recognize-situations.png",
+      "skeleton": "assets/skeletons/35-顺序与平行时间线.svg",
+      "nearest_distinction": "辨别：对齐不是因果，间距需要尺度。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "36",
+      "family": "situations",
+      "guide_svg": "assets/guides/recognize-situations.svg",
+      "guide_png": "assets/guides/recognize-situations.png",
+      "skeleton": "assets/skeletons/36-重复循环.svg",
+      "nearest_distinction": "辨别：版本螺旋留变化；本图看再出现。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "37",
+      "family": "icebergs",
+      "guide_svg": "assets/guides/recognize-icebergs.svg",
+      "guide_png": "assets/guides/recognize-icebergs.png",
+      "skeleton": "assets/skeletons/37-冰山模型.svg",
+      "nearest_distinction": "辨别：不是人格测量或更深的真相。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "38",
+      "family": "icebergs",
+      "guide_svg": "assets/guides/recognize-icebergs.svg",
+      "guide_png": "assets/guides/recognize-icebergs.png",
+      "skeleton": "assets/skeletons/38-信息冰山.svg",
+      "nearest_distinction": "辨别：37探索表现；本图查证事件信息。",
+      "scope": "original-skeleton-recognition"
+    },
+    {
+      "id": "40",
+      "family": "time-trends",
+      "guide_svg": "assets/guides/recognize-time-trends.svg",
+      "guide_png": "assets/guides/recognize-time-trends.png",
+      "skeleton": "assets/skeletons/40-同轴趋势对照.svg",
+      "nearest_distinction": "35对齐先后与持续，26定位双维；40显示同一指标随时间变化。",
+      "scope": "original-skeleton-recognition"
+    }
+  ]
+}

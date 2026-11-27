@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="2800" viewBox="0 0 1900 2800" role="img" aria-labelledby="title" aria-describedby="desc">
+<title id="title">概念定义图：这个词究竟指什么？</title>
+<desc id="desc">概念定义图的自主排版：中央大方框代表同一个概念，向上连接定义，向右展开三个属性位置，向下连接三个作为实例对象的圆。每个实例圆各自接一个归类理由方框，说明它如何依据定义及可核对的特征归类。关系保持为同一概念的定义、属性、实例与归类依据，不表示因果或固定操作顺序。可用一个不确定的例子回查定义与属性；区域数量可随内容改变。按用户提供的教学图示关系绘制，没有复制书页图像、字体或阴影资产。</desc>
+<style data-vt-theme="">:root{--vt-bg:#191A18;--vt-ink:#EFEEE7;--vt-muted:#B0B2A8;--vt-accent:#EFEEE7;--vt-surface:#272925;--vt-secondary:#383B34;--vt-line:1.8;--vt-title:54px;--vt-section:32px;--vt-label:23px;--vt-note:19px;}text{font-family:"PingFang SC","Noto Sans CJK SC","Source Han Sans SC","Microsoft YaHei","Helvetica Neue",sans-serif}</style>
+<rect width="1900" height="2800" fill="var(--vt-bg)" data-decoration="background"/>
+<text x="90" y="122" font-size="54" fill="var(--vt-ink)" text-anchor="start" font-weight="600">概念定义图：这个词究竟指什么？</text>
+<text x="90" y="184" font-size="30" fill="var(--vt-muted)" text-anchor="start" font-weight="400">Concept Definition Map</text>
+<path d="M90 228H1200" fill="none" stroke="var(--vt-muted)" stroke-opacity=".42" stroke-width="1" data-decoration="guide"/>
+<rect id="definition" data-node="" data-vt-geometry="definition" x="240" y="620" width="600" height="180" fill="var(--vt-bg)" stroke="var(--vt-muted)" stroke-width="1.4"/>
+<rect id="concept" data-node="" data-vt-geometry="concept" x="240" y="980" width="600" height="240" fill="var(--vt-ink)" stroke="var(--vt-ink)" stroke-width="1.4"/>
+<rect id="property-1" data-node="" data-vt-geometry="property" x="1250" y="660" width="440" height="180" fill="var(--vt-bg)" stroke="var(--vt-muted)" stroke-width="1.4"/>
+<rect id="property-2" data-node="" data-vt-geometry="property" x="1250" y="1010" width="440" height="180" fill="var(--vt-bg)" stroke="var(--vt-muted)" stroke-width="1.4"/>
+<rect id="property-3" data-node="" data-vt-geometry="property" x="1250" y="1360" width="440" height="180" fill="var(--vt-bg)" stroke="var(--vt-muted)" stroke-width="1.4"/>
+<circle id="example-1" data-node="" data-vt-geometry="instance" cx="330" cy="1830" r="110" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="1.8"/>
+<rect id="reason-1" data-node="" data-vt-geometry="membership-reason" x="110" y="2020" width="440" height="180" fill="var(--vt-bg)" stroke="var(--vt-muted)" stroke-width="1.4"/>
+<circle id="example-2" data-node="" data-vt-geometry="instance" cx="950" cy="1830" r="110" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="1.8"/>
+<rect id="reason-2" data-node="" data-vt-geometry="membership-reason" x="730" y="2020" width="440" height="180" fill="var(--vt-bg)" stroke="var(--vt-muted)" stroke-width="1.4"/>
+<circle id="example-3" data-node="" data-vt-geometry="instance" cx="1570" cy="1830" r="110" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="1.8"/>
+<rect id="reason-3" data-node="" data-vt-geometry="membership-reason" x="1350" y="2020" width="440" height="180" fill="var(--vt-bg)" stroke="var(--vt-muted)" stroke-width="1.4"/>
+<circle id="property-junction" data-node="" data-vt-geometry="junction" cx="1050" cy="1100" r="3" fill="var(--vt-ink)" stroke="var(--vt-ink)" stroke-width="0"/>
+<circle id="example-root" data-node="" data-vt-geometry="junction" cx="540" cy="1610" r="3" fill="var(--vt-ink)" stroke="var(--vt-ink)" stroke-width="0"/>
+<circle id="example-middle" data-node="" data-vt-geometry="junction" cx="950" cy="1610" r="3" fill="var(--vt-ink)" stroke="var(--vt-ink)" stroke-width="0"/>
+<path id="to-definition" data-edge="" data-from="concept" data-to="definition" d="M540 980V800" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+<path id="to-property-branch" data-edge="" data-from="concept" data-to="property-junction" d="M840 1100H1050" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+<path id="to-property-1" data-edge="" data-from="property-junction" data-to="property-1" d="M1050 1100V762A12 12 0 0 1 1062 750H1250" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+<path id="to-property-2" data-edge="" data-from="property-junction" data-to="property-2" d="M1050 1100H1250" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+<path id="to-property-3" data-edge="" data-from="property-junction" data-to="property-3" d="M1050 1100V1438A12 12 0 0 0 1062 1450H1250" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+<path id="to-examples" data-edge="" data-from="concept" data-to="example-root" d="M540 1220V1610" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+<path id="to-example-1" data-edge="" data-from="example-root" data-to="example-1" d="M540 1610H342A12 12 0 0 0 330 1622V1720" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+<path id="example-spine" data-edge="" data-from="example-root" data-to="example-middle" d="M540 1610H950" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+<path id="to-example-2" data-edge="" data-from="example-middle" data-to="example-2" d="M950 1610V1720" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+<path id="to-example-3" data-edge="" data-from="example-middle" data-to="example-3" d="M950 1610H1558A12 12 0 0 1 1570 1622V1720" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+<path id="to-reason-1" data-edge="" data-from="example-1" data-to="reason-1" d="M330 1940V2020" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+<path id="to-reason-2" data-edge="" data-from="example-2" data-to="reason-2" d="M950 1940V2020" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+<path id="to-reason-3" data-edge="" data-from="example-3" data-to="reason-3" d="M1570 1940V2020" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+<text x="272" y="683" font-size="34" fill="var(--vt-ink)" text-anchor="start" font-weight="500" data-in-node="definition" data-padding="16">定义</text>
+<text x="808" y="679" font-size="19" fill="var(--vt-muted)" text-anchor="end" font-weight="400" data-in-node="definition" data-padding="16">DEFINITION</text>
+<text x="272" y="747" font-size="23" fill="var(--vt-muted)" text-anchor="start" font-weight="400" data-in-node="definition" data-padding="16">它是什么？属于哪一类事物？</text>
+<text x="575" y="904" font-size="22" fill="var(--vt-muted)" text-anchor="start" font-weight="400">它是什么</text>
+<text x="272" y="1045" font-size="36" fill="var(--vt-bg)" text-anchor="start" font-weight="600" data-in-node="concept" data-padding="16">概念</text>
+<text x="808" y="1041" font-size="20" fill="var(--vt-bg)" text-anchor="end" font-weight="400" data-in-node="concept" data-padding="16">CONCEPT</text>
+<text x="540" y="1134" font-size="31" fill="var(--vt-bg)" text-anchor="middle" font-weight="500" data-in-node="concept" data-padding="16">放入要弄懂的概念</text>
+<text x="540" y="1182" font-size="20" fill="var(--vt-bg)" text-anchor="middle" font-weight="400" data-in-node="concept" data-padding="16">围绕同一个概念展开</text>
+<text x="916" y="1066" font-size="22" fill="var(--vt-muted)" text-anchor="middle" font-weight="400">有何属性</text>
+<text x="1282" y="723" font-size="32" fill="var(--vt-ink)" text-anchor="start" font-weight="500" data-in-node="property-1" data-padding="16">属性 1</text>
+<text x="1658" y="719" font-size="18" fill="var(--vt-muted)" text-anchor="end" font-weight="400" data-in-node="property-1" data-padding="16">PROPERTY</text>
+<text x="1282" y="786" font-size="22" fill="var(--vt-muted)" text-anchor="start" font-weight="400" data-in-node="property-1" data-padding="16">写出一个关键特征。</text>
+<text x="1282" y="1073" font-size="32" fill="var(--vt-ink)" text-anchor="start" font-weight="500" data-in-node="property-2" data-padding="16">属性 2</text>
+<text x="1658" y="1069" font-size="18" fill="var(--vt-muted)" text-anchor="end" font-weight="400" data-in-node="property-2" data-padding="16">PROPERTY</text>
+<text x="1282" y="1136" font-size="22" fill="var(--vt-muted)" text-anchor="start" font-weight="400" data-in-node="property-2" data-padding="16">补充另一项相关特征。</text>
+<text x="1282" y="1423" font-size="32" fill="var(--vt-ink)" text-anchor="start" font-weight="500" data-in-node="property-3" data-padding="16">属性 3</text>
+<text x="1658" y="1419" font-size="18" fill="var(--vt-muted)" text-anchor="end" font-weight="400" data-in-node="property-3" data-padding="16">PROPERTY</text>
+<text x="1282" y="1486" font-size="22" fill="var(--vt-muted)" text-anchor="start" font-weight="400" data-in-node="property-3" data-padding="16">还有什么特征帮助理解它？</text>
+<text x="575" y="1536" font-size="23" fill="var(--vt-muted)" text-anchor="start" font-weight="400">有哪些具体例子</text>
+<text x="330" y="1824" font-size="30" fill="var(--vt-ink)" text-anchor="middle" font-weight="500" data-in-node="example-1" data-padding="16">例子 1</text>
+<text x="330" y="1871" font-size="18" fill="var(--vt-muted)" text-anchor="middle" font-weight="400" data-in-node="example-1" data-padding="16">放入一个具体对象</text>
+<text x="330" y="2081" font-size="28" fill="var(--vt-ink)" text-anchor="middle" font-weight="500" data-in-node="reason-1" data-padding="16">为什么属于它？</text>
+<text x="330" y="2130" font-size="22" fill="var(--vt-muted)" text-anchor="middle" font-weight="400" data-in-node="reason-1" data-padding="16">对照定义，哪些特征支持归类？</text>
+<path d="M150 2167H510" fill="none" stroke="var(--vt-muted)" stroke-opacity=".42" stroke-width="1" data-decoration="content-space"/>
+<text x="950" y="1824" font-size="30" fill="var(--vt-ink)" text-anchor="middle" font-weight="500" data-in-node="example-2" data-padding="16">例子 2</text>
+<text x="950" y="1871" font-size="18" fill="var(--vt-muted)" text-anchor="middle" font-weight="400" data-in-node="example-2" data-padding="16">放入一个具体对象</text>
+<text x="950" y="2081" font-size="28" fill="var(--vt-ink)" text-anchor="middle" font-weight="500" data-in-node="reason-2" data-padding="16">为什么属于它？</text>
+<text x="950" y="2130" font-size="22" fill="var(--vt-muted)" text-anchor="middle" font-weight="400" data-in-node="reason-2" data-padding="16">对照定义，哪些特征支持归类？</text>
+<path d="M770 2167H1130" fill="none" stroke="var(--vt-muted)" stroke-opacity=".42" stroke-width="1" data-decoration="content-space"/>
+<text x="1570" y="1824" font-size="30" fill="var(--vt-ink)" text-anchor="middle" font-weight="500" data-in-node="example-3" data-padding="16">例子 3</text>
+<text x="1570" y="1871" font-size="18" fill="var(--vt-muted)" text-anchor="middle" font-weight="400" data-in-node="example-3" data-padding="16">放入一个具体对象</text>
+<text x="1570" y="2081" font-size="28" fill="var(--vt-ink)" text-anchor="middle" font-weight="500" data-in-node="reason-3" data-padding="16">为什么属于它？</text>
+<text x="1570" y="2130" font-size="22" fill="var(--vt-muted)" text-anchor="middle" font-weight="400" data-in-node="reason-3" data-padding="16">对照定义，哪些特征支持归类？</text>
+<path d="M1390 2167H1750" fill="none" stroke="var(--vt-muted)" stroke-opacity=".42" stroke-width="1" data-decoration="content-space"/>
+<path d="M760 2520H1810" fill="none" stroke="var(--vt-muted)" stroke-opacity=".42" stroke-width="1" data-decoration="guide"/>
+<text x="1810" y="2574" font-size="30" fill="var(--vt-ink)" text-anchor="end" font-weight="500">不只举出例子，还要说清归类的理由。</text>
+<text x="1810" y="2626" font-size="23" fill="var(--vt-muted)" text-anchor="end" font-weight="400">如果某个例子对不上，回看定义、属性或归类依据。</text>
+<text x="1810" y="2681" font-size="20" fill="var(--vt-muted)" text-anchor="end" font-weight="400">定义、属性与例子数量可按内容调整；连线不表示因果或固定顺序。</text>
+<text x="1810" y="2740" font-size="17" fill="var(--vt-muted)" text-anchor="end" font-weight="400">按所提供 Concept Definition Map 的关系自主编排与绘制。</text>
+</svg>

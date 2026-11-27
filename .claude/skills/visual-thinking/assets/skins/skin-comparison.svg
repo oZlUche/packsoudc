@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="1730" viewBox="0 0 720 1730" role="img" aria-labelledby="vt-title" aria-describedby="vt-desc"><title id="vt-title">同一交集的三个主题</title><desc id="vt-desc">三个上下排列的同构图保持两个条件及其交集不变，只改变背景、色面与线宽。</desc><g font-family="PingFang SC,Noto Sans CJK SC,Source Han Sans SC,Microsoft YaHei,Helvetica Neue,sans-serif"><g transform="translate(0 0)" style="--vt-bg:#191A18;--vt-ink:#EFEEE7;--vt-muted:#B0B2A8;--vt-accent:#EFEEE7;--vt-surface:#272925;--vt-secondary:#383B34;--vt-line:1.8;--vt-title:46px;--vt-section:32px;--vt-label:28px;--vt-note:22px"><rect data-decoration="background" width="720" height="570" fill="var(--vt-bg)"/>
+ <text x="42" y="65" font-size="var(--vt-section)" font-weight="600" fill="var(--vt-ink)">黑白几何</text>
+ <text x="42" y="107" font-size="var(--vt-note)" data-text-role="note" fill="var(--vt-muted)">同一组条件 · 相同位置与关系</text>
+ <circle id="0-a" data-node="" cx="265" cy="310" r="149" fill="var(--vt-surface)" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+ <circle id="0-b" data-node="" cx="455" cy="310" r="149" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+ <clipPath id="0-clip"><circle cx="265" cy="310" r="149"/></clipPath>
+ <circle data-decoration="intersection-fill" cx="455" cy="310" r="149" clip-path="url(#0-clip)" fill="var(--vt-secondary)" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+ <circle data-decoration="boundary" cx="265" cy="310" r="149" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+ <g fill="var(--vt-ink)" text-anchor="middle" font-size="var(--vt-label)">
+ <text x="220" y="319">条件 A</text><text x="500" y="319">条件 B</text><text x="360" y="319">都满足</text></g>
+ <text x="42" y="517" font-size="var(--vt-label)" fill="var(--vt-ink)">放入一个例子，它会落在哪里？</text>
+ <text x="42" y="552" font-size="var(--vt-note)" data-text-role="note" fill="var(--vt-muted)">位置表示归属，面积不表示数量。</text></g><g transform="translate(0 580)" style="--vt-bg:#EAF4F4;--vt-ink:#102436;--vt-muted:#496170;--vt-accent:#2FA7C7;--vt-surface:#BDE4DB;--vt-secondary:#F1C4AD;--vt-line:2.8;--vt-title:46px;--vt-section:32px;--vt-label:28px;--vt-note:22px"><rect data-decoration="background" width="720" height="570" fill="var(--vt-bg)"/>
+ <text x="42" y="65" font-size="var(--vt-section)" font-weight="600" fill="var(--vt-ink)">彩色积木</text>
+ <text x="42" y="107" font-size="var(--vt-note)" data-text-role="note" fill="var(--vt-muted)">同一组条件 · 相同位置与关系</text>
+ <circle id="1-a" data-node="" cx="265" cy="310" r="149" fill="var(--vt-surface)" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+ <circle id="1-b" data-node="" cx="455" cy="310" r="149" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+ <clipPath id="1-clip"><circle cx="265" cy="310" r="149"/></clipPath>
+ <circle data-decoration="intersection-fill" cx="455" cy="310" r="149" clip-path="url(#1-clip)" fill="var(--vt-secondary)" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+ <circle data-decoration="boundary" cx="265" cy="310" r="149" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+ <g fill="var(--vt-ink)" text-anchor="middle" font-size="var(--vt-label)">
+ <text x="220" y="319">条件 A</text><text x="500" y="319">条件 B</text><text x="360" y="319">都满足</text></g>
+ <text x="42" y="517" font-size="var(--vt-label)" fill="var(--vt-ink)">放入一个例子，它会落在哪里？</text>
+ <text x="42" y="552" font-size="var(--vt-note)" data-text-role="note" fill="var(--vt-muted)">位置表示归属，面积不表示数量。</text></g><g transform="translate(0 1160)" style="--vt-bg:#F5F0D8;--vt-ink:#25211D;--vt-muted:#61584C;--vt-accent:#E756BD;--vt-surface:#F3E768;--vt-secondary:#B6CBF3;--vt-line:3;--vt-title:46px;--vt-section:32px;--vt-label:28px;--vt-note:22px"><rect data-decoration="background" width="720" height="570" fill="var(--vt-bg)"/>
+ <text x="42" y="65" font-size="var(--vt-section)" font-weight="600" fill="var(--vt-ink)">贴纸学习板</text>
+ <text x="42" y="107" font-size="var(--vt-note)" data-text-role="note" fill="var(--vt-muted)">同一组条件 · 相同位置与关系</text>
+ <circle id="2-a" data-node="" cx="265" cy="310" r="149" fill="var(--vt-surface)" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+ <circle id="2-b" data-node="" cx="455" cy="310" r="149" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+ <clipPath id="2-clip"><circle cx="265" cy="310" r="149"/></clipPath>
+ <circle data-decoration="intersection-fill" cx="455" cy="310" r="149" clip-path="url(#2-clip)" fill="var(--vt-secondary)" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+ <circle data-decoration="boundary" cx="265" cy="310" r="149" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+ <g fill="var(--vt-ink)" text-anchor="middle" font-size="var(--vt-label)">
+ <text x="220" y="319">条件 A</text><text x="500" y="319">条件 B</text><text x="360" y="319">都满足</text></g>
+ <text x="42" y="517" font-size="var(--vt-label)" fill="var(--vt-ink)">放入一个例子，它会落在哪里？</text>
+ <text x="42" y="552" font-size="var(--vt-note)" data-text-role="note" fill="var(--vt-muted)">位置表示归属，面积不表示数量。</text></g></g></svg>

@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="2900" viewBox="0 0 2400 2900" role="img" aria-labelledby="title" aria-describedby="desc">
+<title id="title">办读书会，除了参加的人还该问谁？</title>
+<desc id="desc">利益相关者洋葱思想的自主活动应用。四个同心边界依次纳入拟议活动、直接运行角色、受益支持角色和更广的受影响角色；环带中的点表示拟议角色，不是真实人数。主持、志愿者、参加者、场地方、邻近住户和规则管理者的诉求需要实际核实。圆距不代表重要性，中心是活动而不是最重要的人。</desc>
+<style data-vt-theme="">:root{--vt-bg:#191A18;--vt-ink:#EFEEE7;--vt-muted:#B0B2A8;--vt-accent:#EFEEE7;--vt-surface:#272925;--vt-secondary:#383B34;--vt-line:1.8;}text{font-family:"PingFang SC","Noto Sans CJK SC","Source Han Sans SC","Microsoft YaHei","Helvetica Neue",sans-serif}</style>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="11" markerHeight="11" orient="auto" markerUnits="userSpaceOnUse"><path d="M2 2L10 6L2 10" fill="none" stroke="var(--vt-ink)" stroke-width="1.5"/></marker></defs>
+<rect width="2400" height="2900" fill="var(--vt-bg)" data-decoration="background"/>
+<text x="120" y="160" font-size="76" font-weight="600" fill="var(--vt-ink)" text-anchor="start">办读书会，除了参加的人还该问谁？</text>
+<text x="120" y="239" font-size="40" font-weight="400" fill="var(--vt-muted)" text-anchor="start">Who else should a book club listen to?</text>
+<path data-decoration="annotation" d="M120 288H1950" fill="none" stroke="var(--vt-muted)" stroke-width="1.5"/>
+<text x="120" y="347" font-size="30" font-weight="400" fill="var(--vt-muted)" text-anchor="start">拟议场景：社区读书会。圈层用于查漏角色，诉求仍需实际核实。</text>
+<circle data-decoration="semantic-boundary" cx="1120" cy="1390" r="760" fill="none" stroke="var(--vt-ink)" stroke-width="2.6"/>
+<circle data-decoration="semantic-boundary" cx="1120" cy="1390" r="540" fill="none" stroke="var(--vt-ink)" stroke-width="1.9"/>
+<circle data-decoration="semantic-boundary" cx="1120" cy="1390" r="340" fill="none" stroke="var(--vt-ink)" stroke-width="1.9"/>
+<circle id="event" data-node="" cx="1120" cy="1390" r="160" fill="none" stroke="var(--vt-ink)" stroke-width="2.2"/>
+<text x="1120" y="732" font-size="41" font-weight="500" fill="var(--vt-ink)" text-anchor="middle">更广的影响范围</text>
+<text x="1120" y="960" font-size="37" font-weight="500" fill="var(--vt-ink)" text-anchor="middle">受益与支持范围</text>
+<text x="1120" y="1165" font-size="34" font-weight="500" fill="var(--vt-ink)" text-anchor="middle">直接运行范围</text>
+<text x="1120" y="1375" font-size="48" font-weight="500" fill="var(--vt-ink)" text-anchor="middle" data-in-node="event" data-padding="12">读书会</text>
+<text x="1120" y="1435" font-size="26" font-weight="400" fill="var(--vt-muted)" text-anchor="middle" data-in-node="event" data-padding="12">人数／时段／音量</text>
+<circle id="host" data-node="" cx="900" cy="1390" r="9" fill="var(--vt-ink)" stroke="var(--vt-ink)" stroke-width="1.9"/>
+<text x="900" y="1338" font-size="29" font-weight="400" fill="var(--vt-ink)" text-anchor="middle">主持人</text>
+<circle id="volunteer" data-node="" cx="1120" cy="1620" r="9" fill="var(--vt-ink)" stroke="var(--vt-ink)" stroke-width="1.9"/>
+<text x="1120" y="1680" font-size="28" font-weight="400" fill="var(--vt-ink)" text-anchor="middle">志愿者</text>
+<circle id="reader" data-node="" cx="1540" cy="1390" r="9" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="1.9"/>
+<path data-decoration="annotation" d="M1555 1390H1920" fill="none" stroke="var(--vt-muted)" stroke-width="1.5"/>
+<text x="1960" y="1350" font-size="33" font-weight="500" fill="var(--vt-ink)" text-anchor="start">参加者</text>
+<text x="1960" y="1447" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="start">听得清？能参与？</text>
+<circle id="venue" data-node="" cx="850" cy="1730" r="9" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="1.9"/>
+<path data-decoration="annotation" d="M835 1730H425" fill="none" stroke="var(--vt-muted)" stroke-width="1.5"/>
+<text x="120" y="1690" font-size="33" font-weight="500" fill="var(--vt-ink)" text-anchor="start">场地方</text>
+<text x="120" y="1784" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="start">谁负责开放、清场？</text>
+<circle id="neighbour" data-node="" cx="1740" cy="1740" r="9" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="1.9"/>
+<path data-decoration="annotation" d="M1755 1740H1920" fill="none" stroke="var(--vt-muted)" stroke-width="1.5"/>
+<text x="1960" y="1700" font-size="33" font-weight="500" fill="var(--vt-ink)" text-anchor="start">邻近住户</text>
+<text x="1960" y="1795" font-size="27" font-weight="400" fill="var(--vt-muted)" text-anchor="start">未参加，也可能受影响。</text>
+<text x="1960" y="1842" font-size="26" font-weight="400" fill="var(--vt-muted)" text-anchor="start">谁来表达通行或噪声诉求？</text>
+<circle id="rules" data-node="" cx="690" cy="1040" r="9" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="1.9"/>
+<path data-decoration="annotation" d="M675 1040H425" fill="none" stroke="var(--vt-muted)" stroke-width="1.5"/>
+<text x="120" y="1000" font-size="33" font-weight="500" fill="var(--vt-ink)" text-anchor="start">规则管理者</text>
+<text x="120" y="1090" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="start">场地规则有哪些？</text>
+<text x="1120" y="1987" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">中心是活动；靠近中心不等于更重要。</text>
+<text x="1120" y="2040" font-size="26" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">同一人也可能同时承担多个角色。</text>
+<path data-decoration="annotation" d="M120 2470H2280" fill="none" stroke="var(--vt-muted)" stroke-width="1.5"/>
+<text x="2280" y="2550" font-size="42" font-weight="500" fill="var(--vt-ink)" text-anchor="end">补进一个没被问过的人，方案哪一处要跟着变？</text>
+<text x="2280" y="2615" font-size="29" font-weight="400" fill="var(--vt-muted)" text-anchor="end">把“我替他设想的需求”与“他实际表达的诉求”分开。</text>
+<text x="120" y="2710" font-size="25" font-weight="400" fill="var(--vt-muted)" text-anchor="start">[2] Alexander (2004). A Better Fit—Characterising the Stakeholders. REBPS / CAISE.</text>
+<text x="120" y="2754" font-size="24" font-weight="400" fill="var(--vt-muted)" text-anchor="start">scenarioplus.org.uk/papers/stakeholders/a_better_fit.htm</text>
+<text x="120" y="2820" font-size="24" font-weight="400" fill="var(--vt-muted)" text-anchor="start">本图为活动情境的自主改编，非原文图或已完成调研；圆的大小、角色点数不表示人数、权力或影响程度。</text>
+</svg>

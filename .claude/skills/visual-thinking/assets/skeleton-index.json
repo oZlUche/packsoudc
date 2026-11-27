@@ -1,0 +1,614 @@
+{
+  "version": 2,
+  "numbering": "stable ids; 38 public entries; names and actual assets are authoritative",
+  "items": [
+    {
+      "id": "01",
+      "slug": "居中分流—汇合",
+      "title": "居中分流—汇合",
+      "source_asset": "assets/skeletons/01-居中分流—汇合.svg",
+      "family": "routes",
+      "group": "分支与组织",
+      "kind": "retained",
+      "status": "通用骨架",
+      "crop": [
+        5,
+        40,
+        490,
+        385
+      ]
+    },
+    {
+      "id": "02",
+      "slug": "层级拆解",
+      "title": "层级拆解",
+      "source_asset": "assets/skeletons/02-层级拆解.svg",
+      "family": "routes",
+      "group": "分支与组织",
+      "kind": "retained",
+      "status": "通用骨架",
+      "crop": [
+        5,
+        40,
+        490,
+        385
+      ]
+    },
+    {
+      "id": "03",
+      "slug": "横向主干与扇形分流",
+      "title": "横向主干与扇形分流",
+      "source_asset": "assets/skeletons/03-横向主干与扇形分流.svg",
+      "family": "routes",
+      "group": "分支与组织",
+      "kind": "original",
+      "status": "通用骨架",
+      "crop": [
+        70,
+        380,
+        2370,
+        1290
+      ]
+    },
+    {
+      "id": "04",
+      "slug": "命题关系与跨分支连接",
+      "title": "命题关系与跨分支连接",
+      "source_asset": "assets/skeletons/04-命题关系与跨分支连接.svg",
+      "family": "routes",
+      "group": "分支与组织",
+      "kind": "organizer",
+      "status": "通用骨架",
+      "crop": [
+        100,
+        440,
+        1200,
+        840
+      ]
+    },
+    {
+      "id": "05",
+      "slug": "共有与独有",
+      "title": "共有与独有",
+      "source_asset": "assets/skeletons/05-共有与独有.svg",
+      "family": "comparison",
+      "group": "比较与共同条件",
+      "kind": "retained",
+      "status": "通用骨架",
+      "crop": [
+        5,
+        40,
+        490,
+        385
+      ]
+    },
+    {
+      "id": "06",
+      "slug": "交集与边界",
+      "title": "交集与边界",
+      "source_asset": "assets/skeletons/06-交集与边界.svg",
+      "family": "comparison",
+      "group": "比较与共同条件",
+      "kind": "retained",
+      "status": "通用骨架",
+      "crop": [
+        5,
+        40,
+        490,
+        385
+      ]
+    },
+    {
+      "id": "07",
+      "slug": "四重交集与整体校核",
+      "title": "四重交集与整体校核",
+      "source_asset": "assets/skeletons/07-四重交集与整体校核.svg",
+      "family": "comparison",
+      "group": "比较与共同条件",
+      "kind": "combination",
+      "status": "组合骨架 · 已填样张",
+      "crop": [
+        220,
+        465,
+        1760,
+        1760
+      ]
+    },
+    {
+      "id": "08",
+      "slug": "共同标准比较图",
+      "title": "共同标准比较图 · Compare Map",
+      "source_asset": "assets/skeletons/08-共同标准比较图.svg",
+      "family": "comparison",
+      "group": "比较与共同条件",
+      "kind": "organizer",
+      "status": "通用骨架",
+      "crop": [
+        170.0,
+        520.0,
+        1460.0,
+        1440.0
+      ]
+    },
+    {
+      "id": "09",
+      "slug": "关系类比",
+      "title": "关系类比",
+      "source_asset": "assets/skeletons/09-关系类比.svg",
+      "family": "comparison",
+      "group": "比较与共同条件",
+      "kind": "retained",
+      "status": "通用骨架",
+      "crop": [
+        5,
+        40,
+        490,
+        385
+      ]
+    },
+    {
+      "id": "10",
+      "slug": "四区概念界定",
+      "title": "四区概念界定",
+      "source_asset": "assets/skeletons/10-四区概念界定.svg",
+      "family": "learning",
+      "group": "学习、概念与论证",
+      "kind": "organizer",
+      "status": "通用骨架",
+      "crop": [
+        100,
+        440,
+        1200,
+        840
+      ]
+    },
+    {
+      "id": "11",
+      "slug": "概念定义图",
+      "title": "概念定义图 · Concept Definition Map",
+      "source_asset": "assets/skeletons/11-概念定义图.svg",
+      "family": "learning",
+      "group": "学习、概念与论证",
+      "kind": "organizer",
+      "status": "通用骨架",
+      "crop": [
+        70.0,
+        570.0,
+        1660.0,
+        1680.0
+      ]
+    },
+    {
+      "id": "12",
+      "slug": "大问题地图5W1H",
+      "title": "大问题地图 · 5W1H",
+      "source_asset": "assets/skeletons/12-大问题地图5W1H.svg",
+      "family": "learning",
+      "group": "学习、概念与论证",
+      "kind": "organizer",
+      "status": "通用骨架",
+      "crop": [
+        60.0,
+        590.0,
+        1480.0,
+        900.0
+      ]
+    },
+    {
+      "id": "13",
+      "slug": "四栏学习框架",
+      "title": "四栏学习框架",
+      "source_asset": "assets/skeletons/13-四栏学习框架.svg",
+      "family": "learning",
+      "group": "学习、概念与论证",
+      "kind": "retained",
+      "status": "通用骨架",
+      "crop": [
+        5,
+        40,
+        490,
+        385
+      ]
+    },
+    {
+      "id": "14",
+      "slug": "研究V图",
+      "title": "研究 V 图 · V Map",
+      "source_asset": "assets/skeletons/14-研究V图.svg",
+      "family": "learning",
+      "group": "学习、概念与论证",
+      "kind": "organizer",
+      "status": "通用骨架",
+      "crop": [
+        90.0,
+        570.0,
+        1720.0,
+        1850.0
+      ]
+    },
+    {
+      "id": "15",
+      "slug": "主张—依据—例外",
+      "title": "主张—依据—例外",
+      "source_asset": "assets/skeletons/15-主张—依据—例外.svg",
+      "family": "learning",
+      "group": "学习、概念与论证",
+      "kind": "organizer",
+      "status": "通用骨架 · 本轮补录",
+      "crop": [
+        170,
+        470,
+        2040,
+        1240
+      ]
+    },
+    {
+      "id": "16",
+      "slug": "原因主干",
+      "title": "原因主干",
+      "source_asset": "assets/skeletons/16-原因主干.svg",
+      "family": "causes",
+      "group": "原因、后果与失效",
+      "kind": "retained",
+      "status": "通用骨架",
+      "crop": [
+        5,
+        40,
+        490,
+        385
+      ]
+    },
+    {
+      "id": "17",
+      "slug": "原因—事件—后果",
+      "title": "原因—事件—后果",
+      "source_asset": "assets/skeletons/17-原因—事件—后果.svg",
+      "family": "causes",
+      "group": "原因、后果与失效",
+      "kind": "retained",
+      "status": "通用骨架",
+      "crop": [
+        5,
+        40,
+        490,
+        385
+      ]
+    },
+    {
+      "id": "18",
+      "slug": "逆向追溯",
+      "title": "逆向追溯",
+      "source_asset": "assets/skeletons/18-逆向追溯.svg",
+      "family": "causes",
+      "group": "原因、后果与失效",
+      "kind": "retained",
+      "status": "通用骨架",
+      "crop": [
+        5,
+        40,
+        490,
+        385
+      ]
+    },
+    {
+      "id": "19",
+      "slug": "分层屏障与失效路径",
+      "title": "分层屏障与失效路径",
+      "source_asset": "assets/skeletons/19-分层屏障与失效路径.svg",
+      "family": "causes",
+      "group": "原因、后果与失效",
+      "kind": "organizer",
+      "status": "通用骨架",
+      "crop": [
+        0.0,
+        0.0,
+        2800.0,
+        2780.0
+      ]
+    },
+    {
+      "id": "21",
+      "slug": "嵌套范围",
+      "title": "嵌套范围",
+      "source_asset": "assets/skeletons/21-嵌套范围.svg",
+      "family": "scope",
+      "group": "范围、角色与情境",
+      "kind": "retained",
+      "status": "通用骨架",
+      "crop": [
+        5,
+        40,
+        490,
+        385
+      ]
+    },
+    {
+      "id": "22",
+      "slug": "参与范围洋葱",
+      "title": "参与范围洋葱",
+      "source_asset": "assets/skeletons/22-参与范围洋葱.svg",
+      "family": "scope",
+      "group": "范围、角色与情境",
+      "kind": "organizer",
+      "status": "通用骨架",
+      "crop": [
+        0.0,
+        0.0,
+        2400.0,
+        2900.0
+      ]
+    },
+    {
+      "id": "23",
+      "slug": "生态情境与联系",
+      "title": "生态情境与联系",
+      "source_asset": "assets/skeletons/23-生态情境与联系.svg",
+      "family": "scope",
+      "group": "范围、角色与情境",
+      "kind": "organizer",
+      "status": "通用骨架",
+      "crop": [
+        0.0,
+        0.0,
+        2600.0,
+        2920.0
+      ]
+    },
+    {
+      "id": "24",
+      "slug": "扩大观察尺度",
+      "title": "扩大观察尺度",
+      "source_asset": "assets/skeletons/24-扩大观察尺度.svg",
+      "family": "scope",
+      "group": "范围、角色与情境",
+      "kind": "retained",
+      "status": "通用骨架",
+      "crop": [
+        5,
+        40,
+        490,
+        385
+      ]
+    },
+    {
+      "id": "25",
+      "slug": "过去投入与未来分岔",
+      "title": "过去投入与未来分岔",
+      "source_asset": "assets/skeletons/25-过去投入与未来分岔.svg",
+      "family": "decisions",
+      "group": "选择、尺度与数量",
+      "kind": "retained",
+      "status": "通用骨架",
+      "crop": [
+        5,
+        40,
+        490,
+        385
+      ]
+    },
+    {
+      "id": "26",
+      "slug": "双维定位",
+      "title": "双维定位",
+      "source_asset": "assets/skeletons/26-双维定位.svg",
+      "family": "decisions",
+      "group": "选择、尺度与数量",
+      "kind": "retained",
+      "status": "通用骨架",
+      "crop": [
+        5,
+        40,
+        490,
+        385
+      ]
+    },
+    {
+      "id": "27",
+      "slug": "结果分布与尾部",
+      "title": "结果分布与尾部",
+      "source_asset": "assets/skeletons/27-结果分布与尾部.svg",
+      "family": "decisions",
+      "group": "选择、尺度与数量",
+      "kind": "retained",
+      "status": "通用骨架",
+      "crop": [
+        5,
+        40,
+        490,
+        385
+      ]
+    },
+    {
+      "id": "28",
+      "slug": "新增与边际变化",
+      "title": "新增与边际变化",
+      "source_asset": "assets/skeletons/28-新增与边际变化.svg",
+      "family": "decisions",
+      "group": "选择、尺度与数量",
+      "kind": "retained",
+      "status": "通用骨架",
+      "crop": [
+        5,
+        40,
+        490,
+        385
+      ]
+    },
+    {
+      "id": "29",
+      "slug": "指标与真实目标",
+      "title": "指标与真实目标",
+      "source_asset": "assets/skeletons/29-指标与真实目标.svg",
+      "family": "decisions",
+      "group": "选择、尺度与数量",
+      "kind": "retained",
+      "status": "通用骨架",
+      "crop": [
+        5,
+        40,
+        490,
+        385
+      ]
+    },
+    {
+      "id": "30",
+      "slug": "80-20模型",
+      "title": "80-20模型",
+      "source_asset": "assets/skeletons/30-80-20模型.svg",
+      "family": "decisions",
+      "group": "选择、尺度与数量",
+      "kind": "retained",
+      "status": "通用骨架",
+      "crop": [
+        160,
+        395,
+        1080,
+        530
+      ]
+    },
+    {
+      "id": "31",
+      "slug": "数量构成与因素联动",
+      "title": "数量构成与因素联动",
+      "source_asset": "assets/skeletons/31-数量构成与因素联动.svg",
+      "family": "decisions",
+      "group": "选择、尺度与数量",
+      "kind": "organizer",
+      "status": "通用骨架 · 本轮补录",
+      "crop": [
+        200,
+        520,
+        2000,
+        1050
+      ]
+    },
+    {
+      "id": "32",
+      "slug": "分层螺旋与版本迭代",
+      "title": "分层螺旋与版本迭代",
+      "source_asset": "assets/skeletons/32-分层螺旋与版本迭代.svg",
+      "family": "situations",
+      "group": "时间、人物与场景",
+      "kind": "original",
+      "status": "通用骨架",
+      "crop": [
+        50,
+        340,
+        1300,
+        1720
+      ]
+    },
+    {
+      "id": "33",
+      "slug": "情境人物与事件变化",
+      "title": "情境人物与事件变化",
+      "source_asset": "assets/skeletons/33-情境人物与事件变化.svg",
+      "family": "situations",
+      "group": "时间、人物与场景",
+      "kind": "organizer",
+      "status": "通用骨架",
+      "crop": [
+        100,
+        440,
+        1200,
+        840
+      ]
+    },
+    {
+      "id": "34",
+      "slug": "共同场景与多重生活关系",
+      "title": "共同场景与多重生活关系",
+      "source_asset": "assets/skeletons/34-共同场景与多重生活关系.svg",
+      "family": "situations",
+      "group": "时间、人物与场景",
+      "kind": "combination",
+      "status": "组合骨架 · 已填样张",
+      "crop": [
+        135,
+        545,
+        2450,
+        1935
+      ]
+    },
+    {
+      "id": "35",
+      "slug": "顺序与平行时间线",
+      "title": "顺序与平行时间线",
+      "source_asset": "assets/skeletons/35-顺序与平行时间线.svg",
+      "family": "situations",
+      "group": "时间、人物与场景",
+      "kind": "organizer",
+      "status": "通用骨架 · 本轮补录",
+      "crop": [
+        180,
+        520,
+        2000,
+        1170
+      ]
+    },
+    {
+      "id": "36",
+      "slug": "重复循环",
+      "title": "重复循环",
+      "source_asset": "assets/skeletons/36-重复循环.svg",
+      "family": "situations",
+      "group": "时间、人物与场景",
+      "kind": "organizer",
+      "status": "通用骨架 · 本轮补录",
+      "crop": [
+        430,
+        600,
+        1530,
+        1000
+      ]
+    },
+    {
+      "id": "37",
+      "slug": "冰山模型",
+      "title": "冰山模型",
+      "source_asset": "assets/skeletons/37-冰山模型.svg",
+      "family": "icebergs",
+      "group": "可见表现与信息背景",
+      "kind": "retained",
+      "status": "通用骨架",
+      "crop": [
+        80,
+        300,
+        1240,
+        770
+      ]
+    },
+    {
+      "id": "38",
+      "slug": "信息冰山",
+      "title": "信息冰山",
+      "source_asset": "assets/skeletons/38-信息冰山.svg",
+      "family": "icebergs",
+      "group": "可见表现与信息背景",
+      "kind": "retained",
+      "status": "通用骨架",
+      "crop": [
+        80,
+        300,
+        1240,
+        770
+      ]
+    },
+    {
+      "id": "40",
+      "slug": "同轴趋势对照",
+      "title": "同轴趋势对照",
+      "source_asset": "assets/skeletons/40-同轴趋势对照.svg",
+      "family": "situations",
+      "group": "时间、人物与场景",
+      "kind": "organizer",
+      "status": "通用骨架",
+      "crop": [
+        300,
+        700,
+        1940,
+        1450
+      ]
+    }
+  ]
+}

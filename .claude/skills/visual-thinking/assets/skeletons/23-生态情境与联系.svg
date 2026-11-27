@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2600" height="2920" viewBox="0 0 2600 2920" role="img" aria-labelledby="title" aria-describedby="desc">
+<title id="title">生态情境：条件如何改变表现？</title>
+<desc id="desc">通用生态情境骨架。外轮廓为更广背景，两个并列圆为同级直接情境，同一人X在两处保持标识；中间联系与间接条件须分别查证。不由布局推断原因。</desc>
+<style data-vt-theme="">:root{--vt-bg:#191A18;--vt-ink:#EFEEE7;--vt-muted:#B0B2A8;--vt-accent:#EFEEE7;--vt-surface:#272925;--vt-secondary:#383B34;--vt-line:1.8;}text{font-family:"PingFang SC","Noto Sans CJK SC","Source Han Sans SC","Microsoft YaHei","Helvetica Neue",sans-serif}</style>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="11" markerHeight="11" orient="auto" markerUnits="userSpaceOnUse"><path d="M2 2L10 6L2 10" fill="none" stroke="var(--vt-ink)" stroke-width="1.5" /></marker></defs>
+<rect width="2600" height="2920" fill="var(--vt-bg)" data-decoration="background" />
+<text x="120" y="160" font-size="76" font-weight="600" fill="var(--vt-ink)" text-anchor="start">生态情境：条件如何改变表现？</text>
+<text x="120" y="239" font-size="40" font-weight="400" fill="var(--vt-muted)" text-anchor="start">The same subject across connected settings</text>
+<path data-decoration="annotation" d="M120 288H2150" fill="none" stroke="var(--vt-muted)" stroke-width="1.5" />
+<text x="120" y="347" font-size="30" font-weight="400" fill="var(--vt-muted)" text-anchor="start">通用骨架：比较同一人在同级情境中的条件，另查情境联系与间接影响。</text>
+<circle data-decoration="semantic-boundary" cx="1300" cy="1450" r="820" fill="none" stroke="var(--vt-ink)" stroke-width="2.6" />
+<text x="1300" y="732" font-size="40" font-weight="500" fill="var(--vt-ink)" text-anchor="middle">更广的制度与文化背景</text>
+<text x="1300" y="790" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">具体有哪些规则和预期？先确认，再谈影响。</text>
+<rect id="work-context" data-node="" x="1060" y="970" width="480" height="150" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="1.8" />
+<text x="1300" y="1034" font-size="36" font-weight="500" fill="var(--vt-ink)" text-anchor="middle" data-in-node="work-context" data-padding="12">外部安排？</text>
+<text x="1300" y="1092" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="middle" data-in-node="work-context" data-padding="12">一个待查的间接条件</text>
+<circle id="home" data-node="" cx="880" cy="1640" r="340" fill="none" stroke="var(--vt-ink)" stroke-width="2.1" />
+<circle id="school" data-node="" cx="1720" cy="1640" r="340" fill="none" stroke="var(--vt-ink)" stroke-width="2.1" />
+<text x="880" y="1380" font-size="41" font-weight="500" fill="var(--vt-ink)" text-anchor="middle" data-in-node="home" data-padding="12">情境 A</text>
+<circle id="child-home" data-node="" cx="880" cy="1575" r="10" fill="var(--vt-ink)" stroke="var(--vt-ink)" stroke-width="1.9" />
+<text x="880" y="1650" font-size="36" font-weight="500" fill="var(--vt-ink)" text-anchor="middle" data-in-node="home" data-padding="12">同一个人 X</text>
+<text x="880" y="1745" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="middle" data-in-node="home" data-padding="12">要求／资源／反馈／时间</text>
+<text x="880" y="1802" font-size="29" font-weight="400" fill="var(--vt-muted)" text-anchor="middle" data-in-node="home" data-padding="12">哪些条件变了？</text>
+<text x="1720" y="1380" font-size="41" font-weight="500" fill="var(--vt-ink)" text-anchor="middle" data-in-node="school" data-padding="12">情境 B</text>
+<circle id="child-school" data-node="" cx="1720" cy="1575" r="10" fill="var(--vt-ink)" stroke="var(--vt-ink)" stroke-width="1.9" />
+<text x="1720" y="1650" font-size="36" font-weight="500" fill="var(--vt-ink)" text-anchor="middle" data-in-node="school" data-padding="12">同一个人 X</text>
+<text x="1720" y="1745" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="middle" data-in-node="school" data-padding="12">要求／资源／反馈／时间</text>
+<text x="1720" y="1802" font-size="29" font-weight="400" fill="var(--vt-muted)" text-anchor="middle" data-in-node="school" data-padding="12">哪些条件变了？</text>
+<path id="indirect-condition" data-edge="" data-from="work-context" data-to="home" d="M1045 1040H892A12 12 0 0 0 880 1052V1285" fill="none" stroke="var(--vt-muted)" stroke-width="1.5" stroke-dasharray="6 10" marker-end="url(#arrow)" />
+<text x="840" y="1192" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="end">哪项条件会变？</text>
+<text x="1300" y="1485" font-size="27" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">两处怎样联系？</text>
+<path id="home-school-link" data-edge="" data-from="home" data-to="school" d="M1205.04 1540H1394.96" fill="none" stroke="var(--vt-muted)" stroke-width="1.5" stroke-dasharray="6 10" />
+<circle cx="1300" cy="1540" r="5" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="1.9" data-decoration="annotation-anchor" />
+<path data-decoration="annotation" d="M1300 1555V2020" fill="none" stroke="var(--vt-muted)" stroke-width="1.5" />
+<text x="1300" y="2087" font-size="32" font-weight="500" fill="var(--vt-ink)" text-anchor="middle">中间系统：情境之间的联系 [3]</text>
+<text x="1300" y="2145" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">同级情境并置，联系本身单独辨认。</text>
+<path data-decoration="annotation" d="M120 2520H2480" fill="none" stroke="var(--vt-muted)" stroke-width="1.5" />
+<text x="2480" y="2600" font-size="45" font-weight="500" fill="var(--vt-ink)" text-anchor="end">先比较条件，再解释差异。</text>
+<text x="2480" y="2664" font-size="29" font-weight="400" fill="var(--vt-muted)" text-anchor="end">可先对齐任务难度或可用时间，再看差异；仍需记录并排查其他条件。</text>
+<text x="120" y="2750" font-size="25" font-weight="400" fill="var(--vt-muted)" text-anchor="start">[3] Bronfenbrenner (1977). Toward an Experimental Ecology of Human Development.</text>
+<text x="120" y="2795" font-size="24" font-weight="400" fill="var(--vt-muted)" text-anchor="start">American Psychologist · doi:10.1037/0003-066X.32.7.513</text>
+<text x="120" y="2864" font-size="24" font-weight="400" fill="var(--vt-muted)" text-anchor="start">依据生态情境与联系定义自主绘制；非完整后期生物生态模型；并置不证明因果，位置不编码距离或影响强度。</text>
+</svg>
