@@ -43,24 +43,23 @@
       },
       {
         "trigger": {
-          "type": "on_stacks_at_least",
-          "buff_id": "bleed",
-          "stacks": 6,
-          "on_self": false
+          "type": "on_item_fired",
+          "self_only": true
         },
         "cadence": "@always",
+        "costs": [
+          {
+            "type": "status_condition",
+            "buff_id": "bleed",
+            "stacks": 6
+          }
+        ],
         "effects": [
           {
             "type": "deal_damage",
             "amount": 3.0,
             "damage_stat": "",
             "per_target_stack": "bleed"
-          },
-          {
-            "type": "remove_status",
-            "target": "OPPONENT",
-            "buff_id": "bleed",
-            "stacks": 0
           }
         ]
       }
