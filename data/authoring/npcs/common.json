@@ -8,9 +8,9 @@
     {
       "id": "common_rotate",
       "kind": "guide",
-      "text": "拖着东西的时候按 [key=rotate_item]，能转个方向",
+      "text": "拖着东西的时候按 [key=rotate_ccw] 逆时针、[key=rotate_cw] 顺时针，能转个方向",
       "texts": {
-        "en": "Press [key=rotate_item] while dragging to turn it round."
+        "en": "While dragging, press [key=rotate_ccw] to turn it counterclockwise or [key=rotate_cw] to turn it clockwise."
       }
     },
     {
