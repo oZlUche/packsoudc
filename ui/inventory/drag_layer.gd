@@ -115,6 +115,9 @@ const PUT_BACK_PX := 4.0
 const SNAP_BACK_CELLS := 0.5
 ## 非空表示正在拖一个带内容物的包，内容为 detach_bag 的载荷
 var _payload: Dictionary = {}
+## 402：整组拖（框选了两件以上、按在其中一件上）：`[{inst, origin, rot, off}]`，off = 这件落点 − 领头那件（[member _inst]）落点。
+## 空 = 单件。整组只进格子（全都放得进空位才放，不顶替）或整组到地上；别处一律整组弹回
+var _group: Array = []
 
 
 func _ready() -> void:
@@ -129,6 +132,8 @@ func register_view(view: ContainerView) -> void:
 		return
 	_views.append(view)
 	view.grab_requested.connect(_on_grab_requested)
+	if view is InventoryView:
+		(view as InventoryView).box_select = true     # 402：有人接的棋盘才能框选
 
 
 ## 撤销登记（开局屏换角色重造棋盘）
@@ -136,6 +141,9 @@ func unregister_view(view: ContainerView) -> void:
 	if view.grab_requested.is_connected(_on_grab_requested):
 		view.grab_requested.disconnect(_on_grab_requested)
 	_views.erase(view)
+	if view is InventoryView and is_instance_valid(view):
+		(view as InventoryView).box_select = false
+		(view as InventoryView).clear_selection()
 
 
 ## 审查 A3：登记过的视图被别人释放了（没撤登记）就从名单里拿掉，不去碰已释放的对象
@@ -147,6 +155,19 @@ func _prune_views() -> void:
 
 func is_dragging() -> bool:
 	return _inst != null
+
+
+## 402：正在整组拖
+func is_group_drag() -> bool:
+	return _inst != null and not _group.is_empty()
+
+
+## 402：整组拖着的那几件（领头的在内）；没在整组拖 = 空
+func group_items() -> Array[ItemInstance]:
+	var out: Array[ItemInstance] = []
+	for e in _group:
+		out.append(e["inst"])
+	return out
 
 
 ## 正在拖的这件是从哪个容器拿起来的（没在拖 null）。商店屏靠它认出「这是货架上的商品」（087）
@@ -183,6 +204,11 @@ func _on_grab_requested(view: ContainerView, uid: int, local_pos: Vector2) -> vo
 	if from is GridInventory and (from as GridInventory).is_locked(uid):
 		grab_refused.emit(uid)     # 207：扎了根的拿不起来（包被钉住同理）
 		return
+	if view is InventoryView and from is GridInventory:
+		var members := (view as InventoryView).group_for(uid)
+		if members.size() >= 2:
+			_grab_group(view as InventoryView, members, inst, local_pos)     # 402：按在框选的一件上 = 整组拿起
+			return
 
 	_src_origin = inst.origin
 	_src_rot = inst.rotation
@@ -227,6 +253,38 @@ func _on_grab_requested(view: ContainerView, uid: int, local_pos: Vector2) -> vo
 	queue_redraw()
 	AudioHub.play(SfxMaterial.pick_cue(_inst.def))     # 206：上手按材质响
 	drag_started.emit(uid)
+
+
+## 402：整组拿起 —— 各件从棋盘上拿走，记下原位（取消时原样放回），领头的是按住的那件
+func _grab_group(view: InventoryView, members: Array[int], lead: ItemInstance, local_pos: Vector2) -> void:
+	var grid := view.inventory
+	_group = []
+	for u in members:
+		var it := grid.get_item(u)
+		if it != null:
+			_group.append({"inst": it, "origin": it.origin, "rot": it.rotation, "off": it.origin - lead.origin})
+	_src_origin = lead.origin
+	_src_rot = lead.rotation
+	_rot = lead.rotation
+	_source = grid
+	_src_index = -1
+	_payload = {}
+	_grab_cell = view.cell_at_local(local_pos) - lead.origin
+	_cell = view.cell_px
+	_src_px = view.global_position + view.cell_origin_px(lead.origin)
+	_inst = lead     # 同单件：先记「正在拖」再拿走
+	grid.begin_batch()
+	for e in _group:
+		grid.remove((e["inst"] as ItemInstance).uid)
+	grid.end_batch()
+	set_process_input(true)
+	InventoryView.set_focused(_inst, get_tree() if is_inside_tree() else null)
+	_mark_partners()
+	UiCursor.set_drag(true)
+	_show_footprints(true)
+	queue_redraw()
+	AudioHub.play(SfxMaterial.pick_cue(_inst.def))
+	drag_started.emit(_inst.uid)
 
 
 ## 让一件**已经游离**的物品直接上手。顶替时被挤出来的那一件走这条路 ——
@@ -301,8 +359,8 @@ func _input(event: InputEvent) -> void:
 ## 包也能转。内容物不跟着转，仍按原偏移画在残影上 —— 落到新轮廓之外的那些
 ## 会在放手时脱落到地上，残影上先给它们打好标记，玩家放手前就看得见代价。
 func rotate_dragged(step: int = 1) -> void:
-	if _inst == null or _inst.def == null:
-		return
+	if _inst == null or _inst.def == null or is_group_drag():
+		return     # 402：整组先不转（待作者定）
 	_rot = posmod(_rot + step, 4)
 	# 抓取点必须跟着落进新的包围盒，否则旋转后物品会离奇地跳开
 	var box := _inst.def.shape.size_rotated(_rot)
@@ -394,6 +452,8 @@ static func visible_rect(view: Control) -> Rect2:
 ## 落点会吸进棋盘边界：整块能放得下就不让它伸出去（光标贴着边或略出边时落在最靠边的那一格）
 func target_origin(view: InventoryView, global_pos: Vector2) -> Vector2i:
 	var origin := view.cell_at_global(global_pos) - _grab_cell
+	if is_group_drag():
+		return origin     # 402：整组按格老实算，不往边界里吸（吸了别的几件反而出界）
 	var inv := view.inventory
 	# 光标还在视图里：老老实实按格算（越界就是越界）；只有光标已出界、靠整块判定才落到这个视图时才吸进边界
 	if inv != null and _inst != null and not visible_rect(view).has_point(global_pos) and _inst.def != null:
@@ -441,6 +501,10 @@ func update_preview(global_pos: Vector2) -> void:
 ## 157：在这里松手算不算放下了（不是弹回原处）：棋盘外看会不会到地上（249：也看 [member drop_filter] 许不许），格子看预览是不是绿 / 黄的
 func drop_ok_at(global_pos: Vector2) -> bool:
 	var target := view_at(global_pos)
+	if is_group_drag():
+		if target is InventoryView:
+			return (target as InventoryView).preview_ok()
+		return _group_ground(target) != null
 	if target == null:
 		return _drops_outside_to_stash() and _drop_allowed(stash)
 	if target.container() == null or not _drop_allowed(target.container()):
@@ -472,6 +536,9 @@ func _update_preview(global_pos: Vector2) -> void:
 		return
 	if not (target is InventoryView):
 		return     # 157：事件的收获行（背后是地上）只拿不放
+	if is_group_drag():
+		_preview_group(target as InventoryView, global_pos)
+		return
 
 	var grid_view := target as InventoryView
 	var inv := grid_view.inventory
@@ -533,6 +600,116 @@ func _update_preview(global_pos: Vector2) -> void:
 	# 放不进空位，但地形允许 —— 那就是「压着别人」，可以顶替
 	var victims := _displaceable(inv, origin)
 	grid_view.set_preview(cells, origin, not victims.is_empty(), victims)
+
+
+## 402：整组在 [param view] 上的落点预览：几件的占格拼在一起，全放得进空位（且这一屏许放）才绿，否则红
+func _preview_group(view: InventoryView, global_pos: Vector2) -> void:
+	var inv := view.inventory
+	if inv == null:
+		return
+	var origin := target_origin(view, global_pos)
+	var cells: Array[Vector2i] = []
+	for e in _group:
+		var at: Vector2i = origin + (e["off"] as Vector2i)
+		for c in (e["inst"] as ItemInstance).def.cells_rotated(int(e["rot"])):
+			cells.append(at + c)
+	view.set_held(null, 0)
+	view.set_preview(cells, Vector2i.ZERO, _group_fits(inv, origin))
+
+
+## 402：整组放到 [param inv] 的 [param origin]（领头那件的落点）上 —— 每件都放得进空位、每件都许放
+func _group_fits(inv: GridInventory, origin: Vector2i) -> bool:
+	for e in _group:
+		var it: ItemInstance = e["inst"]
+		if not _allowed_for(it, inv) or not inv.can_place_def(it.def, origin + (e["off"] as Vector2i), int(e["rot"]), it.uid):
+			return false
+	return true
+
+
+## 402：[member drop_filter] 对任意一件（不只是领头那件）
+func _allowed_for(inst: ItemInstance, target: ItemContainer) -> bool:
+	return not drop_filter.is_valid() or bool(drop_filter.call(inst, target))
+
+
+## 402：整组松手在 [param target]（null = 棋盘外）会落到哪块地上；落不了 = null
+func _group_ground(target: ContainerView) -> ItemStash:
+	var dest: ItemStash = null
+	if target == null and drop_outside_to_stash:
+		dest = stash
+	elif target is GroundLayer:
+		dest = (target as GroundLayer).stash
+	if dest == null or not dest.room_for(_group.size()):
+		return null
+	for e in _group:
+		var it: ItemInstance = e["inst"]
+		if not _allowed_for(it, dest) or not dest.accepts(it.def):
+			return null
+		if it.is_locked_by_player() and _source != dest:
+			return null     # 230：锁住的不丢到地上
+	return dest
+
+
+## 402：整组松手。格子：全放得进空位才放（不顶替、不合成、不附魔）；棋盘外 / 地上：整组落地；别处或放不下：整组弹回
+func _drop_group(global_pos: Vector2) -> bool:
+	var lead := _inst
+	var target := view_at(global_pos)
+	var dropped := false
+	var landed: InventoryView = null
+	if target is InventoryView and (target as InventoryView).inventory != null:
+		var gv := target as InventoryView
+		var inv := gv.inventory
+		var origin := target_origin(gv, global_pos)
+		if _group_fits(inv, origin):
+			inv.begin_batch()
+			for e in _group:
+				var it: ItemInstance = e["inst"]
+				if inv == _source:
+					it.container_id = inv.id     # 099：同一块棋盘里挪位置不算重新置入
+				inv.place(it, origin + (e["off"] as Vector2i), int(e["rot"]))
+			inv.end_batch()
+			dropped = true
+			landed = gv
+	else:
+		var dest := _group_ground(target)
+		if dest != null:
+			var ground := target as GroundLayer if target is GroundLayer else _ground_view()
+			var top_left := _release_px(global_pos)
+			dest.begin_batch()
+			for e in _group:
+				var it: ItemInstance = e["inst"]
+				it.rotation = int(e["rot"])
+				var at := top_left + Vector2(e["off"] as Vector2i) * _cell
+				var spot := ground.spot_for_drop(at, it, it.rotation) if ground != null else ItemStash.NO_SPOT
+				if dest.insert(it, -1, spot):
+					dest.landing_from[it.uid] = at     # 162 补充二：各从自己残影的位置掉下去
+				elif not (_source as GridInventory).place(it, e["origin"] as Vector2i, int(e["rot"])):
+					push_error("DragLayer: uid %d 落不了地也放不回原位，物品已丢失" % it.uid)
+			dest.end_batch()
+			dropped = true
+	var moved := group_items()
+	if not dropped:
+		_restore()
+		AudioHub.play(&"bag.invalid")
+	elif landed != null:
+		AudioHub.play(SfxMaterial.place_cue(lead.def))
+	var home := _source
+	_end_drag()
+	# 选中跟着道具走：放进哪块棋盘就在哪块接着选中；弹回原处就还是原来那几件；落了地就不再选中
+	if landed != null:
+		landed.set_selection(_uids_of(moved))
+	elif not dropped:
+		for v in _views:
+			if v is InventoryView and v.container() == home:
+				(v as InventoryView).set_selection(_uids_of(moved))
+	drag_finished.emit(lead.uid, dropped)
+	return dropped
+
+
+static func _uids_of(items: Array[ItemInstance]) -> Array[int]:
+	var out: Array[int] = []
+	for it in items:
+		out.append(it.uid)
+	return out
 
 
 func _drop_allowed(target: ItemContainer) -> bool:
@@ -700,6 +877,8 @@ func _stash_accepts(target: ItemStash, inst: ItemInstance) -> bool:
 func drop_at(global_pos: Vector2) -> bool:
 	if not is_dragging():
 		return false
+	if is_group_drag():
+		return _drop_group(global_pos)
 	var inst := _inst
 	var dropped := false
 	var target := view_at(global_pos)
@@ -957,7 +1136,7 @@ func _mark_partners() -> void:
 			continue
 		var marks := {}
 		var c := view.container()
-		if _inst != null and _payload.is_empty() and fuse_partner.is_valid() and c != null:
+		if _inst != null and _payload.is_empty() and _group.is_empty() and fuse_partner.is_valid() and c != null:
 			for raw in c.items():
 				var b := raw as ItemInstance
 				if b != null and b.uid != _inst.uid and bool(fuse_partner.call(_inst, b)):
@@ -1140,8 +1319,14 @@ func cancel() -> void:
 	if not is_dragging():
 		return
 	var inst := _inst
+	var moved := group_items()
+	var home := _source
 	_restore()
 	_end_drag()
+	if not moved.is_empty():
+		for v in _views:
+			if v is InventoryView and v.container() == home:
+				(v as InventoryView).set_selection(_uids_of(moved))     # 402：取消 = 整组原样放回，还是选中的
 	drag_finished.emit(inst.uid, false)
 
 
@@ -1149,6 +1334,9 @@ func cancel() -> void:
 ## 万一放不回（说明别处动过这个容器），退而求其次找个空位，绝不允许物品凭空消失。
 func _restore() -> void:
 	if _inst == null or _source == null:
+		return
+	if not _group.is_empty():
+		_restore_group()
 		return
 	if _source is ItemStash:
 		if (_source as ItemStash).insert(_inst, _src_index, _src_spot):
@@ -1175,11 +1363,27 @@ func _restore() -> void:
 	push_error("DragLayer: uid %d 放不回源容器，物品已丢失" % _inst.uid)
 
 
+## 402：整组放回各自原位（拿起后那几格一直空着，必然放得回；万一放不回，自动找空位，再不行进地上）
+func _restore_group() -> void:
+	var grid := _source as GridInventory
+	grid.begin_batch()
+	for e in _group:
+		var it: ItemInstance = e["inst"]
+		it.container_id = grid.id
+		if grid.place(it, e["origin"] as Vector2i, int(e["rot"])):
+			continue
+		push_warning("DragLayer: uid %d 无法放回原位，改为自动装填" % it.uid)
+		if not grid.admit(it) and not (stash != null and stash.admit(it)):
+			push_error("DragLayer: uid %d 放不回源容器，物品已丢失" % it.uid)
+	grid.end_batch()
+
+
 func _end_drag() -> void:
 	_prune_views()
 	for view in _views:
 		view.clear_preview()
 	_inst = null
+	_group = []
 	_mark_partners()     # 手上空了：小锤全收
 	_motion.clear()
 	_cell = InventoryView.CELL
@@ -1209,6 +1413,9 @@ func _draw() -> void:
 	var mouse := get_global_mouse_position()
 	var anchor := ghost_anchor(mouse)
 	var cell := ghost_cell(mouse)
+	if is_group_drag():
+		_draw_group(anchor, cell)
+		return
 
 	var font := label_font if label_font != null else get_theme_default_font()
 	var is_bag := not _payload.is_empty()
@@ -1258,6 +1465,22 @@ func _draw() -> void:
 			)
 			InventoryView.draw_footprint(self, item.def, item_cells, at, cell, false, item.rarity())
 		_draw_straddlers(font)
+
+
+## 402：整组的残影 —— 每件按相对领头那件的位置画
+func _draw_group(anchor: Vector2, cell: float) -> void:
+	var font := label_font if label_font != null else get_theme_default_font()
+	for e in _group:
+		var it: ItemInstance = e["inst"]
+		var rot := int(e["rot"])
+		var at := anchor + Vector2(e["off"] as Vector2i) * cell
+		var item_cells := it.def.cells_rotated(rot)
+		if not ItemPainter.draw_art(self, it.def, rot, at, cell, Color(1, 1, 1, 0.85) * ItemPainter.runs_tint(it), Transform2D.IDENTITY, ItemPainter.variant_of(it)):
+			var body := ItemPainter.body_color(it.def, it.rarity())
+			body.a = 0.85
+			ItemPainter.draw_item(self, item_cells, at, cell, body, ItemPainter.rarity_color(it.def, it.rarity()))
+			ItemPainter.draw_label(self, item_cells, at, cell, Names.of_item(it), font, 13, Color("f2f4f8"))
+		InventoryView.draw_footprint(self, it.def, item_cells, at, cell, InventoryView.footprint_hollow(it.def), it.rarity())
 
 
 ## 193 §4：棋盘外（地上 / 空处）在残影上画手上这件的格位，未点亮态 —— 转了方向在哪儿都看得出格位转到哪了
