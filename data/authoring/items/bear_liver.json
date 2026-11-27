@@ -22,7 +22,7 @@
   ],
   "material": "flesh",
   "eat_trait": {
-    "regen_hp": 3,
+    "regen_hp": 5.4,
     "haste": -4
   }
 }

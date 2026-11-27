@@ -20,7 +20,7 @@ script = ExtResource("6_8cosq")
 
 [sub_resource type="Resource" id="Resource_ismbh"]
 script = ExtResource("8_7rbbi")
-amount = 60.0
+amount = 108.0
 
 [sub_resource type="Resource" id="Resource_lrlav"]
 script = ExtResource("9_n3mae")

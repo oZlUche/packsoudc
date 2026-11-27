@@ -22,14 +22,14 @@
   "material": "metal",
   "combat": {
     "base_stats": {
-      "damage": 8
+      "damage": 10
     },
     "rules": [
       {
         "trigger": "@on_schedule",
         "cadence": "@cooldown_1s",
         "costs": [
-          "@resource_4"
+          "@resource_5"
         ],
         "effects": [
           "@deal_damage",

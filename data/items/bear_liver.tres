@@ -27,5 +27,5 @@ tags = Array[StringName]([&"material", &"ingredient", &"nature", &"beast_part", 
 material = "flesh"
 eat_trait = {
 "haste": -4,
-"regen_hp": 3
+"regen_hp": 5.4
 }

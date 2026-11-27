@@ -58,7 +58,7 @@
         "costs": [
           {
             "type": "resource",
-            "amount": 3.0
+            "amount": 4.0
           }
         ],
         "effects": [

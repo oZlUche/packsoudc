@@ -37,8 +37,8 @@
 			"def_id": "shortsword",
 			"stats": {
 				"damage": {
-					"total": 77000,
-					"base": 70000,
+					"total": 88000,
+					"base": 80000,
 					"flat": 0,
 					"percent": 1000
 				},

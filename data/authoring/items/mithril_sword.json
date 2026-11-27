@@ -26,7 +26,7 @@
   "requires_unlock": "ach_extract_3",
   "combat": {
     "base_stats": {
-      "damage": 32
+      "damage": 38
     },
     "rules": [
       {
@@ -38,7 +38,7 @@
         "costs": [
           {
             "type": "resource",
-            "amount": 7.0
+            "amount": 8.0
           }
         ],
         "effects": [

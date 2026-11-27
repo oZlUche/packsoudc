@@ -9,7 +9,7 @@
 [sub_resource type="Resource" id="Resource_sktv4"]
 script = ExtResource("2_e4mj5")
 values = {
-"damage": 5,
+"damage": 6,
 "sec": 1,
 "stamina": 1
 }

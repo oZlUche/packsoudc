@@ -28,8 +28,7 @@
             "stacks": 2
           },
           {
-            "type": "change_resource",
-            "amount": 3.0
+            "type": "change_resource"
           }
         ]
       }
