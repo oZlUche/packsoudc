@@ -44,7 +44,7 @@ const TERMS := {
 	# 153（作者定）：防护改名格挡，几面盾只算最高的一面；作者 11-26 17:03：固定减伤，只对直接、非真实伤害生效，不同来源只取最高
 	"星辰": {"text": "日神【众星】点亮的。整局结算时每颗换成金钱，无论胜负。", "en": {"name": "Star", "text": "Lit by the Sun god's Myriad Stars. When the run is settled each one turns into money, win or lose."}},
 	"格挡": {"text": "固定减伤：每次受到直接伤害（武器打的）固定减少这个数，减到零为止；只对直接伤害、非真实伤害生效。不同来源的格挡只有最高的一个生效（带几面盾只算最高的一面），加固 / 破绽在它之上加减，破绽为负时反而多挨。buff 造成的灼烧、中毒、流血不是直接伤害，真实伤害也不吃格挡。", "en": {"name": "Block", "text": "Flat damage reduction: every hit of direct damage (from weapons) is reduced by this amount, down to zero. It only works on direct damage that isn't true damage. When Block comes from several sources only the highest counts (with several shields, only the best one); Fortified / Exposed add to or subtract from it, and if Exposed takes it below zero you take extra. Burn, Poison and Bleed from buffs are not direct damage, and true damage ignores Block."}},
-	"护甲": {"text": "先于生命被扣的一层。开战时按护甲上限充满，之后不自己回复。中毒、流血无视护甲。", "en": {"name": "Armor", "text": "A layer lost before Health. It fills to Max Armor at the start of a battle and doesn't recover on its own. Poison and Bleed ignore Armor."}},
+	"护甲": {"text": "先于生命被扣的一层。开战时充满，之后不自己回复。中毒、流血无视护甲。", "en": {"name": "Armor", "text": "A layer lost before Health. It fills up at the start of a battle and doesn't recover on its own. Poison and Bleed ignore Armor."}},
 	"直接伤害": {"text": "武器造成的伤害。格挡（加固 / 破绽）只减它；buff 造成的伤害（灼烧、中毒、流血）不是直接伤害。", "en": {"name": "Direct damage", "text": "Damage dealt by weapons. Block (Fortified / Exposed) only reduces this. Damage from buffs (Burn, Poison, Bleed) is not direct damage."}},
 	"永续": {"text": "不会过期，一直到战斗结束（除非被清除）。", "en": {"name": "Permanent", "text": "Never expires; lasts until the end of the battle (unless removed)."}},
 	"叠层": {"text": "同一个状态可以叠多层，效果按层数累加；没写上限就不限层。", "en": {"name": "Stacking", "text": "A status can stack many times, and its effect adds up per stack. If no cap is written, there is none."}},
@@ -191,7 +191,7 @@ static func faith_terms(def: ItemDef) -> Dictionary:
 const STAT_NAMES := {
 	"damage": {"zh": "伤害", "en": "Damage"}, "block": {"zh": "格挡", "en": "Block"}, "max_hp": {"zh": "生命", "en": "Health"},
 	"max_stamina": {"zh": "耐力上限", "en": "Max stamina"}, "haste": {"zh": "急速", "en": "Haste"}, "cooldown": {"zh": "冷却", "en": "Cooldown"},
-	"regen_stamina": {"zh": "每秒回耐力", "en": "Stamina regen"}, "regen_hp": {"zh": "每秒回血", "en": "Health regen"}, "max_armor": {"zh": "护甲上限", "en": "Max Armor"},
+	"regen_stamina": {"zh": "每秒回耐力", "en": "Stamina regen"}, "regen_hp": {"zh": "每秒回血", "en": "Health regen"}, "max_armor": {"zh": "护甲", "en": "Armor"},
 	"max_mana": {"zh": "法力上限", "en": "Max mana"}, "regen_mana": {"zh": "每秒回法力", "en": "Mana regen"},
 	"stamina_cost": {"zh": "耗耐力", "en": "Stamina cost"}, "mana_cost": {"zh": "耗法力", "en": "Mana cost"},
 	"crit_chance": {"zh": "暴击率", "en": "Crit chance"}, "crit_damage": {"zh": "暴击伤害", "en": "Crit damage"},
