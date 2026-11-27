@@ -343,15 +343,18 @@ func _input(event: InputEvent) -> void:
 
 	if event is InputEventKey and event.pressed and not event.echo:
 		var key := (event as InputEventKey).keycode
-		if InputKeys.is_key_of(event as InputEventKey, InputKeys.ROTATE_ITEM):     # 284 §3.5：键走动作（默认 R）
-			rotate_dragged()
+		if InputKeys.is_key_of(event as InputEventKey, InputKeys.ROTATE_CCW):     # 作者 11-27：键走动作，默认 Q 逆时针
+			rotate_dragged(-1)
+			get_viewport().set_input_as_handled()
+		elif InputKeys.is_key_of(event as InputEventKey, InputKeys.ROTATE_CW):     # 默认 E 顺时针
+			rotate_dragged(1)
 			get_viewport().set_input_as_handled()
 		elif key == KEY_ESCAPE:
 			cancel()
 			get_viewport().set_input_as_handled()
 
 
-## 拖拽中顺时针转一步。
+## 拖拽中转一步：[param step] 为 1 顺时针、-1 逆时针。
 ##
 ## 包也能转。内容物不跟着转，仍按原偏移画在残影上 —— 落到新轮廓之外的那些
 ## 会在放手时脱落到地上，残影上先给它们打好标记，玩家放手前就看得见代价。

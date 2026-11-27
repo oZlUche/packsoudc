@@ -103,10 +103,10 @@ static func run_autosave(t: TestCase) -> void:
 
 
 static func run_coach_data(t: TestCase) -> void:
-	t.begin("166 · 教程步骤是数据：序章地图那份四步（体力、货币、背包、放大镜），目标都是登记过的读数部件；坏的报出来")
+	t.begin("166 · 教程步骤是数据：序章地图那份五步（作者 11-27 先讲拖地图，再体力、货币、背包、放大镜），目标都是登记过的读数部件；坏的报出来")
 	var steps := CoachOverlay.load_steps(&"prologue_map")
 	var targets: Array = steps.map(func(s: Dictionary) -> String: return String(s["target"]))
-	t.eq(targets, ["vitality", "wallet", "bag_end", "reopen_button"], "四步按顺序（235：背包指栏的右头）")
+	t.eq(targets, ["screen", "vitality", "wallet", "bag_end", "reopen_button"], "五步按顺序（235：背包指栏的右头；作者 11-27：拖地图那步讲整屏）")
 	t.eq(CoachOverlay.problems(steps), [] as Array[String], "没有问题")
 	var bad := CoachOverlay.problems([{"target": "nope", "text": "x", "texts": {"en": "x"}}, {"target": "wallet", "texts": {"en": "x"}}])
 	t.check(bad.size() == 2 and bad[0].contains("nope") and bad[1].contains("没写说明"), "坏目标、没写字都报：%s" % "；".join(bad))
@@ -222,11 +222,13 @@ static func frame_prologue_coach(t: TestCase, root: Window) -> void:
 	t.not_null(o, "地图露出来：教程开了（屏 %s）" % flow.screen)
 	if o != null:
 		t.eq(o.index, 0, "第一步")
-		t.check(o.hole().size.x > 0.0, "第一步挖了洞（体力在栏里）")
-		for i in o.steps.size():
+		t.eq(o.hole(), Rect2(), "作者 11-27：第一步讲拖地图，整屏、不挖洞")
+		o.next()
+		t.check(o.hole().size.x > 0.0, "第二步挖了洞（体力在栏里）")
+		for i in range(1, o.steps.size()):
 			t.check(o.hole().size.x > 0.0, "第 %d 步的目标找得到" % (i + 1))
 			o.next()
-		t.is_null(map.coach(), "四步点完：收掉")
+		t.is_null(map.coach(), "五步点完：收掉")
 	t.check(flow.meta.coach_seen.has("prologue_map"), "记在局外")
 	map.call("_maybe_coach")
 	t.is_null(map.coach(), "放过了：不再自己放")
