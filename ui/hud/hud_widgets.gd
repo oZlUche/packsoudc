@@ -8,12 +8,11 @@ const KINDS := {
 	&"vitality": "res://ui/hud/widgets/vitality_widget.gd",
 	&"wallet": "res://ui/hud/widgets/wallet_widget.gd",
 	&"faith": "res://ui/hud/widgets/faith_widget.gd",
-	&"buffs": "res://ui/hud/widgets/buffs_widget.gd",
 	&"erosion": "res://ui/hud/widgets/erosion_widget.gd",
 	&"belt": "res://ui/hud/widgets/belt_widget.gd",
 	&"hud_bar": "res://ui/hud/widgets/hud_bar.gd",
 	&"legend": "res://ui/hud/widgets/legend_widget.gd",
-	&"commissions": "res://ui/hud/widgets/commissions_widget.gd",     # 336
+	&"status_slate": "res://ui/hud/widgets/status_slate_widget.gd",     # 作者 11-27（85 A）：左上一块石板 = 状态 + 委托（原 buffs、commissions 两件）
 	&"meal": "res://ui/hud/widgets/meal_widget.gd",     # 355
 	&"stars": "res://ui/hud/widgets/stars_widget.gd",     # 作者 11-27：日神【众星】点亮几颗（没拿不显示）
 	&"level": "res://ui/hud/widgets/level_widget.gd",     # 372 / 382：等级格（星 + 等级数，待选红点）
