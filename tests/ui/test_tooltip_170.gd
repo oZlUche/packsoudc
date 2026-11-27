@@ -85,7 +85,7 @@ static func run_ring(t: TestCase) -> void:
 
 
 static func frame_pin(t: TestCase, root: Window) -> void:
-	t.begin("170 · 固定式悬浮窗：离开道具当场收、移进窗也收（作者 10-27）；停在道具上 0.5 + 0.6 秒钉住、中途移开归零；钉住后关键词停 0.25 秒开子窗（封顶 3 层）；Esc / 点外面 / 离开 0.4 秒收")
+	t.begin("170 · 固定式悬浮窗：离开道具当场收、移进窗也收（作者 10-27）；停在道具上 0.5 + 0.6 秒钉住、中途移开归零；钉住后关键词停 0.25 秒开子窗（封顶 3 层）；Esc / 点外面 / 离开当场收（作者 11-27）")
 	var db := _db()
 	var host := Control.new()
 	host.size = Vector2(1600, 900)
@@ -148,11 +148,9 @@ static func frame_pin(t: TestCase, root: Window) -> void:
 		tip.pin(grand)
 		grand.terms["probe2"] = {"name": "探针二", "text": "说明"}
 		t.check(tip.open_child(grand, "term:probe2") == null, "第 4 层开不出来（封顶 %d）" % HoverTip.MAX_DEPTH)
-	# 离开 0.4 秒收
-	tip.tick(0.2, outside)
-	t.check(tip.is_showing(), "离开 0.2 秒：还在")
-	tip.tick(0.25, outside)
-	t.check(not tip.is_showing(), "离开 0.4 秒：整串收掉")
+	# 作者 2026-11-27：贴着道具摆的窗，离开道具与整串窗当场收（不再等 0.4 秒）
+	tip.tick(0.01, outside)
+	t.check(not tip.is_showing(), "离开道具与窗：当场整串收掉")
 	# Esc
 	view.gui_input.emit(mm)
 	tip.tick(0.7 + HoverTip.PIN_DELAY_SEC, src)
@@ -228,4 +226,63 @@ static func frame_anchor_item(t: TestCase, root: Window) -> void:
 	view.gui_input.emit(mm)
 	tip._refit()
 	t.eq(tip._panel.global_position, at1, "鼠标换到这件的另一角：窗不动")
+	host.queue_free()
+
+
+static func frame_flush_hand_off(t: TestCase, root: Window) -> void:
+	t.begin("作者 2026-11-27 · 钉住的道具窗：紧贴道具外框、子窗紧贴主窗，鼠标从道具挪进窗一路不落空；在道具外框里（异形凹处）也不收；离开当场收")
+	var db := _db()
+	var host := Control.new()
+	host.size = Vector2(1600, 900)
+	root.add_child(host)
+	var board := GridInventory.new(Vector2i(4, 3), 1)
+	var arrows := ItemInstance.create(db.get_def(&"poison_arrows"))
+	board.place(arrows, Vector2i(0, 0), 0)
+	var view := InventoryView.new()
+	view.inventory = board
+	view.position = Vector2(20, 20)
+	view.size = Vector2(board.size) * InventoryView.CELL
+	host.add_child(view)
+	var tip := HoverTip.new()
+	host.add_child(tip)
+	tip.watch(view)
+	t.eq(HoverTip.ANCHOR_GAP, 0.0, "主窗与道具之间不留缝")
+	t.eq(HoverTip.CHILD_GAP, 0.0, "子窗与父窗之间不留缝")
+	var r := view.item_rect(arrows.uid)
+	var mm := InputEventMouseMotion.new()
+	mm.position = r.position + Vector2(4, 4)
+	view.gui_input.emit(mm)
+	tip._refit()
+	tip.pin(tip._panel)
+	var item_g := view.get_global_transform() * r
+	var win := tip._panel.global_rect()
+	t.check(is_equal_approx(win.position.x, item_g.end.x), "窗左沿 = 道具右沿")
+	# 从道具中间一路横着挪进窗：每一步都在道具或窗里，窗不收
+	var y := item_g.position.y + 4.0
+	var x := item_g.position.x + 4.0
+	var ok := true
+	while x < win.position.x + 20.0:
+		tip.tick(0.05, Vector2(x, y))
+		if not tip.is_showing():
+			ok = false
+			break
+		x += 1.0
+	t.check(ok, "鼠标从道具横挪进窗：一路不收")
+	# 道具外框里但不在道具的格上（异形凹处）：也算在源上
+	tip._on_source = false
+	tip.tick(0.05, item_g.get_center())
+	t.check(tip.is_showing(), "道具外框里：不收")
+	# 子窗紧贴
+	tip._panel.terms["probe"] = {"name": "探针", "text": "说明"}
+	var child := tip.open_child(tip._panel, "term:probe")
+	t.not_null(child, "开出子窗")
+	if child != null:
+		tip.pin(child)
+		var cr := child.global_rect()
+		var pr := tip._panel.global_rect()
+		t.check(is_equal_approx(cr.position.x, pr.end.x) or is_equal_approx(cr.position.y, pr.end.y), "子窗贴着父窗的右沿或下沿")
+		tip.tick(0.05, cr.get_center())
+		t.check(tip.is_showing(), "在子窗里：不收")
+	tip.tick(0.01, Vector2(5, 880))
+	t.check(not tip.is_showing(), "离开道具与所有窗：当场收")
 	host.queue_free()
