@@ -9,5 +9,6 @@
     "en": "Wood, resin, herbs and hive goods gathered in the woods."
   },
   "tip": false,
-  "category": "affiliation"
+  "category": "affiliation",
+  "icon": "herb"
 }

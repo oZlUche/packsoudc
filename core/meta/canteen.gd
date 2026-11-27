@@ -26,6 +26,9 @@ const CAP_FLAT := 999.0
 const CAP_PCT := 1000.0
 ## 355：食材在普通搜索里的权重倍数（报告 355 第八节「权重低」）
 const SEARCH_WEIGHT := 0.25
+## 作者 2026-11-27（确认清单 73「让赐福的更值钱，然后效果统一 +50%」）：赐福的食材下锅照本体那一条算，加成 ×1.5，饱腹不变
+## （器官的特性在 [method Blessings.derive] 派生时就乘好了）
+const BLESSED_MULT := 1.5
 
 static var _rules: CanteenRules = null
 ## 提示窗按谁算「对当前角色实际加多少」（食堂页 = 上回出征那位，开局屏 = 选着的那位；空 = 不写）
@@ -149,7 +152,7 @@ static func meal_of(items: Array, rules: CanteenRules = null) -> Dictionary:
 		var it := inst as ItemInstance
 		if it == null or not is_ingredient(it.def):
 			continue
-		var e := r.entry(it.def.id)
+		var e := table_entry(it.def, r)
 		if OrganTraits.is_organ(it.def):     # 395：器官下锅给特性，放几件叠几次
 			count += 1
 			ids[String(it.def.id)] = int(ids.get(String(it.def.id), 0)) + 1
@@ -190,7 +193,7 @@ static func entry_of(def: ItemDef, rules: CanteenRules = null) -> Dictionary:
 	if not is_ingredient(def):
 		return {}
 	var r := rules if rules != null else load_rules()
-	var e := r.entry(def.id)
+	var e := table_entry(def, r)
 	var stat: StringName = STAT_OF.get(StringName(String(e.get("category", ""))), &"")
 	if stat == &"":
 		return {}
@@ -200,6 +203,19 @@ static func entry_of(def: ItemDef, rules: CanteenRules = null) -> Dictionary:
 	elif e.has("pct"):
 		out["pct"] = float(e["pct"])
 	return out
+
+
+## 表里这件的那一条；赐福版（表里没登记）照本体那一条，固定值 / 百分比 ×[constant BLESSED_MULT]，饱腹不变
+static func table_entry(def: ItemDef, r: CanteenRules) -> Dictionary:
+	if def == null or r == null:
+		return {}
+	if not def.is_blessed():
+		return r.entry(def.id)
+	var e := r.entry(def.blessed_of).duplicate()
+	for k in ["flat", "pct"]:
+		if e.has(k):
+			e[k] = float(e[k]) * BLESSED_MULT
+	return e
 
 
 ## 某属性的终值：基数 ×（1 + Σ%）+ Σ固定（和科技同一条算式，[method RunContext.scaled] 的浮点版）

@@ -103,6 +103,8 @@ static func flesh_gain(lv: LevelModule, def: ItemDef) -> float:
 	if lv == null or def == null:
 		return 0.0
 	var per := lv.god_value(EAT_UP if lv.has_card(EAT_UP) else EAT, "per_cell")
+	if def.is_blessed() and Canteen.is_ingredient(def):     # 作者 11-27（确认清单 78）：赐福食材饱腹以外的效果 ×1.5 —— 按本体的稀有度（赐福 +1 之前）算再乘
+		return per * def.cell_count() * (maxi(0, def.rarity - 1) + 1) * Canteen.BLESSED_MULT
 	return per * def.cell_count() * (def.rarity + 1)
 
 

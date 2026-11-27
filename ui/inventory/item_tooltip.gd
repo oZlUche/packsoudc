@@ -30,6 +30,13 @@ static var faith_probe: Callable = Callable()
 ## 256：这一局按标签打折的重量（[member RunContext.weight_pct]）；没接 = 不打折
 static var weight_probe: Callable = Callable()
 const DIM_HEX := "8b93a1"
+## 作者 11-27 定稿（71）：「下锅」小节的颜色 —— 标题黄铜、数金色、角色名灰、角色实得浅、器官好处绿 / 代价红
+const POT_TITLE := "#C9A04E"
+const POT_VAL := "#FFC928"
+const POT_WHO := "#A89F8A"
+const POT_WHO_VAL := "#E6DCC6"
+const POT_GOOD := "#8FD16A"
+const POT_BAD := "#E8A08A"
 ## 320 A9：侵蚀那一行的红
 const DANGER_HEX := "b0413e"
 static var _sets: SetDatabase = null
@@ -228,10 +235,6 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 		var made := made_from_line(def)
 		if made != "":
 			lines.append(made)
-	if Canteen.is_ingredient(def):     # 355：食材下锅给什么，再写对当前角色实际加多少
-		var cl := canteen_line(def)
-		if cl != "":
-			lines.append(cl)
 	if def.wear != null:     # 148：耐久 —— 剩几次、用完就碎
 		lines.append(wear_line(inst))
 	if ItemErosion.count(inst) > 0:     # 320 A9：侵蚀层数 —— 坏消息放后面
@@ -283,7 +286,8 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 		var bd: BuffDef = item_buffs[id]
 		if Names.of(bd) != "":
 			extra[Names.of(bd)] = {"id": String(id), "text": Glossary.describe_buff(bd), "style": Glossary.status_style(bd)}
-	var rest := "\n".join(head_rest) + "\n" + "\n".join(lines) + "\n" + faith
+	var pot := "" if wild else canteen_line(def)     # 作者 11-27（71）：食材的「下锅」小节在正文开头
+	var rest := "\n".join(head_rest) + "\n" + pot + "\n" + "\n".join(lines) + "\n" + faith
 	var found := Glossary.terms_in(rest, extra)
 	var terms := {}
 	for f in found:
@@ -298,8 +302,11 @@ static func describe_full(inst: ItemInstance, board: GridInventory = null) -> Di
 	var faith_title := "" if faith == "" else faith_title_of(def, status)
 	if faith != "":
 		faith = "[font_size=%d]%s[/font_size]" % [BODY_SIZE, Glossary.mark_rich(faith, found)]
-	var text := head + "\n" + (body + "\n" if body != "" else "") + (faith_title + "\n" + faith + "\n" if faith != "" else "") + foot + (UiText.t("tip.set") % set_name if set_name != "" else "")
-	return {"head": head, "body": body, "faith_title": faith_title, "faith": faith, "foot": foot, "set": set_name, "text": text, "terms": terms}
+	var pot_head := "" if pot == "" else pot_title()
+	if pot != "":
+		pot = "[font_size=%d][color=@tip_fg]%s[/color][/font_size]" % [BODY_SIZE, Glossary.mark_rich(pot, found)]
+	var text := head + "\n" + (pot_head + "\n" + pot + "\n" if pot != "" else "") + (body + "\n" if body != "" else "") + (faith_title + "\n" + faith + "\n" if faith != "" else "") + foot + (UiText.t("tip.set") % set_name if set_name != "" else "")
+	return {"head": head, "pot_title": pot_head, "pot": pot, "body": body, "faith_title": faith_title, "faith": faith, "foot": foot, "set": set_name, "text": text, "terms": terms}
 
 
 ## 257：赐福小节 —— 每条加成一行两列（左：生效条件 `@faith`；右：加成 `@val`），信物降成一行脚注「信物」（奉着的写「信物 · 当前信仰」）（正文同号 tip_meta —— 作者 11-04，
@@ -784,24 +791,40 @@ static func set_name_of(id: StringName) -> String:
 
 
 ## 148：耐久那一行（「耐久 2 / 3：每供给一场少一次，用完就碎」；碎了写不再供给）。208：写了换成什么就说「用完碎成碎晶」
-## 355：「下锅：耐力上限 +5% · 饱腹 +5」
+## 作者 11-27（确认清单 71，A 的小节标题 + B 的角色实得）：食材的「下锅」小节正文 —— 每项一行两列（左名字、右数）：
+## 加成（金色粗体；百分比的在名字后面挂小字「马库斯 +2.6」= 对当前角色实际加多少，固定值对谁都一样不写）、饱腹（0 不写）；
+## 器官一条特性一行，好处绿、代价红，好处在前。不是食材 / 表里没有返回空
 static func canteen_line(def: ItemDef) -> String:
-	if OrganTraits.is_organ(def) and Canteen.is_ingredient(def):     # 395：器官下锅给特性（好处在前）
-		return UiText.t("canteen.tip_line") % OrganTraits.line(def.eat_trait)
-	var e := Canteen.entry_of(def)
-	if e.is_empty():
+	if not Canteen.is_ingredient(def):
 		return ""
-	var stat := StringName(e["stat"])
-	var meal := Canteen.single_meal(def)
-	var parts: Array[String] = [Canteen.line_of(meal, stat)]
-	if int(e.get("satiety", 0)) > 0:
-		parts.append(UiText.t("canteen.tip_satiety") % int(e["satiety"]))
-	var out := UiText.t("canteen.tip_line") % " · ".join(parts)
-	var ch := Canteen.viewer     # 355：对当前角色实际加多少，玩家不用自己算固定值和百分比哪个划算
-	# 2026-11-27：只有百分比才要折算；固定值对谁都一样，再写一行带角色名的同数会被看成「直接吃的效果」（食材局里不能吃）
-	if ch != null and e.has("pct") and not (stat == Canteen.CARRY and ch.weight_capacity <= 0):
-		out += "\n" + UiText.t("canteen.tip_for") % [Names.of(ch), UiText.t("canteen.stat_" + String(stat)), Canteen.num(Canteen.gain_for(ch, meal, stat))]
-	return out
+	var rows: Array = []
+	if OrganTraits.is_organ(def):     # 395：器官下锅给特性（好处在前）
+		for r in OrganTraits.rows(def.eat_trait):
+			rows.append([String(r[0]), "[b][color=%s]%s[/color][/b]" % [POT_GOOD if bool(r[2]) else POT_BAD, String(r[1])]])
+	else:
+		var e := Canteen.entry_of(def)
+		if e.is_empty():
+			return ""
+		var stat := StringName(e["stat"])
+		var meal := Canteen.single_meal(def)
+		var name := UiText.t("canteen.stat_" + String(stat))
+		var amount := "+" + Canteen.num(float(e["flat"])) if e.has("flat") else (UiText.t("canteen.hp_pct") if stat == BattleStats.REGEN_HP else "+%s%%") % Canteen.num(float(e["pct"]))
+		var ch := Canteen.viewer     # 355：对当前角色实际加多少，玩家不用自己算固定值和百分比哪个划算
+		# 11-27：只有百分比才要折算；固定值对谁都一样，再写一遍带角色名的同数会被看成「直接吃的效果」（食材局里不能吃）
+		if ch != null and e.has("pct") and not (stat == Canteen.CARRY and ch.weight_capacity <= 0):
+			name += "　[font_size=%d][color=%s]%s[/color][/font_size] [font_size=%d][b][color=%s]+%s[/color][/b][/font_size]" % [FOOT_SIZE, POT_WHO, Names.of(ch), FOOT_SIZE + 1, POT_WHO_VAL, Canteen.num(Canteen.gain_for(ch, meal, stat))]
+		rows.append([name, "[b][color=%s]%s[/color][/b]" % [POT_VAL, amount]])
+	var sat := int(Canteen.entry_of(def).get("satiety", 0))
+	if sat > 0:
+		rows.append([UiText.t("canteen.satiety_name"), "[b][color=%s]+%d[/color][/b]" % [POT_VAL, sat]])
+	if rows.is_empty():
+		return ""
+	return Glossary.columns(rows, Glossary.two_widths(rows))
+
+
+## 「下锅」小节的标题（黄铜色粗体）
+static func pot_title() -> String:
+	return "[font_size=%d][b][color=%s]%s[/color][/b][/font_size]" % [SUB_SIZE, POT_TITLE, UiText.t("canteen.pot_title")]
 
 
 static func wear_line(inst: ItemInstance) -> String:

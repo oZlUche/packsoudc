@@ -64,6 +64,10 @@ class TipWindow extends PanelContainer:
 	var head: RichTextLabel
 	var sep: ColorRect
 	var body: RichTextLabel
+	## 作者 11-27（71）：食材的「下锅」小节 —— 和赐福小节同样的带字虚线 + 两列行，在正文前面；没有就藏
+	var pot_dash: HBoxContainer
+	var pot_title: RichTextLabel
+	var pot_body: RichTextLabel
 	## 257：道具窗的赐福小节 —— 居中神名的虚线（[method titled_dash]）+ 两列行；没有就藏
 	var faith_dash: HBoxContainer
 	var faith_title: RichTextLabel
@@ -118,6 +122,11 @@ class TipWindow extends PanelContainer:
 		sep.custom_minimum_size = Vector2(width, 1)
 		sep.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		col.add_child(sep)
+		pot_dash = titled_dash(width)
+		pot_title = pot_dash.get_child(1) as RichTextLabel
+		col.add_child(pot_dash)
+		pot_body = _rich(width)
+		col.add_child(pot_body)
 		body = _rich(width)
 		col.add_child(body)
 		faith_dash = titled_dash(width)
@@ -178,6 +187,8 @@ class TipWindow extends PanelContainer:
 	func _hide_faith() -> void:
 		faith_dash.visible = false
 		faith_body.visible = false
+		pot_dash.visible = false
+		pot_body.visible = false
 
 	func _rich(width: float) -> RichTextLabel:
 		var r := UiTheme.rich_block(width, UiTheme.RICH_SMALL_SIZE + 1)     # 悬浮窗整体比小字大一号（作者 10-21）
@@ -200,6 +211,8 @@ class TipWindow extends PanelContainer:
 		head.custom_minimum_size.x = w - (HoverTip.FAV_MARGIN if fav >= 0 else 0.0)     # 265：名字行右边给丝带让 48
 		body.custom_minimum_size.x = w
 		faith_dash.custom_minimum_size.x = w
+		pot_dash.custom_minimum_size.x = w
+		pot_body.custom_minimum_size.x = w
 		faith_body.custom_minimum_size.x = w
 		sep.custom_minimum_size.x = w
 		foot_sep.custom_minimum_size.x = w
@@ -272,7 +285,12 @@ class TipWindow extends PanelContainer:
 		UiTheme.set_rich(foot, String(full.get("foot", "")))
 		# 193：没有正文（只有价值与重量）→ 分隔线与正文都藏，只剩 头 / 虚线 / 脚注
 		var has_body := not Glossary.strip_bbcode(String(full.get("body", ""))).strip_edges().is_empty()
-		sep.visible = has_body
+		var pot := String(full.get("pot", ""))     # 作者 11-27（71）：「下锅」小节在正文前面
+		pot_dash.visible = pot != ""
+		pot_body.visible = pot != ""
+		UiTheme.set_rich(pot_title, String(full.get("pot_title", "")))
+		UiTheme.set_rich(pot_body, pot)
+		sep.visible = has_body or pot != ""
 		body.visible = has_body
 		var faith := String(full.get("faith", ""))     # 257：赐福小节
 		faith_dash.visible = faith != ""
@@ -292,6 +310,9 @@ class TipWindow extends PanelContainer:
 		if not item_mode:
 			return (head.text + "\n" + body.text) if head.visible else body.text
 		var parts: Array[String] = [head.text]
+		if pot_body.visible:
+			parts.append(pot_title.text)
+			parts.append(pot_body.text)
 		if body.visible:
 			parts.append(body.text)
 		if faith_body.visible:

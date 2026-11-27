@@ -49,6 +49,13 @@ static func derive(faith: FaithDef, def: ItemDef, rule: Blessing) -> ItemDef:
 	out.rarity = clampi(def.rarity + rule.rarity_up, 0, 5)
 	if def.value > 0:
 		out.value = roundi(float(def.value) * rule.value_mult)
+	if Canteen.is_ingredient(def):     # 作者 11-27（确认清单 78）：赐福食材售价 = 本体 ×1.5（不随稀有度 +1 的每格价翻上去）
+		out.value = maxi(1, roundi(float(ItemValue.of(def)) * rule.value_mult))
+	if Canteen.is_ingredient(def) and not def.eat_trait.is_empty():     # 作者 11-27（73 / 78）：赐福的器官特性 ×1.5（下锅、蛮神直接吃一样）
+		var tr := {}
+		for k in def.eat_trait:
+			tr[k] = float(def.eat_trait[k]) * Canteen.BLESSED_MULT
+		out.eat_trait = tr
 	out.blessed_of = def.id
 	return out
 

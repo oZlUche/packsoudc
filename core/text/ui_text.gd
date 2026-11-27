@@ -798,8 +798,8 @@ const TEXT := {
 	"canteen.stat_regen_hp": {"zh": "战斗中每秒回血", "en": "Health per second in battle"},
 	"canteen.satiety": {"zh": "饱腹 %d", "en": "Satiety %d"},
 	"canteen.satiety_tip": {"zh": "出征吃掉这一锅；每走到一个新节点饱腹减 1，到 0 这锅的加成失效", "en": "This pot is eaten when you set out; satiety drops by 1 at each new node, and at 0 the meal wears off"},
-	"canteen.tip_line": {"zh": "下锅：%s", "en": "In the pot: %s"},
-	"canteen.tip_satiety": {"zh": "饱腹 +%d", "en": "Satiety +%d"},
+	"canteen.pot_title": {"zh": "下锅", "en": "In the pot"},     # 作者 11-27（71）：食材悬浮窗的小节
+	"canteen.satiety_name": {"zh": "饱腹", "en": "Satiety"},
 	"canteen.menu_default": {"zh": "配方 %d", "en": "Recipe %d"},     # 355 第二批
 	"canteen.menu_save": {"zh": "记为配方", "en": "Save recipe"},
 	"canteen.menu_save_tip": {"zh": "把锅里这一锅记成配方，最多 %d 份", "en": "Save this pot as a recipe, up to %d"},
@@ -812,7 +812,6 @@ const TEXT := {
 	"canteen.unnamed": {"zh": "自由组合", "en": "Free mix"},
 	"canteen.for": {"zh": "按%s算", "en": "For %s"},
 	"canteen.final": {"zh": "%s %s → %s", "en": "%s %s → %s"},
-	"canteen.tip_for": {"zh": "下锅给%s：%s +%s", "en": "In the pot for %s: %s +%s"},
 	"canteen.prep_title": {"zh": "这一锅", "en": "This pot"},
 	"canteen.eaten_mark": {"zh": "已开饭", "en": "Served"},     # 383
 	"canteen.eaten_note": {"zh": "在食堂开过饭了，这一锅不能再换", "en": "Already served at the canteen; this pot can't be changed"},
@@ -2259,6 +2258,15 @@ const TEXT := {
 	"bag.ate_organ": {"zh": "吃下%s：%s", "en": "Ate %s: %s"},     # 395 器官
 	"bag.eat_tip": {"zh": "生命上限 +%s", "en": "Max Health +%s"},
 	"trait.sep": {"zh": "，", "en": ", "},
+	"trait_name.damage": {"zh": "造成的伤害", "en": "Damage dealt"},     # 作者 11-27（71）：「下锅」小节左名字右数
+	"trait_name.haste": {"zh": "急速", "en": "Haste"},
+	"trait_name.max_hp": {"zh": "生命上限", "en": "Max Health"},
+	"trait_name.regen_hp": {"zh": "战斗中每秒回复生命", "en": "Health regen in battle /s"},
+	"trait_name.taken": {"zh": "受到的伤害", "en": "Damage taken"},
+	"trait_name.scorch": {"zh": "每次攻击，敌我各加灼伤", "en": "Each attack: Scorch on both sides"},
+	"trait_name.chill": {"zh": "每次攻击，敌我各加寒冷", "en": "Each attack: Chill on both sides"},
+	"trait_name.poison": {"zh": "每次攻击，敌我各加中毒", "en": "Each attack: Poison on both sides"},
+	"trait_name.stacks": {"zh": "%s 层", "en": "%s"},
 	"trait.damage": {"zh": "造成的伤害 %s%%", "en": "Damage dealt %s%%"},
 	"trait.haste": {"zh": "急速 %s%%", "en": "Haste %s%%"},
 	"trait.max_hp": {"zh": "生命上限 %s", "en": "Max Health %s"},

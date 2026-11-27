@@ -14,4 +14,5 @@ descriptions = {
 }
 tip = false
 category = "affiliation"
+icon = "flesh"
 parents = Array[StringName]([&"material", &"ingredient"])
