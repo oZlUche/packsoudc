@@ -423,7 +423,8 @@
 | 402 | [框选多件道具](402-box-select-items.md) | 落地 v9.33；作者已答 5 条（Shift 从包的空处起框，其余先不做） |
 | 403 | [武器伤害、耐力消耗 ×1.2，回复量 ×1.8](403-weapon-damage-and-heal-upscale.md) | 落实 v9.43；7 条读法作者 11-27 全部按推荐 |
 | 404 | [精英的额外奖励改成宝箱](404-elite-reward-chest.md) | 已交落实（11-28）；四处待定按推荐 |
-| 405 | [道具与信仰牌的联动设计](405-item-faith-synergies.md) | 候选方案，供设计评审 |
+| 405 | [道具和信仰怎么融合：改进方向](405-item-faith-integration-directions.md) | 提案，供审阅，待作者定四处（11-28） |
+| 406 | [道具与信仰牌的联动设计](406-item-faith-synergies.md) | 候选方案，供 Claude 对照评审 |
 
 ## 竞品与市场调查
 
