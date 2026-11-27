@@ -3,7 +3,7 @@
 ##
 ## 现在六个动作：`confirm`（确认，默认回车 / 小键盘回车 / 空格；宝箱屏按住开锁）、`cancel`（取消，默认 Esc；
 ## 只是先定义，各处的 Esc 判断还没换过来）、`toggle_fullscreen`（172：窗口 ↔ 全屏，默认 F11）。改键界面等下一个要改键的动作出现再做（补充一待定 1 = A），手柄不绑（待定 2 = A）。
-## 284 §3.5（作者 11-07 14:57：按键引用而非写死）：`rotate_item`（拖着转向，默认 R）、`hide_tip`（按住藏说明，默认 Alt）、`whole_bag`（按住点包里的 = 点整个包，默认 Ctrl，mac 加 Cmd）。
+## 284 §3.5（作者 11-07 14:57：按键引用而非写死）：`rotate_ccw` / `rotate_cw`（拖着转向；作者 11-27 由 R 改成 Q 逆时针、E 顺时针）、`hide_tip`（按住藏说明，默认 Alt）、`whole_bag`（按住点包里的 = 点整个包，默认 Ctrl，mac 加 Cmd）。
 ## 这三个的默认键登记在代码里（[constant CODE_DEFAULTS]，[method ensure]），不写进 `project.godot`；台词里写 `[key=动作]`，显示时换成现在绑的键名（[KeyNames]）
 class_name InputKeys
 extends RefCounted
@@ -12,8 +12,10 @@ const CONFIRM := &"confirm"
 const CANCEL := &"cancel"
 ## 172：窗口 ↔ 全屏，默认 F11（待定 2 A）
 const TOGGLE_FULLSCREEN := &"toggle_fullscreen"
-## 284 §3.5：拖着时转向
-const ROTATE_ITEM := &"rotate_item"
+## 作者 11-27：拖着时逆时针转一格，默认 Q（原来一个 `rotate_item` 默认 R，只会顺时针）
+const ROTATE_CCW := &"rotate_ccw"
+## 作者 11-27：拖着时顺时针转一格，默认 E
+const ROTATE_CW := &"rotate_cw"
 ## 284 §3.5：按住时道具说明先藏起来
 const HIDE_TIP := &"hide_tip"
 ## 284 §3.5：按住时点包里的道具 = 点这个包（274）
@@ -21,9 +23,9 @@ const WHOLE_BAG := &"whole_bag"
 ## 切片 v6.14 D：地图屏看全图（原来写死 F）
 const MAP_FIT := &"map_fit"
 ## 玩家能改的动作
-const ACTIONS: Array[StringName] = [CONFIRM, CANCEL, TOGGLE_FULLSCREEN, ROTATE_ITEM, HIDE_TIP, WHOLE_BAG, MAP_FIT]
+const ACTIONS: Array[StringName] = [CONFIRM, CANCEL, TOGGLE_FULLSCREEN, ROTATE_CCW, ROTATE_CW, HIDE_TIP, WHOLE_BAG, MAP_FIT]
 ## 284 §3.5：代码里登记默认键的动作（动作 → 键码）
-const CODE_DEFAULTS := {ROTATE_ITEM: [KEY_R], HIDE_TIP: [KEY_ALT], WHOLE_BAG: [KEY_CTRL, KEY_META], MAP_FIT: [KEY_F]}
+const CODE_DEFAULTS := {ROTATE_CCW: [KEY_Q], ROTATE_CW: [KEY_E], HIDE_TIP: [KEY_ALT], WHOLE_BAG: [KEY_CTRL, KEY_META], MAP_FIT: [KEY_F]}
 
 
 ## 284 §3.5：[constant CODE_DEFAULTS] 里的动作没登记就按默认键登记（可以反复叫）
