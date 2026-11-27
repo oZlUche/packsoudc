@@ -1,4 +1,4 @@
-# 402: damage / stamina cost x1.2, heal x1.8 on authoring JSON. Prints every change.
+# 403: damage / stamina cost x1.2, heal x1.8 on authoring JSON. Prints every change.
 import json, glob, math, sys, os
 D, H = 1.2, 1.8
 root = 'data/authoring'

@@ -369,4 +369,4 @@ static func run_validation(t: TestCase) -> void:
 	t.check(lr.ok(), "放血刀导入无错")
 	var dd := (ldef.combat.rules[1] as AbilityRule).effects[0] as DealDamage
 	t.eq(dd.per_target_stack, &"bleed", "放血刀改成按目标流血层数")
-	t.eq(dd.amount, 4.0, "每层 4 点（402：3 × 1.2 取整）")
+	t.eq(dd.amount, 4.0, "每层 4 点（403：3 × 1.2 取整）")

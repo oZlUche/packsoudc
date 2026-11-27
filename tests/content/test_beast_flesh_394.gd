@@ -109,7 +109,7 @@ static func run_organs(t: TestCase) -> void:
 	t.check(is_equal_approx(float(tot.get(&"haste", 0.0)), 4.0), "蛇胆 +8、熊肝 -4：急速 +4%")
 	var base := run.effective_baseline().base_stats
 	t.check(is_equal_approx(float(base.get(&"max_hp", 0.0)), hp0 - 20.0), "蛇胆：生命上限 -20")
-	t.check(is_equal_approx(float(base.get(&"regen_hp", 0.0)), rg0 + 5.4), "熊肝：每秒回复 +5.4（402）")
+	t.check(is_equal_approx(float(base.get(&"regen_hp", 0.0)), rg0 + 5.4), "熊肝：每秒回复 +5.4（403）")
 	t.check(is_equal_approx(float(base.get(&"max_stamina", 0.0)), st0), "器官不给升级的一半耐力")
 	var inp := CompileInput.new()
 	OrganTraits.apply(inp, run)

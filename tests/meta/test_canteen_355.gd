@@ -63,7 +63,7 @@ static func run_content(t: TestCase) -> void:
 	var gl := Commissions.faction(r.faction)
 	t.eq(Commissions.nodes_of(gl).filter(func(n: Dictionary) -> bool: return String(n.get("effect", "")).begins_with("canteen_")).map(func(n: Dictionary) -> Array: return [int(n["rep"]), String(n["effect"]), [int(n["value"][0]), int(n["value"][1])]]),
 		[[50, "canteen_pot", [5, 5]], [50, "canteen_store", [8, 8]], [100, "canteen_pot", [6, 6]], [100, "canteen_store", [10, 8]]], "389：50 锅 5×5、仓库 8×8；100 锅 6×6、仓库 10×8")
-	t.eq(float(r.entry(&"wild_berry")["flat"]), 0.9, "野莓每秒 0.9（作者 16:41 定 0.5，402 回复 ×1.8）")
+	t.eq(float(r.entry(&"wild_berry")["flat"]), 0.9, "野莓每秒 0.9（作者 16:41 定 0.5，403 回复 ×1.8）")
 	var bad := ImportReport.new()
 	ContentImporter.import_canteen_rules({"id": "canteen", "entries": {"x": {"category": "soup", "flat": 1, "pct": 2}}}, ContentImporter.Context.new(), bad)
 	t.check(not bad.ok(), "不认识的类别、固定值百分比都写：导入报错")

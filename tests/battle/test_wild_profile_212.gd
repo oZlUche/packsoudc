@@ -50,7 +50,7 @@ static func run_two_faces(t: TestCase) -> void:
 	t.eq((wg.rules[0].cadence as CooldownCadence).seconds, 1.5, "每 1.5 秒")
 	var dd := wg.rules[0].effects[0] as DealDamage
 	t.check(dd != null and dd.damage_type == &"fire", "打的是火伤")
-	t.eq(wg.stats.total_of(BattleStats.DAMAGE), StatMath.from_float(5.0), "伤害 5（402）")
+	t.eq(wg.stats.total_of(BattleStats.DAMAGE), StatMath.from_float(5.0), "伤害 5（403）")
 	t.check(_origins(wg).has(ElementApply.ORIGIN), "打中施加走 applies 那个入口（wild_applies）")
 	var applied := ""
 	for a in wg.attached:

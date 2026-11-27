@@ -43,7 +43,7 @@ static func run_compile(t: TestCase) -> void:
 	var db := _db()
 	var a := _compiled(db, &"steel_broadsword", 0)
 	var b := _compiled(db, &"steel_broadsword", 2)
-	t.check(is_equal_approx(StatMath.to_float(b.stats.total_of(BattleStats.DAMAGE)), 15.6), "钢阔剑伤害 13 → 15.6（402：11 → 13）")
+	t.check(is_equal_approx(StatMath.to_float(b.stats.total_of(BattleStats.DAMAGE)), 15.6), "钢阔剑伤害 13 → 15.6（403：11 → 13）")
 	t.eq((_fx(a, 0, 1) as DealDamage).amount, 6.0, "0 档：其中 6 点真实伤害")
 	t.eq((_fx(b, 0, 1) as DealDamage).amount, 8.0, "2 档：其中 8 点")
 	t.eq((_fx(b, 1, 0) as PrimeNextHit).amount, 4.0, "下一下加伤 2 → 4")

@@ -109,7 +109,7 @@ static func run_parts(t: TestCase) -> void:
 	var wild := BattleCompiler.compile(board, inp)
 	t.eq(wild.item_of(knife.uid).stats.total_of(BattleStats.HASTE), base_haste, "机关面：不跑邻接")
 	t.check(not wild.item_of(arm.uid).rules.is_empty(), "机关面：齿轮臂自己出手")
-	t.eq(wild.item_of(arm.uid).stats.total_of(BattleStats.DAMAGE), StatMath.from_float(12.0), "打 12（402）")
+	t.eq(wild.item_of(arm.uid).stats.total_of(BattleStats.DAMAGE), StatMath.from_float(12.0), "打 12（403）")
 	var vent := db.get_def(&"steam_vent")
 	t.check(vent.wild_applies.size() == 1 and String(vent.wild_applies[0].buff.id) == "scorch", "蒸汽阀：机关面施加灼伤")
 	t.check(vent.tags.has(&"crafted") and not vent.tags.has(&"nature") and not vent.tags.has(&"magic"), "零件是【工艺】")

@@ -39,7 +39,7 @@ static func run_scaled_by_cells(t: TestCase) -> void:
 		var was: Array = BEFORE[id]
 		var want := floori(float(was[1]) * cells / float(was[0]) + 0.5)
 		if stat == &"damage":
-			want = floori(want * 1.2 + 0.5)     # 402：武器伤害 ×1.2（在 143 的格数比之后再取整）
+			want = floori(want * 1.2 + 0.5)     # 403：武器伤害 ×1.2（在 143 的格数比之后再取整）
 		t.eq(int(def.combat.base_stats[stat]), want, "%s 的%s：%d × %d / %d" % [Names.of(def), Glossary.stat_name(stat), was[1], cells, was[0]])
 
 

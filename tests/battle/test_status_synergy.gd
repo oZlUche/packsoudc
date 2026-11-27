@@ -169,7 +169,7 @@ static func run_items(t: TestCase) -> void:
 	var bleed_buff := ((db.get_def(&"scimitar").combat.rules[0] as AbilityRule).effects[1] as ApplyStatus).buff
 	var poison_buff := ((db.get_def(&"poisoned_knife").combat.rules[0] as AbilityRule).effects[1] as ApplyStatus).buff
 
-	# 放血刀第二条（132 起按目标层数 ×3）：对手攒够六层流血 → 每层 4 点（402）、打完清掉流血
+	# 放血刀第二条（132 起按目标层数 ×3）：对手攒够六层流血 → 每层 4 点（403）、打完清掉流血
 	var burst := db.get_def(&"bloodletter").combat.rules[1] as AbilityRule
 	var ctx := _ctx([_opener([_apply(bleed_buff, 5)]), burst])
 	_start(ctx)
