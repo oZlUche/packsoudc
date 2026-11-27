@@ -90,6 +90,9 @@ static func order_of(id: StringName) -> int:
 
 ## 250（作者定）：悬浮窗的标签行 —— 每个给玩家看的轴最多一个（按道具里写的先后取第一个），按 [constant CATEGORY_ORDER] 排；
 ## 内部的、没归类的都不列。归属轴有神先列神（`faith:<神>`）
+const INGREDIENT := &"ingredient"
+
+
 static func first_per_category(tags: Array) -> Array:
 	var picked := {}
 	for t in tags:
@@ -99,7 +102,8 @@ static func first_per_category(tags: Array) -> Array:
 		var cat := category_of(id)
 		if cat == "" or cat == "internal":
 			continue
-		if not picked.has(cat) or (cat == "affiliation" and String(id).begins_with(FaithTags.PREFIX) and not String(picked[cat]).begins_with(FaithTags.PREFIX)):
+		# 作者 11-27 定稿（食材悬浮窗）：每件食材都画面包，一眼认出能下锅 —— 类别轴上「食材」压过「素材」这些
+		if not picked.has(cat) or (cat == "affiliation" and String(id).begins_with(FaithTags.PREFIX) and not String(picked[cat]).begins_with(FaithTags.PREFIX)) or (id == INGREDIENT and cat == "kind"):
 			picked[cat] = t
 	var out: Array = []
 	for cat in CATEGORY_ORDER:

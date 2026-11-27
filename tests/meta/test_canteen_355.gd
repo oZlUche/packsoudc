@@ -236,6 +236,8 @@ static func run_blessed(t: TestCase) -> void:
 	var heart := db.get_def(Blessings.variant_id(&"wolf_heart", &"nature"))
 	if heart != null:
 		t.check(is_equal_approx(float(heart.eat_trait.get("damage", heart.eat_trait.get(&"damage", 0.0))), 12.0), "赐福狼心：造成的伤害 8%% × 1.5 = 12%%（%s）" % str(heart.eat_trait))
+	for id in [&"wolf_heart", &"meat_scrap", &"fire_gland", &"fowl_wing"]:
+		t.check(TagRegistry.first_per_category(db.get_def(id).tags).has(&"ingredient"), "%s 的标签行画食材（面包），压过素材" % id)
 	for pair in [[&"ingredient", "food"], [&"plant", "herb"], [&"blood_flesh", "flesh"]]:
 		t.eq(TagRegistry.icon_path(pair[0]), "res://assets/ui/tags/%s.png" % pair[1], "%s 标签画 %s 图标、不写字" % pair)
 
