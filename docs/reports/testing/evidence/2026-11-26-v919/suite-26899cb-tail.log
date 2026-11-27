@@ -1,0 +1,40 @@
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] frame_rack_beside_board (res://tests/ui/test_sell_tools_268.gd:231)
+         [1] _process (res://tests/run_tests.gd:138)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] frame_badge_and_ground (res://tests/ui/test_shop_keys.gd:161)
+         [1] _process (res://tests/run_tests.gd:138)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] frame_tent (res://tests/ui/test_shop_tent_233.gd:52)
+         [1] _process (res://tests/run_tests.gd:138)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1519)
+     GDScript backtrace (most recent call first):
+         [0] frame_tent (res://tests/ui/test_shop_tent_233.gd:60)
+         [1] _process (res://tests/run_tests.gd:138)
+WARNING: HoverTip：登记「不弹」条件的对象已释放却没撤销（212547447525820）
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] is_quiet (res://ui/inventory/hover_tip.gd:1358)
+         [1] frame_quiet_lifecycle (res://tests/ui/test_slice_v614.gd:59)
+         [2] _process (res://tests/run_tests.gd:138)
+======================================================
+通过  48219 项断言，362 个套件，耗时 993626 ms
+======================================================
+WARNING: 90 RIDs of type "CanvasItem" were leaked.
+   at: _free_rids (servers/rendering/renderer_canvas_cull.cpp:2735)
+WARNING: 1887051 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 5025 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+EXIT=0
+EXIT=0

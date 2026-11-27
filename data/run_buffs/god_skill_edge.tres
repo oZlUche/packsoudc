@@ -17,6 +17,6 @@ script = ExtResource("5_m2gsw")
 id = &"god_skill_edge"
 display_name = "锋芒"
 display_names = {
-"en": "Keen Edge"
+"en": "Cutting Edge"
 }
 effects = Array[ExtResource("1_q2q05")]([SubResource("Resource_np6xa")])
