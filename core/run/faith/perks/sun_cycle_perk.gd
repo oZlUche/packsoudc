@@ -164,8 +164,8 @@ func effect_for(lv: LevelModule) -> SunCycle:
 	if lv.has_card(ETERNAL_NIGHT):
 		var src4 := ETERNAL_NIGHT_UP if lv.has_card(ETERNAL_NIGHT_UP) else ETERNAL_NIGHT
 		e.eternal_night = lv.god_value(src4, "pct")
-		e.eternal_night_hp = roundi(lv.god_value(src4, "hp"))
-	e.dawn_armor = lv.god_value(DAWN_LIGHT, "pct")
+		e.eternal_night_hp = lv.god_value(src4, "hp")
+	e.dawn_heal = lv.god_value(DAWN_LIGHT, "pct")
 	e.dusk_stamina = lv.god_value(DUSK_LIGHT, "pct")
 	if lv.has_card(VEIL):
 		e.veil = (pow(1.0 + lv.god_value(VEIL, "pct") / lv.count_of(VEIL) / 100.0, lv.count_of(VEIL)) - 1.0) * 100.0     # 夜幕：格挡加成，多张照旧连乘

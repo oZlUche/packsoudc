@@ -47,7 +47,7 @@ static func default_for(p_screen: String) -> HudLayout:
 	l.screen = p_screen
 	if p_screen == "map":
 		l.entries.append(entry(&"hud_bar", "top", Vector2.ZERO))
-		for id in [&"vitality", &"wallet", &"meal"]:     # 382：饱腹收进栏里（没吃饭不显示）
+		for id in [&"vitality", &"wallet", &"stars", &"meal"]:     # 382：饱腹收进栏里（没吃饭不显示）；星辰挨着货币（没拿众星不显示）
 			l.entries.append(entry(id, "bar_left", Vector2.ZERO, 0, "double"))
 		for id in [&"buffs", &"erosion"]:
 			l.entries.append(entry(id, "bar_left", Vector2.ZERO, 1, "small"))
@@ -79,7 +79,7 @@ const BELT_OFFSET := Vector2(-8, -8)
 ## 336：委托小牌在左上（顶端栏下面）
 const COMMISSIONS_OFFSET := Vector2(16, 16)
 ## 336：后来才加的件 —— 旧布局文件里没有就按默认补上（不升 [constant VERSION]，玩家摆过的别的件照旧）
-const ADDED_LATER: Array[StringName] = [&"commissions", &"meal", &"level", &"xp_bar"]
+const ADDED_LATER: Array[StringName] = [&"commissions", &"meal", &"level", &"xp_bar", &"stars"]
 ## 浮在地图上面的件：不算进地图要躲开的上边（[method HudHost.top_inset]）。382：经验值条贴着栏下沿，宿主自己摆（不进组）
 const FLOATS: Array[StringName] = [&"xp_bar"]
 const XP_BAR := &"xp_bar"

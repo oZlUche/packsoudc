@@ -40,6 +40,8 @@ signal level_changed()
 signal leveled(level: int)
 ## 挑了一张牌
 signal picked(card_id: StringName)
+## 神的牌记在 [member god_state] 里的数变了（众星的星辰等，顶端栏读数跟着刷新）
+signal god_state_changed()
 
 ## 累计经验值（乘过难度系数；小数照留，界面取整）
 var xp: float = 0.0
@@ -875,6 +877,7 @@ func _on_battle(_n: MapNode, _r: BattleResult, won: bool) -> void:
 			god_state["sun_shifts"] = int(god_state.get("sun_shifts", 0)) + shifts     # 388 星移斗转：一局里留着
 		if has_card(SunCyclePerk.STARS):
 			god_state[SunCyclePerk.STARS_KEY] = int(god_state.get(SunCyclePerk.STARS_KEY, 0)) + shifts     # 作者 11-26 众星：每变换一次点亮一颗
+			god_state_changed.emit()
 	if won and _r != null:
 		BruteRagePerk.laurel_win(self)     # 作者 11-26 血色桂冠
 	if _r != null and god() == &"nature":

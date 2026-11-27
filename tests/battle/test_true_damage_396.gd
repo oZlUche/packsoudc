@@ -72,3 +72,10 @@ static func run_block_sources(t: TestCase) -> void:
 	me.set_block_layer(SkillMomentum.GUARD_LAYER, 0)
 	DamageResolver.resolve(ctx, DamagePacket.create(DamageTypes.PHYSICAL, StatMath.from_float(20.0), me, 0, 0, true))
 	t.eq(Pipe._hp(ctx, 1), 36, "拿掉以攻待守：只剩盾的 6，落血 14")
+	# 确认台 56（作者 11-27 选 A）：【弹开】（加固 8）加在最高那一层上
+	ShiftAxis.shift(ctx, me, StatAxes.BLOCK, 8, false)
+	DamageResolver.resolve(ctx, DamagePacket.create(DamageTypes.PHYSICAL, StatMath.from_float(20.0), me, 0, 0, true))
+	t.eq(Pipe._hp(ctx, 1), 30, "弹开加固 8 + 盾 6：落血 6")
+	me.set_block_layer(SkillMomentum.GUARD_LAYER, StatMath.from_float(10.0))
+	DamageResolver.resolve(ctx, DamagePacket.create(DamageTypes.PHYSICAL, StatMath.from_float(20.0), me, 0, 0, true))
+	t.eq(Pipe._hp(ctx, 1), 28, "弹开加固 8 + 最高一层 10（以攻待守）：落血 2")

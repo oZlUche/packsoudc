@@ -47,7 +47,7 @@ const CHILL := &"chill"
 @export var sunrise: float = 0.0
 ## 日出当作：耐力上限加多少（报告 390 起生命 ×3.5、耐力 ×2，两样分开写）
 @export var sunrise_stamina: float = 0.0
-@export var dawn_armor: float = 0.0
+@export var dawn_heal: float = 0.0
 @export var dusk_stamina: float = 0.0
 ## 星移斗转：开战时带着几层、每层几成、拿了没有
 @export var shift_on: bool = false
@@ -57,7 +57,7 @@ const CHILL := &"chill"
 @export var eternal_day: float = 0.0
 @export var eternal_day_scorch: int = 0
 @export var eternal_night: float = 0.0
-@export var eternal_night_hp: int = 0
+@export var eternal_night_hp: float = 0.0
 ## 【夜幕】：黑夜时格挡值 +百分之几（作者 11-26 09:54，取代黑夜减伤）
 @export var veil: float = 0.0
 ## 受伤前
@@ -190,7 +190,7 @@ func states_at(t: int) -> Vector2i:
 	var into := int(p["into"])
 	var is_day := bool(p["day"])
 	var day := is_day or (eclipse_moon and not is_day) or (not is_day and dusk_sec > 0.0 and int(p["index"]) > 0 and into < StatMath.from_float(dusk_sec))
-	var night := (not is_day) or (eclipse_sun and is_day) or (is_day and dawn_sec > 0.0 and int(p["index"]) > 0 and into < StatMath.from_float(dawn_sec))
+	var night := (not is_day) or (eclipse_sun and is_day) or (is_day and dawn_sec > 0.0 and into < StatMath.from_float(dawn_sec))
 	return Vector2i(1 if day else 0, 1 if night else 0)
 
 
@@ -297,7 +297,7 @@ func _per_second(ctx: RuleContext, st: Dictionary, s: Vector2i) -> void:
 		_give(ctx, me, SCORCH, eternal_day_scorch)
 		if foe != null and not foe.dead:
 			_give(ctx, foe, SCORCH, eternal_day_scorch)
-	if eternal_night > 0.0 and s.y == 1 and eternal_night_hp > 0:
+	if eternal_night > 0.0 and s.y == 1 and eternal_night_hp > 0.0:
 		for who in [me, foe]:
 			if who != null and not (who as CombatantRuntime).dead:
 				(who as CombatantRuntime).add_max(BattleStats.RES_HP, -StatMath.from_float(eternal_night_hp), StatMath.ONE)
@@ -325,8 +325,8 @@ func _enter_day(ctx: RuleContext) -> void:
 	if sunrise_stamina > 0.0 and res.has(BattleStats.RES_STAMINA):
 		var add_st := StatMath.from_float(sunrise_stamina)
 		me.add_max(BattleStats.RES_STAMINA, add_st)
-	if dawn_armor > 0.0:
-		me.restore_armor(dawn_armor)     # 【黎明】（作者 11-26 09:54）：回复身上防具护甲上限的几成，没穿防具就没有
+	if dawn_heal > 0.0:
+		me.heal(ctx.battle, StatMath.mul(me.resources.maximum(BattleStats.RES_HP), StatMath.from_float(dawn_heal / 100.0)))     # 【黎明】（作者 11-27）：恢复生命上限的几成；开战那一刻也算进入白昼
 
 
 func _enter_night(ctx: RuleContext, now: int) -> void:

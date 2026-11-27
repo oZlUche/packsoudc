@@ -9,7 +9,7 @@
 [sub_resource type="Resource" id="Resource_qd1nr"]
 script = ExtResource("2_lqsxq")
 values = {
-"hp": 1,
+"hp": 3.5,
 "pct": 50
 }
 
