@@ -50,15 +50,12 @@ static func frame_slate(t: TestCase, root: Window) -> void:
 		return
 	t.check(not slate.visible, "没有状态也没带委托：整块不显示")
 	# 状态：一条局外的（名字带「（科技）」），一条局内有时限的
-	var tech_id := &""
-	var timed_id := &""
-	for id_ in run.buff_defs:
-		var d: RunBuffDef = run.buff_defs[id_]
-		if tech_id == &"" and d.is_meta() and Names.of(d).ends_with("）"):
-			tech_id = id_
-		if timed_id == &"" and d.is_map() and d.duration_steps > 0:
-			timed_id = id_
-	t.check(tech_id != &"" and timed_id != &"", "找到一条科技 buff（%s）和一条有时限的地图 buff（%s）" % [tech_id, timed_id])
+	var tech_def := load("res://data/run_buffs/tech_hauling_1.tres") as RunBuffDef
+	var timed_def := load("res://data/run_buffs/weakened.tres") as RunBuffDef
+	var tech_id := tech_def.id
+	var timed_id := timed_def.id
+	run.buff_defs[tech_id] = tech_def
+	run.buff_defs[timed_id] = timed_def
 	run.meta_buffs.append(tech_id)
 	BuffModule.of(run).grant(timed_id)     # 发信号：石板自己刷
 	t.check(slate.visible, "有状态：石板显示")

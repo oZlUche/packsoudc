@@ -3,7 +3,7 @@
 ##
 ## - 状态：每个 buff 一行，名字在左；右边灰字写来源（名字末尾括号里的「科技」之类）或「剩 N 步」。停在一行上开那个状态的悬浮窗。
 ## - 委托：节标题后面金字「已办成 / 带了几条」；每条一行，名字照旧截到 [constant NAME_MAX] 字，右边粗体进度，办成了绿字「已办成」。
-## - 两节之间一道虚线。每节标题右边一枚圆钮（▾ 展开 / ▸ 收起），收起只剩标题行（「状态 N」「委托 x / y」）；
+## - 两节之间一道虚线。每节标题右边一枚圆钮（展开时尖朝下、收起时尖朝右），收起只剩标题行（「状态 N」「委托 x / y」）；
 ##   两节各自记在设置里（[member GameSettings.status_open] / [member GameSettings.commissions_open]），下一局照旧。
 ## - 某一节没内容整节不显示；两节都没有整块不显示
 extends HudWidget
@@ -31,6 +31,7 @@ const V_NUM := &"SlateNum"
 const V_GOLD := &"SlateGold"
 const V_DONE := &"SlateDone"
 const V_SECTION := &"SlateSection"
+const V_HEAD := &"SlateHead"
 
 static var _theme: Theme = null
 static var _theme_scale := -1.0
@@ -239,6 +240,7 @@ class _Section:
 		theme_type_variation = V_SECTION
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 		head = HBoxContainer.new()
+		head.theme_type_variation = V_HEAD
 		head.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		add_child(head)
 		title_l = _label(V_TITLE)
@@ -298,7 +300,7 @@ class _Section:
 		return l
 
 
-## 收起钮：直径 24 的圆，底 #4A4339、黄铜描边，展开 ▾ / 收起 ▸
+## 收起钮：直径 24 的圆，底 #4A4339、黄铜描边，展开尖朝下、收起尖朝右
 class _Knob:
 	extends Control
 	signal pressed()
@@ -367,6 +369,8 @@ static func _slate_theme() -> Theme:
 			t.set_font("font", v[0], bold)
 	t.set_type_variation(V_SECTION, "VBoxContainer")
 	t.set_constant("separation", V_SECTION, int(ROW_GAP))
+	t.set_type_variation(V_HEAD, "HBoxContainer")
+	t.set_constant("separation", V_HEAD, 10)
 	t.set_type_variation("TooltipLabel", "Label")
 	t.set_color("font_color", "TooltipLabel", UiTheme.INK)
 	_theme = t
