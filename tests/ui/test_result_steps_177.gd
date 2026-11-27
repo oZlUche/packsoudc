@@ -213,6 +213,17 @@ static func frame_result_steps(t: TestCase, root: Window) -> void:
 	t.eq(screen.get("_wh"), null, "第 1 步没有仓库面板")
 	t.check(screen.safe_view() != null and screen.find_child("SafeFrame", true, false) != null, "224 补充二：第 1 步账单右边有保险箱（皮带框）")
 	t.eq(_buttons(screen, "继续").size(), 1, "一个「继续」")
+	# 作者 11-27「算分面板排版有错」：372 的等级行多出一行时，明细行压矮、碑板按行重拼，合计仍落在底下那条横带上；等级只写数（Cinzel 里没有 Lv. 字形）
+	var lv := RunResult.new()
+	lv.outcome = &"extracted"
+	lv.run_level = 7
+	var lv_view := LedgerView.new()
+	lv_view.setup(lv, 0)
+	t.eq(lv_view.rows().size(), 13, "等级行：十二行明细 + 合计")
+	t.eq(lv_view.numbers().get("等级"), "7", "等级只写数")
+	t.eq(lv_view.row_height(), LedgerView.ROWS_H / 12.0, "十二行明细平分明细区（44）")
+	t.eq(ledger.row_height(), LedgerView.ROW_H, "十一行照旧 48")
+	lv_view.free()
 	var before: int = f.screen
 	_buttons(screen, "继续")[0].pressed.emit()
 	t.eq(f.screen, before, "第 1 步的继续不离开这一屏")

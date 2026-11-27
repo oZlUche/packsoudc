@@ -13,6 +13,12 @@ signal revealed
 ## 账面（字和线落的那块）；图比它大，左上差 [constant ART_ORIGIN]
 const LEDGER_SIZE := Vector2(864, 576)
 const ROW_H := 48.0
+## 碑板图里明细行那一段（合计那条横带之上）：账面 y 0..[constant ROWS_H]，图里画了 [constant ART_ROWS] 行。
+## 明细行多于这些（372 等级行）时行高压到 ROWS_H / 行数，图按行切开重拼 —— 每行都有横线、竖线贯到底，合计仍落在那条横带上
+const ROWS_H := 528.0
+const ART_ROWS := 11
+## 图里第一条行间横线的上沿（图坐标；之后每 [constant ROW_H] 一条）
+const ART_FIRST_LINE := 77.0
 const ART := "result/ledger_stele"
 const ART_ORIGIN := Vector2(-29, -29)
 ## 图按这个（1x）大小画
@@ -75,7 +81,7 @@ static func rows_for(r: RunResult, lit: int) -> Array[Dictionary]:
 	out.append(_num_row("search_craft", [r.searches, r.crafts], "ledger.dot"))
 	out.append(_num_row("lit", [lit]))
 	if r.run_level > 1:
-		out.append(_num_row("level", [r.run_level], "ledger.level_fmt"))     # 372：这一局到了几级（1 级不写，老账单行数不变）
+		out.append(_num_row("level", [r.run_level]))     # 372：这一局到了几级（1 级不写，老账单行数不变）
 	var carried := r.carried.size() if extracted else 0
 	var safe := r.safe_items.size()
 	if extracted and safe > 0:
@@ -190,16 +196,44 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
+## 明细行（不含合计）的行高：图里的 11 行放得下就是 [constant ROW_H]，多了按行数均分 [constant ROWS_H]
+func row_height() -> float:
+	return ROWS_H / maxf(ART_ROWS, _rows.size() - 1)
+
+
+## 碑板：明细行数正好时整张画；多了就按行切开重拼（顶 + 每条行间横线一段 + 底，每段裁掉行中间那片空白，不缩放，线不会糊）
+func _draw_art(tex: Texture2D, rh: float) -> void:
+	var px_per := Vector2(tex.get_width(), tex.get_height()) / ART_SIZE
+	var n := maxi(ART_ROWS, _rows.size() - 1)
+	if n == ART_ROWS:
+		draw_texture_rect(tex, Rect2(ART_ORIGIN, ART_SIZE), false)
+		return
+	var top_art := -ART_ORIGIN.y     # 账面 y 0 在图里的位置
+	var a := floorf(rh / 2.0)
+	var b := rh - a
+	var pieces: Array = [[0.0, top_art + rh - a, 0.0]]     # [图里起, 图里止, 画到图坐标的 y]
+	for k in n - 1:
+		pieces.append([ART_FIRST_LINE - a, ART_FIRST_LINE + b, top_art + rh * (k + 1) - a])
+	var bottom := top_art + ROWS_H - (rh - b)
+	pieces.append([bottom, ART_SIZE.y, bottom])
+	for p in pieces:
+		var src := Rect2(0.0, float(p[0]), ART_SIZE.x, float(p[1]) - float(p[0]))
+		var dst := Rect2(ART_ORIGIN + Vector2(0.0, float(p[2])), src.size)
+		draw_texture_rect_region(tex, dst, Rect2(src.position * px_per, src.size * px_per))
+
+
 func _draw() -> void:
+	var rh := row_height()
 	var tex := UiTheme.art_cached(ART)
 	if tex != null:
-		draw_texture_rect(tex, Rect2(ART_ORIGIN, ART_SIZE), false)
+		_draw_art(tex, rh)
+	var lift := (ROW_H - rh) / 2.0     # 行压矮了，字跟着往上收半个差，仍在行中间
 	for i in _rows.size():
 		if not _shown(i):
 			continue
 		var row := _rows[i]
-		var y := i * ROW_H
 		var total := bool(row.get("total", false))
+		var y := ROWS_H if total else i * rh - lift     # 合计总在那条横带上
 		var label := String(row["label"])
 		if total:
 			draw_string(_bold_font, Vector2(LABEL_X, y + 35), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 26, INK_LABEL)
