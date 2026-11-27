@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_thick",
+  "display_name": "厚实",
+  "display_names": {
+    "en": "Solid"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "n": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "id": "earth_crystal",
+  "display_name": "大地结晶",
+  "display_names": {
+    "en": "Earth Crystal"
+  },
+  "description": "",
+  "descriptions": {
+    "en": ""
+  },
+  "shape": [
+    "1"
+  ],
+  "value": 5,
+  "weight": 5,
+  "stackable": true,
+  "tags": [
+    "valuable",
+    "magic",
+    "no_random_source"
+  ],
+  "material": "stone"
+}

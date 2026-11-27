@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_kgl8p"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_qbogh"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_nwjg1"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_ywd3g"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_072hg"]
+
+[sub_resource type="Resource" id="Resource_d0fsb"]
+script = ExtResource("2_qbogh")
+values = {
+"stacks": 5
+}
+
+[resource]
+script = ExtResource("5_072hg")
+id = &"god_earth_pillar"
+display_name = "支柱"
+display_names = {
+"en": "Pillars"
+}
+effects = Array[ExtResource("1_kgl8p")]([SubResource("Resource_d0fsb")])

@@ -1,0 +1,13 @@
+{
+  "id": "earth_walk",
+  "display_name": "穿行",
+  "display_names": {
+    "en": "Passage"
+  },
+  "price": 30,
+  "effects": [
+    {
+      "type": "earth_walk"
+    }
+  ]
+}

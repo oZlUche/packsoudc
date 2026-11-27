@@ -103,6 +103,7 @@ func mark_run_in() -> void:
 
 ## 回了基地：带进去过的算一次完整进出
 func close_run() -> void:
+	state.erase(STONE_KEY)     # 基石只在一局里
 	if state.has(RUN_IN_KEY):
 		state.erase(RUN_IN_KEY)
 		state[RUNS_KEY] = runs() + 1
@@ -131,7 +132,37 @@ const LOCKED_KEY := "locked"
 
 
 func is_locked_by_player() -> bool:
-	return bool(state.get(LOCKED_KEY, false))
+	return bool(state.get(LOCKED_KEY, false)) or is_stone()
+
+
+## 大地之神【基石】：这一件动不了、丢不掉、不能合成（只在这一局里，[method close_run] 去掉）。没成基石不写键
+const STONE_KEY := "earth_stone"
+## 大地之神【压缩】：可堆叠的道具（[member ItemDef.stackable]）这一摞有几个（没记 = 1）
+const STACK_KEY := "stack"
+## 大地之神【提炼】：这一件每个多几点重量（价值记在 `value` 上）
+const WEIGHT_ADD_KEY := "weight_add"
+
+
+func stack_count() -> int:
+	return maxi(1, int(state.get(STACK_KEY, 1)))
+
+
+func set_stack(n: int) -> void:
+	if n > 1:
+		state[STACK_KEY] = n
+	else:
+		state.erase(STACK_KEY)
+
+
+func is_stone() -> bool:
+	return bool(state.get(STONE_KEY, false))
+
+
+func set_stone(on: bool) -> void:
+	if on:
+		state[STONE_KEY] = true
+	else:
+		state.erase(STONE_KEY)
 
 
 func set_locked(on: bool) -> void:

@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_ranges",
+  "display_name": "层峦",
+  "display_names": {
+    "en": "Layered Peaks"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "n": 1
+      }
+    }
+  ]
+}

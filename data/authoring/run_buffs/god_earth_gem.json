@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_gem",
+  "display_name": "宝石化",
+  "display_names": {
+    "en": "Gemstone"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "mult": 2
+      }
+    }
+  ]
+}

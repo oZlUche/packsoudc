@@ -91,7 +91,7 @@ func rebuild() -> void:
 	if converting:     # 396【改信】：连着弹的是换神后的重选
 		_title.text = UiText.t("level.convert_pick") % level.repicks_left()
 	elif seed_pick:     # 388 自然【初种】长了一阶：继续培育还是采摘
-		_title.text = UiText.t("level.seed_choice")
+		_title.text = UiText.t("level.earth_select") if bool(cur.get("earth_select", false)) else UiText.t("level.seed_choice")
 	elif qual:     # 388：质变位写清是开局那一次还是第几级的
 		_title.text = UiText.t("level.qual_opening") if lv <= 1 else UiText.t("level.qual_of") % lv
 	else:

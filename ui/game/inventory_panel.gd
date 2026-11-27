@@ -152,6 +152,8 @@ func _try_fuse_hint() -> bool:
 
 
 func _fuse_partner(held: ItemInstance, other: ItemInstance) -> bool:
+	if ItemStack.can_merge(held, other):
+		return true     # 大地结晶：同种的拖到一起叠成一摞
 	var crafting := CraftingModule.of(_run)
 	return crafting != null and crafting.home_of(other.uid) != null and _fusable(held) and _fusable(other) and crafting.partner_ok(held, other)
 
@@ -196,6 +198,9 @@ func _build() -> void:
 		_drag.fuse_partner = _fuse_partner
 		_drag.fuse_refused.connect(_hint_text)     # 317 U01
 		_drag.fuse_drop = func(held: ItemInstance, home: ItemContainer, target: ItemInstance, target_home: ItemContainer, ghost: Rect2) -> void:
+			if ItemStack.can_merge(held, target):
+				ItemStack.merge(held, home, target, target_home)     # 叠上就完，不用确认
+				return
 			ask_fuse_items(held, home, target, target_home, ghost)
 	# 175 第三批：铸牌压到武器上放手 = 附魔（任何格子容器里都行；铸牌已经拿在手上）
 	_drag.enchant_drop = func(token: ItemInstance, grid: GridInventory, weapon_uid: int) -> bool:

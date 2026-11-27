@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_camp",
+  "display_name": "驻扎",
+  "display_names": {
+    "en": "Encamp"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "n": 1
+      }
+    }
+  ]
+}

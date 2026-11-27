@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_dig",
+  "display_name": "发掘",
+  "display_names": {
+    "en": "Excavate"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "n": 1
+      }
+    }
+  ]
+}

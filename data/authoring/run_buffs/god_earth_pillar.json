@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_pillar",
+  "display_name": "支柱",
+  "display_names": {
+    "en": "Pillars"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "stacks": 5
+      }
+    }
+  ]
+}

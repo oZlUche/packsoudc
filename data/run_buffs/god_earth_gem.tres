@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_a0axa"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_48fn0"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_71wjd"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_e86p0"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_m3yal"]
+
+[sub_resource type="Resource" id="Resource_qg631"]
+script = ExtResource("2_48fn0")
+values = {
+"mult": 2
+}
+
+[resource]
+script = ExtResource("5_m3yal")
+id = &"god_earth_gem"
+display_name = "宝石化"
+display_names = {
+"en": "Gemstone"
+}
+effects = Array[ExtResource("1_a0axa")]([SubResource("Resource_qg631")])

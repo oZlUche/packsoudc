@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_nnvji"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_wfscv"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_82acv"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_y0d8m"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_a8a3l"]
+
+[sub_resource type="Resource" id="Resource_i0774"]
+script = ExtResource("2_wfscv")
+values = {
+"n": 2
+}
+
+[resource]
+script = ExtResource("5_a8a3l")
+id = &"god_earth_echo_up"
+display_name = "大地共鸣（升级）"
+display_names = {
+"en": "Earth Resonance+"
+}
+effects = Array[ExtResource("1_nnvji")]([SubResource("Resource_i0774")])

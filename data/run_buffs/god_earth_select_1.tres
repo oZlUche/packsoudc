@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_8bs0s"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_1k1u3"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_qp12j"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_nk1nl"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_ky54v"]
+
+[sub_resource type="Resource" id="Resource_bxd8q"]
+script = ExtResource("2_1k1u3")
+values = {
+"slot": 1
+}
+
+[resource]
+script = ExtResource("5_ky54v")
+id = &"god_earth_select_1"
+display_name = "甄选"
+display_names = {
+"en": "Pick of the Lode"
+}
+effects = Array[ExtResource("1_8bs0s")]([SubResource("Resource_bxd8q")])

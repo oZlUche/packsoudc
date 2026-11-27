@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_quake",
+  "display_name": "反震",
+  "display_names": {
+    "en": "Recoil"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "cd": 6
+      }
+    }
+  ]
+}

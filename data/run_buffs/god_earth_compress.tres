@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_5cs0g"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_p7n63"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_5og74"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_p6eaa"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_3pc85"]
+
+[sub_resource type="Resource" id="Resource_c24bv"]
+script = ExtResource("2_p7n63")
+values = {
+"value": 5
+}
+
+[resource]
+script = ExtResource("5_3pc85")
+id = &"god_earth_compress"
+display_name = "压缩"
+display_names = {
+"en": "Compress"
+}
+effects = Array[ExtResource("1_5cs0g")]([SubResource("Resource_c24bv")])

@@ -18,6 +18,7 @@ var _table_view: InventoryView
 var _head: Label
 var _preview := ""
 var _offer_btn: Button
+var _compress_btn: Button = null
 var _action_btns: Array = []
 var _actions_box: VBoxContainer = null
 var _actions_tier: int = -99
@@ -54,6 +55,10 @@ func open(payload: Dictionary) -> void:
 	_offer_btn.disabled = true
 	_offer_btn.tooltip_text = UiText.t("altar.intro") + ((UiText.t("altar.offerings") % def.offerings_summary()) if def != null and not def.offerings.is_empty() else "")
 	buttons.add_child(_offer_btn)
+	if EarthHeavenPerk.can_compress_any(run):     # 大地之神【压缩】：台上的压成大地结晶，不占献祭
+		_compress_btn = ScrollKey.make(UiText.t("altar.compress"), compress)
+		_compress_btn.tooltip_text = UiText.t("altar.compress_tip") % EarthHeavenPerk.CRYSTAL_VALUE
+		buttons.add_child(_compress_btn)
 	var back := ScrollKey.make(UiText.t("setup.back"), to_map)
 	back.tooltip_text = UiText.t("altar.back_tip")
 	buttons.add_child(back)
@@ -67,12 +72,12 @@ func open(payload: Dictionary) -> void:
 	_tip_double(_table_view, "act.take_back")     # 230
 	_tip_quick(_inv, "act.offer", func(inst: ItemInstance) -> String:
 		var d := flow.run.active_faith()
-		return "" if d == null or d.accepts_offering(inst.def) else UiText.t("altar.rejected") % [Names.of(inst.def), Names.of(d)])
+		return "" if d == null or d.accepts_offering(inst.def) or EarthHeavenPerk.can_compress(flow.run, inst) else UiText.t("altar.rejected") % [Names.of(inst.def), Names.of(d)])
 	_drag.drop_filter = func(inst: ItemInstance, target: ItemContainer) -> bool:
 		if target != _table:
 			return true
 		var d := flow.run.active_faith()
-		return d != null and d.accepts_offering(inst.def) and _altar_open() and not inst.is_locked_by_player()     # 230：锁住的不献
+		return d != null and (d.accepts_offering(inst.def) or EarthHeavenPerk.can_compress(flow.run, inst)) and _altar_open() and not inst.is_locked_by_player()     # 230：锁住的不献
 	_table.changed.connect(_refresh)
 	run.faith_power.changed.connect(func(_id: StringName, _p: int, _t: int): _refresh())
 	_refresh()
@@ -121,7 +126,7 @@ func put_on_table(uid: int) -> bool:
 	if inst != null and inst.is_locked_by_player():
 		say(UiText.t("item.locked_no") % Names.of(inst.def))     # 230
 		return false
-	if inst == null or not def.accepts_offering(inst.def):
+	if inst == null or not (def.accepts_offering(inst.def) or EarthHeavenPerk.can_compress(run, inst)):
 		say(UiText.t("altar.rejected") % [Names.of(inst.def) if inst != null else "?", Names.of(def)])
 		return false
 	return InventoryService.transfer_auto(from, uid, _table)
@@ -156,11 +161,34 @@ func offer() -> Dictionary:
 	var got: Dictionary = altar.offer(insts, _node) if altar != null else {"points": 0, "count": 0}
 	if int(got["count"]) > 0:
 		for inst in insts:
-			_table.remove((inst as ItemInstance).uid)
+			if flow.run.active_faith().offering_value((inst as ItemInstance).def) > 0:     # 只为【压缩】放上来的留在台上
+				_table.remove((inst as ItemInstance).uid)
 		flow.save()
 		say(UiText.t("setup.list_sep").join(got["log"]))
 	_refresh()
 	return got
+
+
+## 大地之神【压缩】：台上能压的压成一摞大地结晶（放进背包，放不下放地上），不占这座神坛的献祭。返回压出几个
+func compress() -> int:
+	var run := flow.run
+	if not _altar_open() or not EarthHeavenPerk.can_compress_any(run):
+		return 0
+	var insts: Array = []
+	var n := 0
+	for raw in _table.items().duplicate():
+		if EarthHeavenPerk.can_compress(run, raw as ItemInstance):
+			insts.append(raw)
+			n += EarthHeavenPerk.crystals_for(raw as ItemInstance)
+	if insts.is_empty():
+		return 0
+	for inst in insts:
+		_table.remove((inst as ItemInstance).uid)
+	EarthHeavenPerk.compress(run, insts)
+	flow.save()
+	say(UiText.t("altar.compressed") % n)
+	_refresh()
+	return n
 
 
 ## 做一个特殊操作（挑了选项的按下拉里的）
@@ -319,6 +347,8 @@ func _refresh() -> void:
 		_preview = UiText.tn("altar.preview", int(p["count"])) % [int(p["count"]), int(p.get("xp", 0)), int(p["tier_before"]), int(p["tier_after"])]
 		line = UiText.tn("altar.offer_line", int(p["count"])) % [int(p["count"]), int(p.get("xp", 0)), int(p["tier_before"]), int(p["tier_after"])]
 	ScrollKey.show_sub(_offer_btn, UiText.t("altar.offer"), line)
+	if _compress_btn != null:
+		_compress_btn.disabled = not open_ or not _table.items().any(func(i: ItemInstance) -> bool: return EarthHeavenPerk.can_compress(run, i))
 	for b in _action_btns:
 		(b as Button).disabled = (b as Button).disabled or not open_     # 【改信】不在这里面：用过的神坛也能改
 

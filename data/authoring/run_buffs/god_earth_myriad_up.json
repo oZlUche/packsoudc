@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_myriad_up",
+  "display_name": "万象（升级）",
+  "display_names": {
+    "en": "All Things+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "pct": 20
+      }
+    }
+  ]
+}

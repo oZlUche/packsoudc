@@ -12,6 +12,10 @@
   "descriptions": {
     "en": "One of the chief gods in the Empire's rites, but with very few followers; its people keep a very low profile."
   },
+  "core_line": "天地：边缘贴近棋盘边界的道具成为【大地】，非【大地】道具中贴近棋盘中央的道具成为【穹顶】",
+  "core_lines": {
+    "en": "Heaven and Earth: items whose edge touches the Board's border become Earth; of the rest, items near the Board's centre become Dome"
+  },
   "thresholds": [
     42,
     117,
@@ -20,13 +24,12 @@
   "deeds": [
     {
       "type": "mechanic",
-      "key": "earth_support",
+      "key": "earth_ground",
       "amount": 2
     },
     {
       "type": "mechanic",
-      "key": "earth_support",
-      "at_least": 2,
+      "key": "earth_dome",
       "amount": 2
     }
   ],
@@ -39,24 +42,15 @@
   ],
   "perks": [
     {
-      "type": "earth_support",
+      "type": "earth_heaven",
       "tier": 0
     },
     {
       "type": "altar_bless"
     },
     {
-      "type": "earth_support",
-      "part": 1
-    },
-    {
       "type": "altar_train_board",
       "tier": 2
-    },
-    {
-      "type": "earth_support",
-      "part": 3,
-      "tier": 3
     }
   ],
   "blessings": [
