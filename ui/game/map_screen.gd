@@ -104,6 +104,8 @@ func refresh() -> void:
 func set_overlaid(on: bool) -> void:
 	if _view != null:
 		_view.throttled = on
+	if _hud_host != null:
+		_hud_host.lift_bar(GameDirector.OVERLAY_Z + 1 if on else 0)     # 作者 11-27：进点时顶栏读数不被叠层压暗盖住，当场看得见
 
 
 #region 公开动作
