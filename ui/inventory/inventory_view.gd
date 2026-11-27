@@ -198,6 +198,7 @@ func set_inventory(inv: GridInventory) -> void:
 	if inventory != null and inventory.changed.is_connected(_on_inventory_changed):
 		inventory.changed.disconnect(_on_inventory_changed)
 	inventory = inv
+	selection = {}     # 402：换了一块（仓库翻页）= 选中作废
 	if inventory != null:
 		inventory.changed.connect(_on_inventory_changed)
 		custom_minimum_size = Vector2(inventory.size) * cell_px
@@ -207,6 +208,10 @@ func set_inventory(inv: GridInventory) -> void:
 
 ## 110：容器变了就重画；格子长了（仓库扩建 `grow_rows`）视图跟着变高
 func _on_inventory_changed() -> void:
+	if not selection.is_empty():
+		for uid in selection.keys():
+			if not inventory.has_item(int(uid)):
+				selection.erase(uid)     # 402：拿走了的不再算选中（整组放下时拖拽层再交回来）
 	var want := Vector2(inventory.size) * cell_px
 	if custom_minimum_size != want:
 		custom_minimum_size = want
@@ -283,6 +288,169 @@ func _draw_footprints() -> void:
 		if inventory.acts_as_bag(item.def):
 			continue
 		draw_footprint(self, item.def, item.cells(), cell_origin_px(item.origin), cell_px, footprint_hollow(item.def), item.rarity())
+#endregion
+
+
+#region 框选（402）
+## 402（作者 11-27）：按住左键从**空格**拖出一个框，框到的道具（压到一格就算）都选中；按在选中的一件上拖 = 整组一起走（[DragLayer]）。
+## 登记到拖拽层才开（[method DragLayer.register_view] 打开，撤登记关上）—— 没人接的棋盘（战前的敌人棋盘、货架）不框
+var box_select := false
+## 选中的那几件（uid → true）。不是勾选模式的 [member selected]（那是快速出售的勾）
+var selection: Dictionary = {}
+## 框的起点（本控件内像素）；x < 0 = 没在框
+var _box_from := Vector2(-1.0, -1.0)
+var _box_to := Vector2.ZERO
+## 拖出了 [constant BOX_START_PX] 才算框（否则就是点了一下空格：取消选中）
+var _box_live := false
+const BOX_START_PX := 6.0
+const SELECTION_WIDTH := 3.0
+const COLOR_SELECTION := Color("e8c46a")
+const COLOR_BOX_FILL := Color(0.91, 0.77, 0.42, 0.12)
+const COLOR_BOX_EDGE := Color(0.91, 0.77, 0.42, 0.85)
+
+
+## 这件能不能被框进来：包不框（包带着内容物，走自己那套）、扎根 / 随身之物不框（本来就拿不起来 / 离不开棋盘）
+static func box_selectable(inv: GridInventory, inst: ItemInstance) -> bool:
+	if inv == null or inst == null or inst.def == null:
+		return false
+	return not inv.acts_as_bag(inst.def) and not inv.keeps(inst.uid)
+
+
+## 像素框（本控件内，两角随意）压到的格子范围（夹在棋盘里）；压不到任何格 = 空
+func box_cells(a: Vector2, b: Vector2) -> Rect2i:
+	if inventory == null:
+		return Rect2i()
+	var lo := cell_at_local(Vector2(minf(a.x, b.x), minf(a.y, b.y)))
+	var hi := cell_at_local(Vector2(maxf(a.x, b.x), maxf(a.y, b.y)))
+	lo = Vector2i(maxi(lo.x, 0), maxi(lo.y, 0))
+	hi = Vector2i(mini(hi.x, inventory.size.x - 1), mini(hi.y, inventory.size.y - 1))
+	if hi.x < lo.x or hi.y < lo.y:
+		return Rect2i()
+	return Rect2i(lo, hi - lo + Vector2i.ONE)
+
+
+## 框 [param a]–[param b] 框到的道具（任一格压进框里就算），按 uid 排好
+func items_in_box(a: Vector2, b: Vector2) -> Array[int]:
+	var out: Array[int] = []
+	var r := box_cells(a, b)
+	if r.size == Vector2i.ZERO:
+		return out
+	for raw in inventory.items():
+		var inst := raw as ItemInstance
+		if not box_selectable(inventory, inst):
+			continue
+		for c in inst.cells():
+			if r.has_point(inst.origin + c):
+				out.append(inst.uid)
+				break
+	out.sort()
+	return out
+
+
+## 框完：选中框到的那几件（替换原来的选中）。勾选模式（268 快速出售）下改成把没勾的都勾上
+func select_box(a: Vector2, b: Vector2) -> void:
+	var got := items_in_box(a, b)
+	if select_mode:
+		for uid in got:
+			if not selected.has(uid):
+				item_picked.emit(self, uid)
+		return
+	set_selection(got)
+
+
+func clear_selection() -> void:
+	if selection.is_empty():
+		return
+	selection = {}
+	queue_redraw()
+
+
+## 拖拽层整组放下后把选中交给这块棋盘（选中跟着道具走，可以接着再挪）
+func set_selection(uids: Array) -> void:
+	selection = {}
+	for uid in uids:
+		selection[int(uid)] = true
+	queue_redraw()
+
+
+## 还在这块棋盘上、还能框的选中件（按 uid 排好）
+func selected_uids() -> Array[int]:
+	var out: Array[int] = []
+	if inventory == null:
+		return out
+	for uid in selection:
+		if box_selectable(inventory, inventory.get_item(int(uid))):
+			out.append(int(uid))
+	out.sort()
+	return out
+
+
+## 按在 [param uid] 上要整组走的那几件：它是选中的、且选中的还有别的 = 整组；否则空（单件照旧）
+func group_for(uid: int) -> Array[int]:
+	var none: Array[int] = []
+	if not selection.has(uid):
+		return none
+	var got := selected_uids()
+	return got if got.size() >= 2 and got.has(uid) else none
+
+
+## 402 第 80 条：按着框选键（默认 Shift）时，包的空处（没有道具、只有包）也能起框；平时那里是拿起整个包
+func box_starts_at(c: Vector2i, held_key: bool) -> bool:
+	if inventory == null or not held_key or not inventory.in_bounds(c):
+		return false
+	return inventory.cell_uid(c) == GridInventory.EMPTY_UID and inventory.bag_at(c) != GridInventory.EMPTY_UID
+
+
+func is_boxing() -> bool:
+	return _box_from.x >= 0.0 and _box_live
+
+
+func box_press(p: Vector2) -> void:
+	_box_from = p
+	_box_to = p
+	_box_live = false
+
+
+func box_motion(p: Vector2) -> void:
+	_box_to = p
+	if not _box_live and _box_from.distance_to(p) >= BOX_START_PX:
+		_box_live = true
+	if _box_live:
+		queue_redraw()
+
+
+func box_release(p: Vector2) -> void:
+	_box_to = p
+	if _box_live:
+		select_box(_box_from, _box_to)
+	elif not select_mode:
+		clear_selection()     # 点了一下空格 = 取消选中
+	_box_from = Vector2(-1.0, -1.0)
+	_box_live = false
+	queue_redraw()
+
+
+## 选中的那几件沿占格外缘描一圈金边；正在框时画框
+func _draw_selection() -> void:
+	for uid in selection:
+		var inst := inventory.get_item(int(uid))
+		if inst == null:
+			continue
+		var mine := {}
+		for c in inst.cells():
+			mine[inst.origin + c] = true
+		for cell: Vector2i in mine:
+			var o := cell_origin_px(cell)
+			for d: Vector2i in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+				if mine.has(cell + d):
+					continue
+				var a := o + Vector2(maxi(d.x, 0), maxi(d.y, 0)) * cell_px
+				var b := a + Vector2(absi(d.y), absi(d.x)) * cell_px
+				draw_line(a, b, COLOR_SELECTION, SELECTION_WIDTH)
+	if is_boxing():
+		var r := Rect2(_box_from, Vector2.ZERO).expand(_box_to)
+		draw_rect(r, COLOR_BOX_FILL, true)
+		draw_rect(r, COLOR_BOX_EDGE, false, 2.0)
 #endregion
 
 
@@ -426,6 +594,9 @@ func _gui_input(event: InputEvent) -> void:
 	if inventory == null:
 		return
 	if event is InputEventMouseMotion:
+		if _box_from.x >= 0.0:
+			box_motion((event as InputEventMouseMotion).position)     # 402：框着
+			accept_event()
 		var hc := cell_at_local((event as InputEventMouseMotion).position)
 		if hc != _hover_cell:
 			var before := _hover_bag()
@@ -435,11 +606,24 @@ func _gui_input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
+		if _box_from.x >= 0.0 and mb.button_index == MOUSE_BUTTON_LEFT and not mb.pressed:
+			box_release(mb.position)     # 402：框完
+			accept_event()
+			return
 		if mb.pressed and mb.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
 			var c := cell_at_local(mb.position)
 			var uid := uid_at_cell(c, InputKeys.held_with(mb, InputKeys.WHOLE_BAG))
+			if box_select and mb.button_index == MOUSE_BUTTON_LEFT and not mb.double_click and box_starts_at(c, InputKeys.held_with(mb, InputKeys.BOX_SELECT)):
+				box_press(mb.position)     # 402 第 80 条：按住 Shift 从包的空处起拖也是框选
+				accept_event()
+				return
 			if uid == GridInventory.EMPTY_UID and mb.button_index == MOUSE_BUTTON_LEFT:
 				set_focused(null, get_tree() if is_inside_tree() else null)     # 点空处：槽位都收起
+				if box_select and not mb.double_click:
+					box_press(mb.position)     # 402：从空格起拖 = 框选（松手时没拖开 = 取消选中）
+					accept_event()
+			elif mb.button_index == MOUSE_BUTTON_LEFT and not select_mode and not selection.has(uid):
+				clear_selection()     # 402：按在没选中的一件上 = 单件照旧，选中作废
 			if uid != GridInventory.EMPTY_UID:
 				# 099：右键按在一件上 = 这一屏自己决定做什么（棋盘：信物奉为主信仰）。
 				# 拖拽中的右键是「取消」，那一下已经被 [DragLayer] 吃掉，走不到这里
@@ -608,6 +792,7 @@ func _draw() -> void:
 		draw_rect(Rect2(Vector2.ZERO, grid_px), COLOR_BORDER, false, 2.0)
 	_draw_fuse_marks()
 	_draw_bag_outline(_hover_bag())
+	_draw_selection()     # 402
 
 
 ## 314：能合的那几件身上画小锤（勾选模式下不画）
