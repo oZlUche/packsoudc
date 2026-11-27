@@ -1,0 +1,40 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+OpenGL API 4.5 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.4 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 20.1.2, 256 bits)
+ALSA lib confmisc.c:855:(parse_card) cannot find card '0'
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) error evaluating strings
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) error evaluating name
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5731:(snd_config_expand) Evaluate error: No such file or directory
+ALSA lib pcm.c:2721:(snd_pcm_open_noupdate) Unknown PCM default
+ERROR: Condition "status < 0" is true. Returning: ERR_CANT_OPEN
+   at: init_output_device (drivers/alsa/audio_driver_alsa.cpp:97)
+WARNING: All audio drivers failed, falling back to the dummy driver.
+     at: initialize (servers/audio/audio_server.cpp:258)
+
+HS1012 ♥ f 300 st 4 屏 9
+HS1012 ♥ f 600 st 4 屏 2
+HS1012 第 1 局到地图：状态节 不显示 展开 true 行 []；委托节 显示 展开 true 行 ["From Afar|0 / 1", "The First Rite|0 / 1"]；石板 [P: (14.0, 114.0), S: (282.0, 127.0)]
+HS1012 待选 6；这一批 [&"card_vitality", &"card_next_search", &"card_regen"]；选牌窗 开着；体力 3 / 3，顶栏心 (3, 3)
+HS1012 拿了耐行（1 张）两帧后：体力 3 / 4（原上限 3）；顶栏心 (4, 3)（原 (3, 3)）
+HS1012 走到相邻点 1（battle）
+HS1012 进点后屏 11，叠层 true；顶栏抬到 z 101；经验 (13, 14)（进点前 (13, 14)）；经验条 z 101 在树 true
+HS1012 叠层开着时再得 30 经验：经验 (14, 16)；经验条  
+HS1012 ♥ f 900 st 12 屏 3
+HS1012 ♥ f 1200 st 12 屏 3
+HS1012 ♥ f 1500 st 12 屏 3
+HS1012 ♥ f 1800 st 12 屏 3
+HS1012 ♥ f 2100 st 12 屏 3
+HS1012 ♥ f 2400 st 12 屏 3
+HS1012 ♥ f 2700 st 12 屏 3
+HS1012 ♥ f 3000 st 12 屏 3
+HS1012 ♥ f 3300 st 12 屏 3
+HS1012 ♥ f 3600 st 12 屏 3
+HS1012 ♥ f 3900 st 12 屏 3
+HS1012 ♥ f 4200 st 12 屏 3
+HS1012 ♥ f 4500 st 12 屏 3
+HS1012 ♥ f 4800 st 12 屏 3
+HS1012 ♥ f 5100 st 12 屏 3

@@ -1,0 +1,57 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+WARNING: GridInventory.remove: uid 1 是非空的包，请改用 detach_bag
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] remove (res://core/inventory/grid_inventory.gd:435)
+         [1] _armor (res://tools/_x.gd:9)
+         [2] _init (res://tools/_x.gd:35)
+WARNING: GridInventory.remove: uid 1 是非空的包，请改用 detach_bag
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] remove (res://core/inventory/grid_inventory.gd:435)
+         [1] _armor (res://tools/_x.gd:9)
+         [2] _init (res://tools/_x.gd:36)
+SS1017 空包：铆钉挎包护甲 0（放进 0 件），皮包 0；差 0
+WARNING: GridInventory.remove: uid 1 是非空的包，请改用 detach_bag
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] remove (res://core/inventory/grid_inventory.gd:435)
+         [1] _armor (res://tools/_x.gd:9)
+         [2] _init (res://tools/_x.gd:35)
+WARNING: GridInventory.remove: uid 1 是非空的包，请改用 detach_bag
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] remove (res://core/inventory/grid_inventory.gd:435)
+         [1] _armor (res://tools/_x.gd:9)
+         [2] _init (res://tools/_x.gd:36)
+SS1017 1 件绷带：铆钉挎包护甲 0（放进 0 件），皮包 0；差 0
+WARNING: GridInventory.remove: uid 1 是非空的包，请改用 detach_bag
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] remove (res://core/inventory/grid_inventory.gd:435)
+         [1] _armor (res://tools/_x.gd:9)
+         [2] _init (res://tools/_x.gd:35)
+WARNING: GridInventory.remove: uid 1 是非空的包，请改用 detach_bag
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] remove (res://core/inventory/grid_inventory.gd:435)
+         [1] _armor (res://tools/_x.gd:9)
+         [2] _init (res://tools/_x.gd:36)
+SS1017 4 件绷带：铆钉挎包护甲 0（放进 0 件），皮包 0；差 0 | zh：[outline_size=2][outline_color=#000000bf][font_size=20][b][color=@rarity2]铆钉挎包[/color][/b][/font_size][/outline_color][/outline_size] / [font_size=14][outline_size=2][outline_color=#000000bf][color=@rarity2]稀有[/color][/outline_color][/outline_size][/font_size] | en：[outline_size=2][outline_color=#000000bf][font_size=20][b][color=@rarity2]Studded Satchel[/color][/b][/font_size][/outline_color][/outline_size] / [font_size=14][outline_size=2][outline_color=#000000bf][color=@rarity2]Rare[/color][/outline_color][/outline_size
+WARNING: GridInventory.remove: uid 1 是非空的包，请改用 detach_bag
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] remove (res://core/inventory/grid_inventory.gd:435)
+         [1] _armor (res://tools/_x.gd:9)
+         [2] _init (res://tools/_x.gd:35)
+WARNING: GridInventory.remove: uid 1 是非空的包，请改用 detach_bag
+     at: push_warning (core/variant/variant_utility.cpp:1033)
+     GDScript backtrace (most recent call first):
+         [0] remove (res://core/inventory/grid_inventory.gd:435)
+         [1] _armor (res://tools/_x.gd:9)
+         [2] _init (res://tools/_x.gd:36)
+SS1017 2 把小刀（1×2）：铆钉挎包护甲 0（放进 0 件），皮包 0；差 0
+SS1017 max_armor 显示名 zh：护甲
+SS1017 max_armor 显示名 en：Armor
+SS1017 完

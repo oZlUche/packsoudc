@@ -1,0 +1,408 @@
+extends SceneTree
+## 游戏测试 v9.33（PR #1011）：框选多件道具 —— 仓库拉框、整组拖、放不下弹回、点空格取消、勾选模式全勾；局内背包 Shift 从包的空处起框、不按 Shift 是拿整包；整组拖时 Q / E 不转、悬浮窗。参数 <outdir>
+const TAG := "BX1011"
+const D383 := preload("res://tests/ui/test_departure_383.gd")
+##HEAD##
+var _q: Array = []
+var _bad := 0
+var _v: InventoryView = null
+var _sel0: Array = []
+var _pos0 := {}
+var _shift := false
+
+
+func _btn(p: Vector2, button: int, down: bool) -> void:
+	var c := root.get_final_transform() * p
+	Input.warp_mouse(c)
+	var e := InputEventMouseButton.new()
+	e.button_index = button
+	e.pressed = down
+	e.position = c
+	e.global_position = c
+	e.shift_pressed = _shift
+	if down and button == MOUSE_BUTTON_LEFT: e.button_mask = MOUSE_BUTTON_MASK_LEFT
+	Input.parse_input_event(e)
+
+
+func _move(p: Vector2, mask: int = 0) -> void:
+	var c := root.get_final_transform() * p
+	Input.warp_mouse(c)
+	var e := InputEventMouseMotion.new()
+	e.position = c
+	e.global_position = c
+	e.button_mask = mask
+	e.shift_pressed = _shift
+	Input.parse_input_event(e)
+
+
+func _key(code: int, down: bool) -> void:
+	var e := InputEventKey.new()
+	e.keycode = code
+	e.physical_keycode = code
+	e.pressed = down
+	e.shift_pressed = _shift
+	Input.parse_input_event(e)
+
+
+func _layer() -> DragLayer:
+	for n in root.find_children("*", "DragLayer", true, false):
+		if (n as DragLayer).is_dragging(): return n
+	return null
+
+
+func _dismiss() -> bool:
+	for n in root.find_children("*", "Button", true, false):
+		var b := n as Button
+		if b.is_visible_in_tree() and (b.text == "知道了" or b.text.to_lower() == "got it"): _click(b); return true
+	return false
+
+
+## 格子中心（全局）
+func _cg(c: Vector2i) -> Vector2:
+	return _v.get_global_transform() * (_v.cell_origin_px(c) + Vector2.ONE * _v.cell_px * 0.5)
+
+
+func _drag_seq(a: Vector2, b: Vector2, steps: int = 4) -> Array:
+	var out := [[func(): _move(a); _btn(a, MOUSE_BUTTON_LEFT, true), 4]]
+	for i in steps:
+		var p := a.lerp(b, float(i + 1) / steps)
+		out.append([func(): _move(p, MOUSE_BUTTON_MASK_LEFT), 3])
+	out.append([func(): _btn(b, MOUSE_BUTTON_LEFT, false), 15])
+	return out
+
+
+func _empty(v: InventoryView, need_bag: bool) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	var g: GridInventory = v.inventory
+	for y in g.size.y:
+		for x in g.size.x:
+			var c := Vector2i(x, y)
+			if g.cell_uid(c) == GridInventory.EMPTY_UID and ((g.bag_at(c) != GridInventory.EMPTY_UID) == need_bag): out.append(c)
+	return out
+
+
+func _origins() -> Dictionary:
+	var d := {}
+	for uid in _sel0: d[uid] = _v.inventory.get_item(int(uid)).origin if _v.inventory.get_item(int(uid)) != null else Vector2i(-99, -99)
+	return d
+
+
+## 一块整组能放下的平移量：每件挪过去的格子都在界内、要么空要么本组
+func _free_shift() -> Vector2i:
+	var g: GridInventory = _v.inventory
+	for dy in range(-g.size.y, g.size.y):
+		for dx in range(-g.size.x, g.size.x):
+			var d := Vector2i(dx, dy)
+			if d == Vector2i.ZERO or d.length() < 2: continue
+			var ok := true
+			for uid in _sel0:
+				var it := g.get_item(int(uid))
+				for c0 in it.cells():
+					var c: Vector2i = it.origin + c0
+					var t: Vector2i = c + d
+					if not g.in_bounds(t) or not (g.cell_uid(t) == GridInventory.EMPTY_UID or _sel0.has(g.cell_uid(t))) or (g.bag_at(t) != g.bag_at(c)): ok = false; break
+				if not ok: break
+			if ok: return d
+	return Vector2i(99, 99)
+
+
+## 一块会压到别人的平移量
+func _blocked_shift() -> Vector2i:
+	var g: GridInventory = _v.inventory
+	for dx in range(1, g.size.x):
+		var d := Vector2i(dx, 0)
+		var hit := false
+		var inb := true
+		for uid in _sel0:
+			for c0 in g.get_item(int(uid)).cells():
+				var t: Vector2i = g.get_item(int(uid)).origin + c0 + d
+				if not g.in_bounds(t): inb = false
+				elif g.cell_uid(t) != GridInventory.EMPTY_UID and not _sel0.has(g.cell_uid(t)): hit = true
+		if inb and hit: return d
+	return Vector2i(99, 99)
+
+
+func _assist() -> void:
+	var bk := _flow.meta.commissions
+	for f in Commissions.factions():
+		bk.arrived[String(f.id)] = 0
+	for id in Commissions.FEATURES:
+		bk.grants[String(id)] = true
+	D383._two_menus(_flow)
+	for id in ["knife", "knife", "bandage", "bandage", "dried_herbs"]: _put(id)
+	_flow.sync_commissions(); _flow.save_meta(); _flow.meta.changed.emit()
+
+
+func _setup_go() -> void:
+	var sp: Node = null
+	for n in root.find_children("*", "", true, false):
+		if n.has_method("step_difficulty") and n.has_method("depart"): sp = n
+	if sp == null: return
+	var gb = sp.god_book() if sp.has_method("god_book") else null
+	if gb != null: sp.close_god_book(); return
+	for c in root.find_children("*", "CoachOverlay", true, false):
+		(c as CoachOverlay).next(); return
+	if sp.needs_spawn(): sp.pick_spawn(sp._preview.entry_ids()[0]); return
+	if not sp.next_page(): sp.depart()
+
+
+func _settle() -> bool:
+	var scr := _flow.screen
+	if scr == GameFlow.Screen.EVENT:
+		if bool(_flow.last_payload.get("briefing", false)): _flow.close_briefing()
+		else:
+			var top = _game.overlay() if _game.overlay() != null else _game.base()
+			if top != null and top.has_method("choose_event"): top.choose_event(0)
+			elif top != null and top.has_method("proceed"): top.proceed()
+			else: _flow.resume()
+		return false
+	if scr != GameFlow.Screen.MAP: return false
+	for c in root.find_children("*", "CoachOverlay", true, false):
+		(c as CoachOverlay).next(); return false
+	return true
+
+
+## 拉框：从空格 a 拉到格 b，看选中了哪些
+func _box(label: String, a: Vector2i, b: Vector2i, then: int) -> void:
+	var la := _v.cell_origin_px(a) + Vector2.ONE * _v.cell_px * 0.5
+	var lb := _v.cell_origin_px(b) + Vector2.ONE * _v.cell_px * 0.5
+	var want := _v.items_in_box(la, lb)
+	_q = _drag_seq(_cg(a), _cg(b))
+	_q.append([func():
+		_sel0 = _v.selected_uids()
+		var names := _sel0.map(func(u): return Names.of(_v.inventory.get_item(int(u)).def))
+		var ok := _sel0.size() >= 1 and _sel0.size() == want.size() and _layer() == null
+		L("%s：从空格 %s 拉到 %s：选中 %d 件 %s（框里该有 %d 件）；在拖 %s；%s" % [label, str(a), str(b), _sel0.size(), str(names), want.size(), str(_layer() != null), "对" if ok else "不对"])
+		if not ok: _bad += 1
+		shot(label)
+		_st = then, 5])
+	_st = 1000
+
+
+func _process(_d: float) -> bool:
+	_f += 1
+	if _f % 300 == 0: print("%s ♥ f %d st %d 屏 %d" % [TAG, _f, _st, _flow.screen if _flow != null else -1])
+	if _flow == null:
+		_flow = _game.flow
+		return false
+	if _f > 14000: L("超时 st %d 屏 %d" % [_st, _flow.screen]); shot("timeout"); quit(1); return true
+	if _wait > 0: _wait -= 1; return false
+	var scr := _flow.screen
+	if _st < 3:
+		if _boot(): _st = 3
+		return false
+	match _st:
+		1000:
+			if _q.is_empty(): return false
+			var a: Array = _q.pop_front()
+			(a[0] as Callable).call()
+			_wait = int(a[1])
+		3:
+			_assist()
+			L("框选键 %s" % str(InputKeys.keys_of(InputKeys.BOX_SELECT)))
+			_tab("warehouse"); _wait = 40; _st = 4
+		4:
+			if _dismiss(): _wait = 30; return false
+			for n in root.find_children("*", "InventoryView", true, false):
+				var v := n as InventoryView
+				if v.is_visible_in_tree() and v.box_select and v.inventory != null and v.inventory.items().size() >= 3 and _v == null: _v = v
+			if _v == null: L("仓库没有能框的棋盘"); _st = 99; return false
+			var em := _empty(_v, false)
+			L("仓库棋盘 %s，%d 件，空格 %d 个" % [str(_v.inventory.size), _v.inventory.items().size(), em.size()])
+			# 从最靠左上的空格往左上角拉（压到左上角几件）
+			var best := Vector2i(-1, -1)
+			for c in em:
+				if c.x >= 2 and c.y >= 1 and _v.items_in_box(_v.cell_origin_px(c) + Vector2.ONE * 5, _v.cell_origin_px(Vector2i.ZERO) + Vector2.ONE * 5).size() in [2, 3, 4]: best = c; break
+			if best.x < 0: best = em[0]
+			_box("wh_box", best, Vector2i.ZERO, 5)
+		5:
+			# 悬停选中的一件
+			var it := _v.inventory.get_item(int(_sel0[0]))
+			var p := _cg(it.origin + it.def.shape.cells_rotated(it.rotation)[0])
+			_q = [[func(): _move(Vector2(5, 5)), 20], [func(): _move(p), 60], [func():
+				var tip := HoverTip.host_for(_v)
+				L("悬停选中的 %s：悬浮窗 %s；选中还在 %d 件" % [Names.of(it.def), "开着" if tip != null and tip.visible else "没开", _v.selected_uids().size()])
+				shot("wh_hover_selected")
+				_st = 6, 5]]
+			_st = 1000
+		6:
+			# 整组拖：按住选中的一件，Q / E 不转，挪到能放下的地方
+			_pos0 = _origins()
+			var d := _free_shift()
+			var it := _v.inventory.get_item(int(_sel0[0]))
+			var c0: Vector2i = it.origin + it.def.shape.cells_rotated(it.rotation)[0]
+			L("整组 %d 件，平移 %s 能放下" % [_sel0.size(), str(d)])
+			if d.x == 99: _bad += 1; _st = 8; return false
+			var a := _cg(c0); var b := _cg(c0 + d)
+			_q = [
+				[func(): _move(a); _btn(a, MOUSE_BUTTON_LEFT, true), 4],
+				[func(): _move(a + Vector2(12, 8), MOUSE_BUTTON_MASK_LEFT), 6],
+				[func():
+					var l := _layer()
+					L("按住选中的一件拖开：在拖 %s，整组 %s，朝向 %s" % [str(l != null), str(l.is_group_drag()) if l != null else "-", str(l.get("_rot")) if l != null else "-"])
+					if l == null or not l.is_group_drag(): _bad += 1
+					_key(KEY_Q, true); _key(KEY_Q, false), 5],
+				[func(): var l := _layer(); L("　　整组拖着按 Q：朝向 %s（应不变 0）" % (str(l.get("_rot")) if l != null else "-")); _key(KEY_E, true); _key(KEY_E, false), 5],
+				[func():
+					var l := _layer()
+					L("　　再按 E：朝向 %s" % (str(l.get("_rot")) if l != null else "-"))
+					if l != null and int(l.get("_rot")) != 0: _bad += 1
+					_move(a.lerp(b, 0.5), MOUSE_BUTTON_MASK_LEFT), 4],
+				[func(): _move(b, MOUSE_BUTTON_MASK_LEFT), 6],
+				[func(): var tip := HoverTip.host_for(_v); L("　　拖着时悬浮窗 %s" % ("开着" if tip != null and tip.visible else "没开")); shot("wh_group_drag"); _btn(b, MOUSE_BUTTON_LEFT, false), 20],
+				[func():
+					var now := _origins()
+					var ok := true
+					for uid in _sel0:
+						if now[uid] != _pos0[uid] + d: ok = false
+					L("整组放下：每件都挪了 %s：%s；%s；还选中 %d 件" % [str(d), "是" if ok else "否", str(now), _v.selected_uids().size()])
+					if not ok: _bad += 1
+					shot("wh_group_dropped")
+					_st = 7, 5],
+			]
+			_st = 1000
+		7:
+			# 放不下：整组弹回
+			_pos0 = _origins()
+			_sel0 = _v.selected_uids()
+			var d := _blocked_shift()
+			var it := _v.inventory.get_item(int(_sel0[0]))
+			var c0: Vector2i = it.origin + it.def.shape.cells_rotated(it.rotation)[0]
+			if d.x == 99: L("（找不到压到别人的平移）"); _st = 8; return false
+			var a := _cg(c0); var b := _cg(c0 + d)
+			var n0 := _v.inventory.items().size()
+			_q = _drag_seq(a, b)
+			_q.append([func():
+				var ok := _origins() == _pos0 and _v.inventory.items().size() == n0
+				L("整组拖到压着别人的地方（平移 %s）：%s；件数 %d → %d" % [str(d), "弹回原位" if ok else "没弹回（BAD）", n0, _v.inventory.items().size()])
+				if not ok: _bad += 1
+				_st = 8, 5])
+			_st = 1000
+		8:
+			# 点空格取消
+			var em := _empty(_v, false)
+			var p := _cg(em[em.size() - 1])
+			_q = [[func(): _move(p); _btn(p, MOUSE_BUTTON_LEFT, true), 3], [func(): _btn(p, MOUSE_BUTTON_LEFT, false), 10], [func():
+				L("点一下空格：选中 %d 件（应 0）" % _v.selected_uids().size())
+				if not _v.selected_uids().is_empty(): _bad += 1
+				_st = 9, 5]]
+			_st = 1000
+		9:
+			# 快速出售勾选模式
+			_ms().set_sell_mode(true); _wait = 20; _st = 10
+		10:
+			var em := _empty(_v, false)
+			var best := em[0]
+			for c in em:
+				if c.x >= 2 and c.y >= 1 and _v.items_in_box(_v.cell_origin_px(c) + Vector2.ONE * 5, _v.cell_origin_px(Vector2i.ZERO) + Vector2.ONE * 5).size() >= 2: best = c; break
+			var la := _v.cell_origin_px(best) + Vector2.ONE * 5
+			var want := _v.items_in_box(la, _v.cell_origin_px(Vector2i.ZERO) + Vector2.ONE * 5)
+			_q = _drag_seq(_cg(best), _cg(Vector2i.ZERO))
+			_q.append([func():
+				var ticked: Dictionary = _v.get("selected") if _v.get("selected") is Dictionary else {}
+				var ok := true
+				for u in want:
+					if not ticked.has(u): ok = false
+				L("快速出售勾选模式下拉框：框到 %d 件，勾上 %d 件（全勾上 %s）；出售条 %s" % [want.size(), ticked.size(), str(ok), _labels_under(_ms().sell_strip()).left(120) if _ms().sell_strip() != null else "-"])
+				if not ok: _bad += 1
+				shot("wh_sell_box")
+				_ms().set_sell_mode(false)
+				_st = 11, 20])
+			_st = 1000
+		11:
+			if _dismiss(): _wait = 30; return false
+			_tab("expedition"); _wait = 30; _st = 12
+		12:
+			var sb: Button = _ms().get("_new_run_btn")
+			if sb != null and sb.is_visible_in_tree(): _click(sb)
+			elif sb != null: sb.pressed.emit()
+			_wait = 40; _st = 13
+		13:
+			if scr == GameFlow.Screen.META:
+				if _dismiss(): _wait = 30; return false
+				var sb: Button = _ms().get("_new_run_btn")
+				if sb != null: sb.pressed.emit()
+				_wait = 40; return false
+			if scr == GameFlow.Screen.SETUP: _setup_go(); _wait = 20; return false
+			if not _settle(): _wait = 10; return false
+			if _flow.run.phase == RunState.Phase.PICK_SPAWN:
+				_game.base().pick_spawn(_flow.run.map.entry_ids[0]); _wait = 20; return false
+			for p in root.find_children("*", "LevelPickPanel", true, false):
+				if (p as Control).is_visible_in_tree(): (p as LevelPickPanel).choose(0); _wait = 30; return false
+			for id in ["knife", "bandage", "bandage"]: TestSupport.put(_flow.run.board, _flow.run.items.get_def(StringName(id)))
+			_flow.run.board.touch()
+			_game.base().toggle_bag(); _wait = 40; _st = 14
+		14:
+			_v = null
+			for n in root.find_children("*", "InventoryView", true, false):
+				var v := n as InventoryView
+				if v.is_visible_in_tree() and v.inventory == _flow.run.board: _v = v
+			if _v == null: L("背包棋盘没找到"); _st = 99; return false
+			var bag_em := _empty(_v, true)
+			L("背包棋盘 %s，%d 件；包里的空处 %d 格；框选开着 %s" % [str(_v.inventory.size), _v.inventory.items().size(), bag_em.size(), str(_v.box_select)])
+			shot("bag_before")
+			if bag_em.is_empty(): L("（包里没空处）"); _st = 99; return false
+			var c := bag_em[0]
+			set_meta("bagc", c)
+			var a := _cg(c)
+			# 不按 Shift：拿起整个包
+			_q = [
+				[func(): _move(a); _btn(a, MOUSE_BUTTON_LEFT, true), 4],
+				[func(): _move(a + Vector2(20, 12), MOUSE_BUTTON_MASK_LEFT), 6],
+				[func():
+					var l := _layer()
+					var held: ItemInstance = l.get("_inst") if l != null else null
+					L("不按 Shift 从包的空处 %s 拖：拿起 %s（是包 %s）；框 %s" % [str(c), Names.of(held.def) if held != null else "（没拿起）", str(held != null and held.def.is_bag), str(_v.is_boxing())])
+					if held == null or not held.def.is_bag: _bad += 1
+					_btn(a + Vector2(20, 12), MOUSE_BUTTON_RIGHT, true), 8],
+				[func(): _btn(a + Vector2(20, 12), MOUSE_BUTTON_LEFT, false), 10],
+				[func(): _st = 15, 1],
+			]
+			_st = 1000
+		15:
+			var c: Vector2i = get_meta("bagc")
+			# 往离它最远的格拉框
+			var la := _v.cell_origin_px(c) + Vector2.ONE * _v.cell_px * 0.5
+			var far := c
+			var best_n := 0
+			for y in _v.inventory.size.y:
+				for x in _v.inventory.size.x:
+					var k := _v.items_in_box(la, _v.cell_origin_px(Vector2i(x, y)) + Vector2.ONE * _v.cell_px * 0.5).size()
+					if k > best_n: best_n = k; far = Vector2i(x, y)
+			var lb := _v.cell_origin_px(far) + Vector2.ONE * _v.cell_px * 0.5
+			var want := _v.items_in_box(la, lb)
+			var mv: MapView = null
+			for n in root.find_children("*", "MapView", true, false): mv = n
+			var pan0 := mv.pan if mv != null else Vector2.ZERO
+			_shift = true
+			_q = [[func(): _key(KEY_SHIFT, true), 3]]
+			_q.append_array(_drag_seq(_cg(c), _cg(far)))
+			_q.append([func():
+				_sel0 = _v.selected_uids()
+				var names := _sel0.map(func(u): return Names.of(_v.inventory.get_item(int(u)).def))
+				L("按住 Shift 从包的空处 %s 拉到 %s：选中 %d 件 %s（框里该有 %d 件，包不算）；底下地图平移 %s" % [str(c), str(far), _sel0.size(), str(names), want.size(), str((mv.pan - pan0) if mv != null else "-")])
+				if _sel0.size() != want.size() or _sel0.is_empty(): _bad += 1
+				shot("bag_shift_box")
+				_key(KEY_SHIFT, false); _shift = false
+				_st = 16, 10])
+			_st = 1000
+		16:
+			# 整组拖到棋盘外 = 落地
+			if _sel0.is_empty(): _st = 99; return false
+			var it := _v.inventory.get_item(int(_sel0[0]))
+			var a := _cg(it.origin + it.def.shape.cells_rotated(it.rotation)[0])
+			var out := _v.get_global_rect().position + Vector2(_v.get_global_rect().size.x + 160, 40)
+			var n0 := _v.inventory.items().size()
+			_q = _drag_seq(a, out, 6)
+			_q.append([func():
+				var gone := 0
+				for u in _sel0:
+					if _v.inventory.get_item(int(u)) == null: gone += 1
+				L("整组拖到棋盘外 %s 松手：棋盘件数 %d → %d，离开棋盘 %d / %d 件" % [str(out), n0, _v.inventory.items().size(), gone, _sel0.size()])
+				if gone != _sel0.size(): _bad += 1
+				shot("bag_group_ground")
+				_st = 99, 5])
+			_st = 1000
+		99:
+			L("完 bad=%d" % _bad); quit(0); return true
+	return false

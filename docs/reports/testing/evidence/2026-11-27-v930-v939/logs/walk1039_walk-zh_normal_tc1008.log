@@ -1,0 +1,59 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+OpenGL API 4.5 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.4 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 20.1.2, 256 bits)
+ALSA lib confmisc.c:855:(parse_card) cannot find card '0'
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) error evaluating strings
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) error evaluating name
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5731:(snd_config_expand) Evaluate error: No such file or directory
+ALSA lib pcm.c:2721:(snd_pcm_open_noupdate) Unknown PCM default
+ERROR: Condition "status < 0" is true. Returning: ERR_CANT_OPEN
+   at: init_output_device (drivers/alsa/audio_driver_alsa.cpp:97)
+WARNING: All audio drivers failed, falling back to the dummy driver.
+     at: initialize (servers/audio/audio_server.cpp:258)
+
+TC1008 地图教程第 1 步：目标 screen；洞 [P: (0.0, 0.0), S: (0.0, 0.0)]；字「按住左键或中键拖动地图，滚轮缩放；轻点一下才是点地图上的东西。　1/5」；排版 查了 3 处，没有溢出
+TC1008 地图教程第 2 步：目标 vitality；洞 [P: (92.0, 13.0), S: (277.0, 60.0)]；字「这是体力。走路、受伤都会用掉它；用光了，这一趟就结束了。　2/5」；排版 查了 4 处，没有溢出
+TC1008 地图教程第 3 步：目标 wallet；洞 [P: (359.0, 3.5), S: (92.0, 79.0)]；字「这是货币。商店买东西、付费撤离点放行，都要它。　3/5」；排版 查了 4 处，没有溢出
+TC1008 地图教程第 4 步：目标 bag_end；洞 [P: (1681.0, 0.0), S: (96.0, 86.0)]；字「背包：整理棋盘上的东西，打架之前先排好。快捷键 B。　4/5」；排版 查了 4 处，没有溢出
+TC1008 地图教程第 5 步：目标 reopen_button；洞 [P: (1543.0, 3.0), S: (80.0, 80.0)]；字「放大镜：再看一眼脚下这个点里还有什么。快捷键 N。　5/5」；排版 查了 4 处，没有溢出
+TC1008 地图教程共看了 5 步
+TC1008 背包教程第 1 步：目标 board；字「这是棋盘。先把包放上去，包占住的格子才放得下东西。　1/4」；排版 查了 3 处，没有溢出
+TC1008 背包教程第 2 步：目标 board；字「拿起一件，按 Q 逆时针、E 顺时针转一格；拿着的时候点右键，放回原处。　2/4」；排版 查了 4 处，没有溢出
+TC1008 背包教程第 3 步：目标 board；字「双击一件，在棋盘和地上之间快速挪；直接拖到棋盘外面，也是放到地上。　3/4」；排版 查了 4 处，没有溢出
+TC1008 背包教程第 4 步：目标 strip_stamina；字「底下三枚火漆签：耐力档、估算输出、负重 —— 这几张图不限重，正式进去才算。　4/4」；排版 查了 4 处，没有溢出
+TC1008 背包教程：看完 4 步
+TC1008 百科页 drag_and_rotate：打开 true
+TC1008 　　页上的字（含 Q 那段）：毒] / [护符结界] / [回主菜单] / [← 上一页] / 拖放与旋转 / 左键按住一件道具就拿起来，拖的时候按 Q 或滚轮下滚逆时针转一格，按 E 或滚轮上滚顺时针转一格，右键或 Esc 取消放回原处。落点按物品的左上角算，预览有三种颜色：绿是干净落点，黄是压着别人、放手会把人顶出来，红是地形不许，出界、没被包覆盖、跨了两个包、包不收这类标签都算。  顶出来一件直接拿在手上，多于一件全部到地上。包不参与顶替：往包上丢东西是放进包里，拖一个包压到另一个包上是替换，旧包连内容物摘下、内容物到地上。装着东西的包能整体拖走，但换了朝向之后挂不住的内容物会脱落到地上。按住 Ctrl 再点包里的道具，拿起的是整个包。  拿起一件时，能和它合成的道具身上标一枚小锤：拖到它上面松手，确认后合成一件。  相关：包　双击快
+TC1008 　　R 键出现：false；排版 查了 144 处，溢出 123：「腰带与随身技能」出 @PanelContainer@328 框；「魔晶石与装载」出 @PanelContainer@328 框；「生长与扎根」出 @PanelContainer@328 框；「自动战斗怎么跑」出 @PanelContainer@328 框；「直接伤害与格挡」出 @PanelContainer@328 框；「护甲」出 @PanelContainer@328 框
+TC1008 百科页 keys：打开 true
+TC1008 　　页上的字（含 Q 那段）：/ [日光] / [剧毒] / [护符结界] / [回主菜单] / [← 上一页] / 按键一览 / 背包：拖着一件按 Q 或滚轮下滚逆时针转，按 E 或滚轮上滚顺时针转；右键或 Esc 放回原处。按住 Alt 暂时藏起说明窗。按住 Ctrl 再点包里的道具，拿起的是整个包。从空格按住左键拖出一个框，框住的道具都选中（按住 Shift 从包的空处起拖也行）；按住选中的任一件拖，整组一起走。  地图：按住左键或中键拖动地图，滚轮缩放；B 开背包，N 回到这个点，F 看全图，1 原大，Space 镜头回到自己（按住跟着走），Esc 暂停菜单。  确认键（Enter / Space）：战前 = 开战；回放里 Space 播 / 停，Enter 跳到结尾、再按继续；战利品 = 全部拾取，拿空了再按关掉；结算 = 继续。
+TC1008 　　R 键出现：false；排版 查了 144 处，溢出 123：「腰带与随身技能」出 @PanelContainer@328 框；「魔晶石与装载」出 @PanelContainer@328 框；「生长与扎根」出 @PanelContainer@328 框；「自动战斗怎么跑」出 @PanelContainer@328 框；「直接伤害与格挡」出 @PanelContainer@328 框；「护甲」出 @PanelContainer@328 框
+TC1008 百科页 map_and_steps：打开 true
+TC1008 　　页上的字（含 Q 那段）：百科 / [地图与走步] / [搜索点] / [战斗与战前准备] / [地上] / [撤离与失败] / [体力] / [结算与仓库] / [三个角色] / [按键一览] / [拖放与旋转] / [包] / [双击快速置入] / [整理] / [合成] / [增益槽与受益槽] / [道具按钮与锁定] / [负重] / [腰带与随身技能] / [魔晶石与装载] / [生长与扎根] / [自动战斗怎么跑] / [直接伤害与格挡] / [护甲] / [buff 与叠层] / [耐力与冷却] / [急速] / [乘区] / [元素与反应] / [敌人的三类] / [节点类型] / [随机点] / [商店] / [休息点] / [托付] / [倒计时与撤离点关闭] / [猎手] / [侵蚀] / [传送点] / [铸炉] 
+TC1008 　　R 键出现：false；排版 查了 144 处，溢出 122：「腰带与随身技能」出 @PanelContainer@328 框；「魔晶石与装载」出 @PanelContainer@328 框；「生长与扎根」出 @PanelContainer@328 框；「自动战斗怎么跑」出 @PanelContainer@328 框；「直接伤害与格挡」出 @PanelContainer@328 框；「护甲」出 @PanelContainer@328 框
+TC1008 完 err=0
+ERROR: Texture with GL ID of 75: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 77: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 78: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 79: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+WARNING: 9985 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 4946 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+ERROR: 4 RID allocations of type 'N5GLES37TextureE' were leaked at exit.
