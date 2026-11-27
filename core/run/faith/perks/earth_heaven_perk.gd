@@ -206,8 +206,8 @@ static func effect_for(lv: LevelModule, board: GridInventory, run: RunState = nu
 		e.quake = e.ground
 		e.quake_cd = lv.card_value(QUAKE, "cd", 6.0)
 	if lv.has_card(JADE):
-		for uid in got:
-			e.jade = maxi(e.jade, ItemValue.of_in(board.get_item(int(uid)), board))
+		var doomed := jade_target(board, got)
+		e.jade = ItemValue.of_in(doomed, board) if doomed != null else 0
 	if lv.has_card(PILLAR_SKY):
 		e.elements = e.pillar
 	if lv.has_card(RANGES):
@@ -524,6 +524,59 @@ static func on_search(lv: LevelModule, session: SearchSession) -> void:
 				xp += ECHO_XP[clampi(d.rarity, 0, ECHO_XP.size() - 1)]
 		if xp > 0.0:
 			lv.gain(xp, LevelModule.SRC_FAITH, "earth_echo")
+#endregion
+
+
+#region 玉石俱焚（作者 11-28）：开战消耗最高价的道具
+## 能被玉石俱焚消耗的：参战的非包道具，跳过委托物、随身之物、特殊道具和锁住的（基石、玩家上了锁的）
+static func jade_ok(inst: ItemInstance) -> bool:
+	if inst == null or inst.def == null:
+		return false
+	var d := inst.def
+	return not (d.is_commission() or d.is_signature() or d.is_keepsake() or inst.is_locked_by_player())
+
+
+## 这一场会被消耗的那件：[param got] 里（[method EarthHeaven.roles] 的结果）价值最高的（按包的倍率算，一样高取 uid 小的）；没有 null
+static func jade_target(board: GridInventory, got: Dictionary) -> ItemInstance:
+	var best: ItemInstance = null
+	var top := 0
+	var uids: Array = got.keys()
+	uids.sort()
+	for uid in uids:
+		var inst := board.get_item(int(uid))
+		if not jade_ok(inst):
+			continue
+		var v := ItemValue.of_in(inst, board)
+		if best == null or v > top:
+			best = inst
+			top = v
+	return best
+
+
+## 拿了玉石俱焚时这一场会消耗的那件的 uid（开战界面标出来）；没拿 / 没有 -1
+static func jade_uid(run: RunState) -> int:
+	var lv := LevelModule.of(run)
+	if lv == null or run.board == null or lv.god() != &"earth" or not lv.has_card(JADE):
+		return -1
+	var t := jade_target(run.board, EarthHeaven.roles(run.board, true))
+	return t.uid if t != null else -1
+
+
+## 真的开打时（[NodeEvents] 的 before_battle，战斗单位已经编好）：把那件消耗掉 —— 一摞大地结晶消耗一半（向上取整，至少 1），别的整件没了。
+## 返回消耗了的道具名（没消耗空串）
+static func consume_jade(run: RunState) -> String:
+	var uid := jade_uid(run)
+	if uid < 0:
+		return ""
+	var inst := run.board.get_item(uid)
+	var name := Names.of(inst.def)
+	var n := inst.stack_count()
+	if inst.def.stackable and n > 1:
+		inst.set_stack(n - maxi(1, ceili(n / 2.0)))
+		run.board.touch()
+	else:
+		run.board.remove(uid)
+	return name
 #endregion
 
 

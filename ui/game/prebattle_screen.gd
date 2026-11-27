@@ -349,6 +349,9 @@ func _refresh_belt() -> void:
 
 
 func _refresh() -> void:
+	var bv: Variant = _inv.get("board_view") if _inv != null and flow.run != null else null
+	if bv is InventoryView:
+		(bv as InventoryView).doom_uid = EarthHeavenPerk.jade_uid(flow.run)     # 玉石俱焚：这一场会消耗哪件，拖动跟着变
 	var spec := flow.run.events.pending_battle_spec() if flow.run != null else null
 	if spec != null:
 		_enemy_strip.refresh(spec, null)     # battle_stats v2：原来那行「生命 / DPS」和「免疫」都归进敌人那排签（免疫在特殊能力签的悬浮窗里）
