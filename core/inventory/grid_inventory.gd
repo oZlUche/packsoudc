@@ -792,6 +792,143 @@ func attach_bag_shedding(payload: Dictionary, origin: Vector2i, rot: int) -> Dic
 	return report
 
 
+## 换包（作者 2026-11-27）：手上的包 [param bag]（[param payload] 非空 = 带着它自己的内容物）放在 origin、
+## 替换棋盘上的 [param victim_uid] 会怎样。不改任何状态。
+##
+## 旧包里的东西**按原位逐件**判断：新包（和别的包）换上之后，它原来那几格仍然每格有包覆盖、没被占、
+## 碰到的包都收它，就留在原处不动；否则脱落。位置与形状不变，不自动重排（核心原则 1）。
+## 手上那包自己的内容物先落位（它们跟着包走），旧东西按 uid 升序依次判断。
+##
+## [codeblock]
+## {"ok": bool, "kept": [ItemInstance], "fallen": [ItemInstance],   # 旧包的东西：留下 / 脱落
+##  "carried_fallen": [ItemInstance]}                               # 手上那包的跨包物脱落的
+## [endcodeblock]
+func replace_bag_plan(victim_uid: int, bag: ItemInstance, payload: Dictionary, origin: Vector2i, rot: int) -> Dictionary:
+	var failed := {"ok": false, "kept": [], "fallen": [], "carried_fallen": []}
+	var victim: ItemInstance = _items.get(victim_uid, null)
+	if not requires_bag or bag == null or bag.def == null or victim == null or not acts_as_bag(victim.def) \
+			or not acts_as_bag(bag.def) or not accepts(bag.def):
+		return failed
+	var old_uids: Array[int] = contents_of(victim_uid)
+	old_uids.append_array(straddlers_of(victim_uid))
+	old_uids.sort()
+	var gone := {victim_uid: true, bag.uid: true}
+	for u in old_uids:
+		gone[u] = true
+
+	var bag_cells := bag.def.cells_rotated(rot)
+	if not _cells_in_board(bag_cells, origin):
+		return failed
+	var cover := {}     # 新包盖住的格
+	for c in bag_cells:
+		var p := origin + c
+		var i := _idx(p)
+		var o := _bag_owner[i]
+		if o != EMPTY_UID and not gone.has(o):
+			return failed     # 压着别的包
+		if _occ[i] != EMPTY_UID and not gone.has(_occ[i]):
+			return failed     # 压着不归旧包的东西（随身之物、别的包里的）
+		cover[p] = true
+
+	var taken := {}
+	# 格 p 换包之后归哪个包（EMPTY_UID = 没包）
+	var owner_after := func(p: Vector2i) -> int:
+		if cover.has(p):
+			return bag.uid
+		var o := _bag_owner[_idx(p)]
+		return EMPTY_UID if gone.has(o) else o
+	var occupied_after := func(p: Vector2i) -> bool:
+		if taken.has(p):
+			return true
+		var u := _occ[_idx(p)]
+		return u != EMPTY_UID and not gone.has(u)
+
+	if not payload.is_empty():
+		var contents: Array = payload.get("contents", [])
+		var locals: Array = payload.get("locals", [])
+		for i in contents.size():
+			var inst: ItemInstance = contents[i]
+			var g := to_global(bag, locals[i], inst, origin, rot)
+			for c in inst.def.cells_rotated(int(g["rot"])):
+				var p: Vector2i = (g["origin"] as Vector2i) + c
+				if not cover.has(p) or taken.has(p):
+					return failed
+				taken[p] = true
+	var carried_fallen: Array = []
+	for s in payload.get("straddlers", []):
+		var inst: ItemInstance = s["inst"]
+		var cells := inst.def.cells_rotated(int(s["rot"]))
+		if _fits_after(cells, s["origin"], inst.def, bag, owner_after, occupied_after):
+			for c in cells:
+				taken[(s["origin"] as Vector2i) + c] = true
+		else:
+			carried_fallen.append(inst)
+
+	var kept: Array = []
+	var fallen: Array = []
+	for u in old_uids:
+		var inst: ItemInstance = _items[u]
+		var cells := inst.def.cells_rotated(inst.rotation)
+		if _fits_after(cells, inst.origin, inst.def, bag, owner_after, occupied_after):
+			for c in cells:
+				taken[inst.origin + c] = true
+			kept.append(inst)
+		else:
+			fallen.append(inst)
+	return {"ok": true, "kept": kept, "fallen": fallen, "carried_fallen": carried_fallen}
+
+
+## [method replace_bag_plan] 用：一件东西换包之后按原位还放不放得下
+func _fits_after(cells: Array[Vector2i], at: Vector2i, def: ItemDef, new_bag: ItemInstance,
+		owner_after: Callable, occupied_after: Callable) -> bool:
+	for c in cells:
+		var p := at + c
+		if not in_bounds(p) or _blocked[_idx(p)] != 0:
+			return false
+		var o: int = owner_after.call(p)
+		if o == EMPTY_UID or bool(occupied_after.call(p)):
+			return false
+		var owner_def: ItemDef = new_bag.def if o == new_bag.uid else (_items[o] as ItemInstance).def
+		if not _bag_accepts(owner_def, def):
+			return false
+	return true
+
+
+## 照 [method replace_bag_plan] 换包：旧包连东西摘下，手上的包（连它的内容物）放上，旧东西放得下的原位放回。
+## 返回 `{"ok", "old": 旧包, "shed": [游离的实例，调用方得给它们找地方]}`；`ok` 为假时容器原样不动
+func replace_bag(victim_uid: int, bag: ItemInstance, payload: Dictionary, origin: Vector2i, rot: int) -> Dictionary:
+	var plan := replace_bag_plan(victim_uid, bag, payload, origin, rot)
+	if not plan["ok"]:
+		return {"ok": false, "old": null, "shed": []}
+	var old_home := (_items[victim_uid] as ItemInstance).origin
+	var old_rot := (_items[victim_uid] as ItemInstance).rotation
+	begin_batch()
+	var old_payload := detach_bag(victim_uid)
+	var ok := false
+	var shed: Array = []
+	if payload.is_empty():
+		ok = place(bag, origin, rot)
+	else:
+		var res := attach_bag_shedding(payload, origin, rot)
+		ok = res["ok"]
+		shed.append_array(res["fallen"])
+	if not ok:
+		if not attach_bag(old_payload, old_home, old_rot):
+			push_error("GridInventory.replace_bag: 换包失败后旧包放不回原位")
+		end_batch()
+		return {"ok": false, "old": null, "shed": []}
+	for inst in plan["kept"]:
+		var it := inst as ItemInstance
+		it.container_id = id     # 原地没动：不算重新置入（信仰的置入顺序不变）
+		if not place(it, it.origin, it.rotation):
+			push_error("GridInventory.replace_bag: 计划留下的 uid %d 放不回原位，改为脱落" % it.uid)
+			it.container_id = 0
+			shed.append(it)
+	shed.append_array(plan["fallen"])
+	end_batch()
+	return {"ok": true, "old": old_payload["bag"], "shed": shed}
+
+
 ## 把载荷整体放到 origin，**一件都不能少**。失败时不留任何残迹，容器保持原样。
 ##
 ## 这是「原样放回」用的严格版；玩家放手走的是 [method attach_bag_shedding]。

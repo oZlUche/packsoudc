@@ -17,7 +17,7 @@ static func run_layout(t: TestCase) -> void:
 	t.begin("150 / 166 · 布局：默认是顶端栏三个槽；字典往返一致；坏 id / 锚点 / 档位 / 偏移 / 重复都报；文件存取与重置")
 	var d := HudLayout.default_for("map")
 	t.eq(d.entries.size(), HudWidgets.KINDS.size(), "默认布局把每一种都摆上了")
-	t.eq(HudLayout.VERSION, 8, "382：布局版本 8（旧的回默认）")
+	t.eq(HudLayout.VERSION, 9, "11-27：布局版本 9（buff 与委托合进左上石板；旧的回默认）")
 	t.eq(String(d.entry_of(&"hud_bar")["anchor"]), "top", "顶端栏横在顶上")
 	t.eq(String(d.entry_of(&"countdown")["anchor"]), "bar_center", "倒计时在栏中间")
 	t.eq(String(d.entry_of(&"countdown")["tier"]), "large", "倒计时是大档")
@@ -29,9 +29,11 @@ static func run_layout(t: TestCase) -> void:
 		t.eq(String(d.entry_of(id)["anchor"]), HudLayout.BAR_GROWTH, "382：%s 在日晷右边那一组" % id)
 		t.eq(String(d.entry_of(id)["tier"]), "double", "%s 是 200%% 档" % id)
 	t.eq(String(d.entry_of(HudLayout.XP_BAR)["anchor"]), "top", "382：经验值条贴顶（宿主排在栏下沿）")
-	for id in [&"buffs", &"erosion"]:
-		t.eq(int(d.entry_of(id)["line"]), 1, "%s 在左槽第二行（小字）" % id)
-		t.check(bool(d.entry_of(id)["visible"]), "%s 默认显示" % id)
+	t.eq(int(d.entry_of(&"erosion")["line"]), 1, "侵蚀在左槽第二行（小字）")
+	t.check(bool(d.entry_of(&"erosion")["visible"]), "侵蚀默认显示")
+	t.eq(String(d.entry_of(&"status_slate")["anchor"]), "top_left", "11-27（85 A）：状态 / 委托石板在左上")
+	for id in [&"buffs", &"commissions"]:
+		t.check(not HudWidgets.has(id) and d.entry_of(id).is_empty(), "11-27：%s 退役（合进石板）" % id)
 	for id in [&"distances", &"encumbrance"]:
 		t.check(not HudWidgets.has(id) and d.entry_of(id).is_empty(), "v5.62：%s 读数删了（登记表与默认布局都没有；负重看背包界面）" % id)
 	t.check(d.entry_of(&"action_points").is_empty() and not HudWidgets.KINDS.has(&"action_points"), "179：「行动点」读数删了（登记表与默认布局都没有）")
@@ -56,18 +58,20 @@ static func run_layout(t: TestCase) -> void:
 	var stars := HudWidgets.create(&"stars")
 	t.check(stars.get("star") != null and (stars.get("star") as HudIcon).texture != null, "星辰读数用美术的图标（assets/ui/hud/star.png，v9.27）")
 	stars.free()
-	var cw = load("res://ui/hud/widgets/commissions_widget.gd")
+	var cw = load("res://ui/hud/widgets/status_slate_widget.gd")
 	t.eq([cw.short_name("初次奉神"), cw.short_name("Check the Medicine Packs"), cw.short_name("Check the Medicine Packs").length()], ["初次奉神", "Check the Medic…", 16], "委托小牌：长名字截到 16 个字加「…」，短的不动")
 	t.check(not HudWidgets.has(&"bag_button") and d.entry_of(&"bag_button").is_empty(), "235：右槽小背包钮退役（并进栏的右头）")
 	# v5.62：距离与负重两件读数删了 —— 旧布局里还写着它们：静默丢掉、不报错，别的摆法照用（不整份回默认）
 	var gone: Array[String] = []
 	var kept := HudLayout.from_dict({"widgets": [{"id": "wallet", "anchor": "left"},
 		{"id": "distances", "anchor": "bar_left", "offset": [0, 0], "tier": "small", "line": 1, "visible": false},
-		{"id": "encumbrance", "anchor": "top", "offset": [8, 16], "tier": "double"}]}, gone)
+		{"id": "encumbrance", "anchor": "top", "offset": [8, 16], "tier": "double"},
+		{"id": "buffs", "anchor": "bar_left", "offset": [0, 0], "tier": "small", "line": 1},
+		{"id": "commissions", "anchor": "top_left", "offset": [16, 16]}]}, gone)
 	t.check(kept != null and gone.is_empty(), "旧布局带着删掉的读数：读得进来、不报错（%s）" % "；".join(gone))
 	if kept != null:
-		t.eq(kept.entries.size(), 6, "删掉的两件不进布局（336 / 355 / 372 / 382 / 11-27：旧布局里没有的委托小牌、饱腹读数、等级格、经验值条、星辰补上，所以是六件）")
-		t.check(not kept.entry_of(&"commissions").is_empty(), "336：委托小牌自动补进旧布局")
+		t.eq(kept.entries.size(), 6, "删掉的四件不进布局（旧布局里没有的状态石板、饱腹读数、等级格、经验值条、星辰补上，所以是六件）")
+		t.check(not kept.entry_of(&"status_slate").is_empty(), "11-27：状态石板自动补进旧布局")
 		t.eq(String(kept.entry_of(&"wallet").get("anchor", "")), "left", "别的摆法照用")
 	var old := HudLayout.from_dict({"widgets": [{"id": "wallet", "anchor": "left"}, {"id": "reopen_button", "anchor": "bar_right"}]})
 	t.not_null(old, "栏槽锚点认得")

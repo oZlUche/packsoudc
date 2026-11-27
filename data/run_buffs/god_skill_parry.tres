@@ -9,7 +9,7 @@
 [sub_resource type="Resource" id="Resource_iifll"]
 script = ExtResource("2_bkp3j")
 values = {
-"armor": 2,
+"armor": 5,
 "every": 10
 }
 

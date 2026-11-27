@@ -404,3 +404,114 @@ static func frame_hidden_parent_view_takes_no_drop(t: TestCase, root: Window) ->
 	drag.queue_free()
 	view.queue_free()
 	hidden_host.queue_free()
+
+
+## 作者 2026-11-27：拿一个包换另一个包，新包按原位盖得住的旧东西留在原处不掉；盖不住的才到地上（逐件判断，不重排）
+static func run_bag_swap_keeps_fitting(t: TestCase) -> void:
+	t.begin("DragLayer · 换包：新包盖得住的旧东西原位留下")
+	ItemInstance.reset_uid_counter()
+	var tall := _bag_def("bag6", ["11", "11", "11"])     # 2 宽 3 高
+	var square := _bag_def("bag4", ["11", "11"])
+	var wide := _bag_def("bag9", ["111", "111", "111"])
+	var dot := _def("dot", ["1"])
+	var bar := _def("bar", ["1", "1"])
+
+	var board := GridInventory.new(Vector2i(6, 6), 1, true)
+	var shelf := GridInventory.new(Vector2i(6, 6), 2, true)
+	var view := _view(board, Vector2.ZERO)
+	var view_s := _view(shelf, Vector2(500, 0))
+	var stash := ItemStash.new(3, 0)
+	var drag := DragLayer.new()
+	drag.stash = stash
+	drag.register_view(view)
+	drag.register_view(view_s)
+
+	var old := ItemInstance.create(tall)
+	board.place(old, Vector2i(0, 0), 0)
+	var a := ItemInstance.create(dot)
+	var b := ItemInstance.create(dot)
+	var c := ItemInstance.create(bar)
+	board.place(a, Vector2i(0, 0), 0)
+	board.place(c, Vector2i(1, 0), 0)     # (1,0)-(1,1)
+	board.place(b, Vector2i(1, 2), 0)
+	var a_seq := a.placed_seq
+
+	# --- 部分盖得住：2×2 的包换 2×3 的包，上面两行的留下，最下一行的掉 ---
+	var sq := ItemInstance.create(square)
+	shelf.place(sq, Vector2i(0, 0), 0)
+	view_s.grab_requested.emit(view_s, sq.uid, _grab(Vector2i(0, 0)))
+	drag.update_preview(_center(view, Vector2i(0, 0)))
+	t.check(view._preview_valid and view._preview_victims.has(old.uid), "预览：合法、标着要替换的包")
+	t.check(view._preview_victims.has(b.uid) and not view._preview_victims.has(a.uid) and not view._preview_victims.has(c.uid),
+		"预览：只把会掉的那件标出来")
+	t.check(drag.drop_at(_center(view, Vector2i(0, 0))), "放下：替换成功")
+	t.check(board.has_item(a.uid) and a.origin == Vector2i(0, 0), "盖得住的 dot 留在原处")
+	t.check(board.has_item(c.uid) and c.origin == Vector2i(1, 0) and c.rotation == 0, "盖得住的 bar 原位原朝向")
+	t.eq(board.bag_of(a.uid), sq.uid, "留下的东西归新包")
+	t.eq(a.placed_seq, a_seq, "原地没动不算重新置入")
+	t.check(not board.has_item(b.uid) and stash.has_item(b.uid), "盖不住的那件到地上")
+	t.check(drag.is_dragging() and not board.has_item(old.uid), "旧包拿在手上")
+	drag.cancel()
+
+	# --- 全部盖得住：3×3 换 2×2，一件都不掉；没有地上也能换 ---
+	if board.has_item(old.uid):
+		board.remove(old.uid)     # 取消时旧包回到棋盘空处，挪开它
+	drag.stash = null
+	var big := ItemInstance.create(wide)
+	shelf.place(big, Vector2i(3, 0), 0)
+	view_s.grab_requested.emit(view_s, big.uid, _grab(Vector2i(3, 0)))     # 抓包的左上角
+	t.check(drag.drop_at(_center(view, Vector2i(0, 0))), "没有地上、旧东西全盖得住：照样能换")
+	t.check(board.has_item(a.uid) and board.has_item(c.uid), "两件都留下")
+	t.eq(board.bag_of(c.uid), big.uid, "归新包")
+	drag.cancel()
+	if board.has_item(sq.uid):
+		board.remove(sq.uid)
+
+	# --- 有一件要掉、又没有地上：不能换 ---
+	var b2 := ItemInstance.create(dot)
+	board.place(b2, Vector2i(2, 2), 0)
+	var sq2 := ItemInstance.create(square)
+	shelf.place(sq2, Vector2i(0, 3), 0)
+	view_s.grab_requested.emit(view_s, sq2.uid, _grab(Vector2i(0, 3)))
+	t.check(not drag.drop_at(_center(view, Vector2i(0, 0))), "会掉一件但没地方去：不换")
+	t.check(board.has_item(big.uid) and board.has_item(b2.uid), "棋盘原样")
+
+	for v in [view, view_s]:
+		v.free()
+	drag.free()
+
+
+## 换包的纯模型：新包不收的标签照样掉；手上那包自己的内容物优先占格
+static func run_bag_swap_model(t: TestCase) -> void:
+	t.begin("GridInventory · 换包按原位逐件保留")
+	ItemInstance.reset_uid_counter()
+	var tall := _bag_def("bag6", ["11", "11", "11"])
+	var potion_bag := _bag_def("belt", ["11", "11", "11"])
+	potion_bag.bag_accept_tags = [&"potion"] as Array[StringName]
+	var dot := _def("dot", ["1"])
+	var potion := _def("potion", ["1"], ["potion"])
+	var board := GridInventory.new(Vector2i(6, 6), 1, true)
+	var old := ItemInstance.create(tall)
+	board.place(old, Vector2i(0, 0), 0)
+	var d := ItemInstance.create(dot)
+	var p := ItemInstance.create(potion)
+	board.place(d, Vector2i(0, 0), 0)
+	board.place(p, Vector2i(1, 0), 0)
+	var belt := ItemInstance.create(potion_bag)
+	var res := board.replace_bag(old.uid, belt, {}, Vector2i(0, 0), 0)
+	t.check(res["ok"], "换上药水带")
+	t.check(board.has_item(p.uid) and p.origin == Vector2i(1, 0), "药水原位留下")
+	t.check((res["shed"] as Array).has(d) and not board.has_item(d.uid), "药水带不收的掉出来")
+	t.eq(res["old"], old, "交还旧包")
+
+	# 手上的包带着东西：它的内容物占了的格，旧东西就掉
+	var shelf := GridInventory.new(Vector2i(6, 6), 2, true)
+	var carry := ItemInstance.create(tall)
+	shelf.place(carry, Vector2i(0, 0), 0)
+	var mine := ItemInstance.create(potion)
+	shelf.place(mine, Vector2i(1, 0), 0)
+	var payload := shelf.detach_bag(carry.uid)
+	var res2 := board.replace_bag(belt.uid, carry, payload, Vector2i(0, 0), 0)
+	t.check(res2["ok"], "带内容物的包也能换")
+	t.check(board.has_item(mine.uid) and mine.origin == Vector2i(1, 0), "手上那包的内容物落位")
+	t.check((res2["shed"] as Array).has(p), "被它占了格的旧药水掉出来")

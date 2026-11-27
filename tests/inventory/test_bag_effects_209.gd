@@ -35,7 +35,7 @@ static func run_catalog(t: TestCase) -> void:
 
 
 static func run_mods(t: TestCase) -> void:
-	t.begin("209 · ② 包体效果：铆钉挎包里整件的东西护甲上限 +2；跨两个包的不加；包外的不加")
+	t.begin("209 · ② 包体效果：铆钉挎包里整件的东西每件护甲 +5（作者 11-27）；跨两个包的不加；包外的不加")
 	var db := _db()
 	var board := GridInventory.new(Vector2i(6, 4), 1, true)
 	_put(board, db, &"studded_satchel", Vector2i(0, 0))
@@ -45,7 +45,7 @@ static func run_mods(t: TestCase) -> void:
 	var other := _put(board, db, &"knife", Vector2i(3, 0))
 	t.check(board.has_item(across.uid), "跨包那件摆上了")
 	var spec := BattleCompiler.compile(board, CompileInput.new())
-	t.eq(spec.item_of(inside.uid).stats.total_of(BattleStats.MAX_ARMOR), StatMath.from_float(2.0), "挎包里的匕首：护甲上限 +2")
+	t.eq(spec.item_of(inside.uid).stats.total_of(BattleStats.MAX_ARMOR), StatMath.from_float(5.0), "挎包里的匕首：护甲 +5")
 	t.eq(spec.item_of(across.uid).stats.total_of(BattleStats.MAX_ARMOR), 0, "跨两个包：不加")
 	t.eq(spec.item_of(other.uid).stats.total_of(BattleStats.MAX_ARMOR), 0, "别的包里：不加")
 
