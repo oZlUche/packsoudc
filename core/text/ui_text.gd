@@ -1338,7 +1338,7 @@ const TEXT := {
 	"gcard.god_skill_ready": {"zh": "战斗开始时，立即获得 {stacks} 层连击", "en": "Start each battle with {stacks} Combo"},
 	"gcard.god_skill_stream": {"zh": "每层额外 +{pct}% 加速", "en": "+{pct}% extra Haste per Combo stack"},
 	"gcard.god_skill_cloud": {"zh": "至少拥有 {at} 层连击时，武器的耐力消耗 -{pct}%", "en": "With at least {at} Combo, weapons cost {pct}% less Stamina"},
-	"gcard.god_skill_parry": {"zh": "每累积 {every} 层连击，回复身上防具护甲上限 {pct}% 的护甲", "en": "Every {every} Combo gained, restore Armor equal to {pct}% of your armor's max Armor"},
+	"gcard.god_skill_parry": {"zh": "每累积 {every} 层连击，回复 {armor} 点护甲", "en": "Every {every} Combo gained, restore {armor} Armor"},
 	"gcard.god_skill_breath": {"zh": "清零时，每层恢复 {per} 点耐力", "en": "When Combo resets, restore {per} Stamina per stack"},
 	"gcard.god_skill_vigor": {"zh": "清零时，每层恢复 {per} 点生命", "en": "When Combo resets, restore {per} Health per stack"},
 	"gcard.god_skill_poise": {"zh": "每过 {sec} 秒，暴击率提升 {pct}%，暴击后清零", "en": "Every {sec} seconds, Crit chance +{pct}%; resets after a crit"},
