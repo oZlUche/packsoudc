@@ -1,8 +1,8 @@
 {
   "id": "card_stamina_flat",
-  "display_name": "坚韧",
+  "display_name": "持久",
   "display_names": {
-    "en": "Grit"
+    "en": "Staying Power"
   },
   "effects": [
     {

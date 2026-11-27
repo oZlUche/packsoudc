@@ -14,8 +14,8 @@ amount = 6.0
 [resource]
 script = ExtResource("5_eps5k")
 id = &"card_stamina_flat"
-display_name = "坚韧"
+display_name = "持久"
 display_names = {
-"en": "Grit"
+"en": "Staying Power"
 }
 effects = Array[ExtResource("1_tf0ko")]([SubResource("Resource_ixkir")])
