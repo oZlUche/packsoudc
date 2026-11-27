@@ -67,11 +67,14 @@ var battle_log_open: bool = true
 var dial_number_always: bool = false
 ## 作者 2026-11-21：地图左下的图例放下着（默认放下；点「图例」像卷轴一样卷起）
 var legend_open: bool = true
+## 作者 11-27（确认清单 85 A）：地图左上那块石板的「状态」「委托」两节各自展开着没有（默认展开；点节标题右边的圆钮收起，下一局照旧）
+var status_open: bool = true
+var commissions_open: bool = true
 ## 作者 2026-11-19：离开一个点时地上还有东西就先问一句（默认开；问的时候勾「不再提醒」或在设置里关）
 var leave_ground_warn: bool = true
 
 ## 读回来只转成布尔的开关（字段名 = 文件里的键；文件里没有 = 字段的默认值）
-const BOOLS: Array[String] = ["loot_auto_close", "node_tooltips_preview", "unlock_all", "reveal_names", "battle_trace", "debug_mode", "faith_pace_shown", "ui_fades", "stele_roman", "battle_log_open", "dial_number_always", "legend_open", "leave_ground_warn"]
+const BOOLS: Array[String] = ["loot_auto_close", "node_tooltips_preview", "unlock_all", "reveal_names", "battle_trace", "debug_mode", "faith_pace_shown", "ui_fades", "stele_roman", "battle_log_open", "dial_number_always", "legend_open", "leave_ground_warn", "status_open", "commissions_open"]
 const TEXT_SIZES: Array[StringName] = [&"small", &"medium", &"large"]
 
 ## 172：认得的窗口模式；全屏 = 无边框铺满桌面（待定 4 A）
@@ -121,6 +124,8 @@ func to_dict() -> Dictionary:
 		"battle_log_open": battle_log_open,
 		"dial_number_always": dial_number_always,
 		"legend_open": legend_open,
+		"status_open": status_open,
+		"commissions_open": commissions_open,
 		"leave_ground_warn": leave_ground_warn,
 	}
 
