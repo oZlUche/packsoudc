@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1670" viewBox="0 0 1800 1670" role="img" aria-labelledby="title" aria-describedby="desc">
+  <title id="title">背包搜打撤 · 基地与跨局成长</title>
+  <desc id="desc">回营后，资源、委托和成长分别入账。仓库与经济设施交换资金和物品，委托开启服务，科技提供永久成长，食堂和万神院影响下一次出征。下一局结束后回营并进入同一循环。</desc>
+  <defs><marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M2 2L10 6L2 10" fill="none" stroke="#EFEEE7" stroke-width="1.4"/></marker></defs>
+  <style>
+    text { font-family: "Microsoft YaHei", "Noto Sans CJK SC", "PingFang SC", sans-serif; fill: #EFEEE7 }
+    .title { font-size: 54px; font-weight: 600 }
+    .subtitle { font-size: 24px; fill: #B0B2A8 }
+    .heading { font-size: 28px; font-weight: 600 }
+    .detail { font-size: 21px; fill: #DFE0D7 }
+    .note { font-size: 18px; fill: #B0B2A8 }
+    .source { font-size: 17px; fill: #B0B2A8 }
+    .node { fill: #272925; stroke: #686E63; stroke-width: 1.5 }
+    .edge { fill: none; stroke: #EFEEE7; stroke-width: 1.8; marker-end: url(#arrow) }
+  </style>
+  <rect data-decoration="background" width="1800" height="1670" fill="#191A18"/>
+  <text class="title" x="85" y="96">背包搜打撤 · 基地与跨局成长</text>
+  <text class="subtitle" x="87" y="138">Camp and between-run progression</text>
+
+  <path class="edge" id="settle-to-stock" data-edge="" data-from="settle" data-to="stock" d="M685 316V345A12 12 0 0 1 673 357H332A12 12 0 0 0 320 369V399"/>
+  <path class="edge" id="settle-to-jobs" data-edge="" data-from="settle" data-to="jobs" d="M870 316V399"/>
+  <path class="edge" id="settle-to-growth" data-edge="" data-from="settle" data-to="growth" d="M1055 316V345A12 12 0 0 0 1067 357H1408A12 12 0 0 1 1420 369V399"/>
+  <path class="edge" id="stock-to-economy" data-edge="" data-from="stock" data-to="economy" d="M320 576V669" marker-start="url(#arrow)"/>
+  <path class="edge" id="jobs-to-gates" data-edge="" data-from="jobs" data-to="gates" d="M870 576V669"/>
+  <path class="edge" id="growth-to-tech" data-edge="" data-from="growth" data-to="tech" d="M1420 576V669"/>
+  <path class="edge" id="gates-to-facilities" data-edge="" data-from="gates" data-to="facilities" d="M870 846V935"/>
+  <path class="edge" id="facilities-to-setup" data-edge="" data-from="facilities" data-to="setup" d="M1045 1130V1241"/>
+  <path class="edge" id="stock-to-setup" data-edge="" data-from="stock" data-to="setup" d="M85 498H63A12 12 0 0 0 51 510V1287A12 12 0 0 0 63 1299H569"/>
+  <path class="edge" id="jobs-to-setup" data-edge="" data-from="jobs" data-to="setup" d="M635 503H611A12 12 0 0 0 599 515V1194A12 12 0 0 0 611 1206H672A12 12 0 0 1 684 1218V1241"/>
+  <path class="edge" id="tech-to-setup" data-edge="" data-from="tech" data-to="setup" d="M1655 758H1681A12 12 0 0 1 1693 770V1287A12 12 0 0 1 1681 1299H1171"/>
+  <path class="edge" id="setup-to-run" data-edge="" data-from="setup" data-to="run" d="M870 1377V1434"/>
+  <path class="edge" id="run-to-settle" data-edge="" data-from="run" data-to="settle" d="M1110 1475H1728A12 12 0 0 0 1740 1463V243A12 12 0 0 0 1728 231H1166"/>
+  <text class="note" x="437" y="341">物品与资金</text>
+  <text class="note" x="886" y="365">合并委托进度</text>
+  <text class="note" x="1268" y="341">评分与解锁</text>
+  <text class="note" x="338" y="626">资金、物品与成品</text>
+  <text class="note" x="888" y="626">办完并领取</text>
+  <text class="note" x="1439" y="626">见识投入科技</text>
+  <text class="note" x="888" y="895">按进度开放或扩充</text>
+  <text class="note" x="1062" y="1193">选用食物与信仰</text>
+  <text class="note" x="262" y="1280">带出营地的装备与现金</text>
+  <text class="note" x="700" y="1223">委托进度快照</text>
+  <text class="note" x="1420" y="1280">科技效果带入本局</text>
+  <text class="note" x="1320" y="1456">本局结束后回营</text>
+
+  <g text-anchor="middle">
+    <rect class="node" id="settle" data-node="" x="575" y="220" width="590" height="96" rx="12"/>
+    <text class="heading" x="870" y="265" data-in-node="settle" data-padding="10">回营结算</text>
+    <text class="detail" x="870" y="298" data-in-node="settle" data-padding="10">撤离或战败后，按对局编号入账一次</text>
+
+    <rect class="node" id="stock" data-node="" x="85" y="400" width="470" height="176" rx="12"/>
+    <text class="heading" x="320" y="445" data-in-node="stock" data-padding="10">仓库、包架与资金</text>
+    <text class="detail" x="320" y="478" data-in-node="stock" data-padding="10">撤离带回棋盘与余额，棋盘物品可置入</text>
+    <text class="detail" x="320" y="506" data-in-node="stock" data-padding="10">保险箱物品按结局分流，战败也可带回</text>
+    <text class="detail" x="320" y="534" data-in-node="stock" data-padding="10">仓库保存跨局物品，包架收纳背包</text>
+
+    <rect class="node" id="jobs" data-node="" x="635" y="400" width="470" height="176" rx="12"/>
+    <text class="heading" x="870" y="445" data-in-node="jobs" data-padding="10">委托 · 接单与记功</text>
+    <text class="detail" x="870" y="478" data-in-node="jobs" data-padding="10">基地可交物、报告并领奖</text>
+    <text class="detail" x="870" y="506" data-in-node="jobs" data-padding="10">现场阶段照记，带回阶段看本人撤离</text>
+    <text class="detail" x="870" y="534" data-in-node="jobs" data-padding="10">或有效托付，未达条件的进度须重做</text>
+
+    <rect class="node" id="growth" data-node="" x="1185" y="400" width="470" height="176" rx="12"/>
+    <text class="heading" x="1420" y="445" data-in-node="growth" data-padding="10">跨局记录与解锁</text>
+    <text class="detail" x="1420" y="478" data-in-node="growth" data-padding="10">战绩、图鉴、知识与成就记入基地</text>
+    <text class="detail" x="1420" y="506" data-in-node="growth" data-padding="10">总分达到门槛可得见识</text>
+    <text class="detail" x="1420" y="534" data-in-node="growth" data-padding="10">成功撤离可解锁配置的章节或难度</text>
+
+    <rect class="node" id="economy" data-node="" x="85" y="670" width="470" height="225" rx="12"/>
+    <text class="heading" x="320" y="715" data-in-node="economy" data-padding="10">集市、铁匠铺、炼金</text>
+    <text class="detail" x="320" y="748" data-in-node="economy" data-padding="10">集市：花钱买货，出售可换回资金</text>
+    <text class="detail" x="320" y="776" data-in-node="economy" data-padding="10">铁匠铺：按配方耗材，成品回库</text>
+    <text class="detail" x="320" y="804" data-in-node="economy" data-padding="10">炼金：分解物品成尘</text>
+    <text class="detail" x="320" y="832" data-in-node="economy" data-padding="10">尘可为已实料打造过的配方补缺</text>
+    <text class="detail" x="320" y="860" data-in-node="economy" data-padding="10">每局结算刷新散货摊，保留锁定货位</text>
+
+    <rect class="node" id="gates" data-node="" x="635" y="670" width="470" height="176" rx="12"/>
+    <text class="heading" x="870" y="715" data-in-node="gates" data-padding="10">声望与设施权限</text>
+    <text class="detail" x="870" y="748" data-in-node="gates" data-padding="10">完成委托发声望，按配置发钱或物品</text>
+    <text class="detail" x="870" y="776" data-in-node="gates" data-padding="10">相关剧情可开启炼金、食堂或苗圃</text>
+    <text class="detail" x="870" y="804" data-in-node="gates" data-padding="10">声望节点还可扩充容量、开放服务</text>
+
+    <rect class="node" id="tech" data-node="" x="1185" y="670" width="470" height="176" rx="12"/>
+    <text class="heading" x="1420" y="715" data-in-node="tech" data-padding="10">科技 · 永久成长</text>
+    <text class="detail" x="1420" y="748" data-in-node="tech" data-padding="10">前置达成后，按节点交材料、钱或见识</text>
+    <text class="detail" x="1420" y="776" data-in-node="tech" data-padding="10">升级可加仓库页、扩保险箱</text>
+    <text class="detail" x="1420" y="804" data-in-node="tech" data-padding="10">也可提升设施等级或提供出征增益</text>
+
+    <rect class="node" id="facilities" data-node="" x="635" y="936" width="1020" height="194" rx="12"/>
+    <text class="heading" x="1145" y="981" data-in-node="facilities" data-padding="10">后勤 · 食堂、苗圃与万神院</text>
+    <text class="detail" x="1145" y="1014" data-in-node="facilities" data-padding="10">苗圃播种，符合条件的正式对局结算推进生长，收获进入仓库或食材仓库</text>
+    <text class="detail" x="1145" y="1042" data-in-node="facilities" data-padding="10">食材入食堂，摆一锅，选用后在成功出发时消耗，供本局增益</text>
+    <text class="detail" x="1145" y="1070" data-in-node="facilities" data-padding="10">万神院随进度到访，声望节点或引导委托给拜访机会，完成拜访对局永久解锁神殿</text>
+
+    <rect class="node" id="setup" data-node="" x="570" y="1242" width="600" height="135" rx="12"/>
+    <text class="heading" x="870" y="1287" data-in-node="setup" data-padding="10">出征准备</text>
+    <text class="detail" x="870" y="1320" data-in-node="setup" data-padding="10">选带入装备和现金，确认食物、信仰、地图与难度</text>
+    <text class="detail" x="870" y="1348" data-in-node="setup" data-padding="10">本局读取可用科技效果及适用的已接委托</text>
+
+    <rect class="node" id="run" data-node="" x="630" y="1435" width="480" height="83" rx="12"/>
+    <text class="heading" x="870" y="1487" data-in-node="run" data-padding="10">进入局内循环</text>
+  </g>
+
+  <text class="source" x="85" y="1620">依据 0dfe5fdc 的 GameFlow、MetaState、Commissions、TechService 与基地后勤各模块。图索引可跳转到相应源码。</text>
+</svg>
