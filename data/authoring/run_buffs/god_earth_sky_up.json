@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_sky_up",
+  "display_name": "天光（升级）",
+  "display_names": {
+    "en": "Skylight+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "damage": 10
+      }
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="BeltSkillDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/belt_effect.gd" id="1_1oqrm"]
+[ext_resource type="Script" path="res://core/run/effects/earth_camp.gd" id="2_7myaf"]
+[ext_resource type="Script" path="res://core/inventory/belt_skill_def.gd" id="3_c0xvr"]
+
+[sub_resource type="Resource" id="Resource_lm55i"]
+script = ExtResource("2_7myaf")
+
+[resource]
+script = ExtResource("3_c0xvr")
+id = &"earth_camp"
+display_name = "扎营"
+display_names = {
+"en": "Make Camp"
+}
+price = 30
+effects = Array[ExtResource("1_1oqrm")]([SubResource("Resource_lm55i")])

@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_pillar_up",
+  "display_name": "支柱（升级）",
+  "display_names": {
+    "en": "Pillars+"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "stacks": 10
+      }
+    }
+  ]
+}

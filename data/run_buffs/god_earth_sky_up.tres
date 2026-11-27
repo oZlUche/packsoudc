@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_ay7xv"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_pk2ok"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_k36fh"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_u6emv"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_1f3h2"]
+
+[sub_resource type="Resource" id="Resource_uugfc"]
+script = ExtResource("2_pk2ok")
+values = {
+"damage": 10
+}
+
+[resource]
+script = ExtResource("5_1f3h2")
+id = &"god_earth_sky_up"
+display_name = "天光（升级）"
+display_names = {
+"en": "Skylight+"
+}
+effects = Array[ExtResource("1_ay7xv")]([SubResource("Resource_uugfc")])

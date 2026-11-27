@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_pillar_sky",
+  "display_name": "擎天一柱",
+  "display_names": {
+    "en": "Pillar of Heaven"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "n": 1
+      }
+    }
+  ]
+}

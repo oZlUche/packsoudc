@@ -1,0 +1,13 @@
+{
+  "id": "earth_camp",
+  "display_name": "扎营",
+  "display_names": {
+    "en": "Make Camp"
+  },
+  "price": 30,
+  "effects": [
+    {
+      "type": "earth_camp"
+    }
+  ]
+}

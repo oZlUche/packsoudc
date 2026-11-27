@@ -1,101 +1,154 @@
-## 信仰重构 C（交接方案 §6.4）：大地之神「空间承托」—— 大件（≥ 5 格，一阶起 ≥ 4 格）每有一件不同的有效道具贴边一层，最多 2 层；
-## 角接触不算、同一邻居多条边只算一次、包与不参战的不算；攻击型减耐力、防御型加格挡 / 护甲；三阶开战按件给护甲；与放置先后无关。
+## 大地之神（作者牌表 11-26）：核心【天地】按摆放分大地 / 穹顶 / 支柱；大地之神的牌在战斗里的那一半
+## （磐石、天光、冲撞、万钧、玉石俱焚、厚实、反震、擎天一柱、层峦）
 extends RefCounted
 
 const Comp := preload("res://tests/battle/test_compiler.gd")
 const FX := preload("res://tests/battle/test_effect_system.gd")
 
 
-static func _big(id: String, tags: Array, rows: Array = ["111", "11."]) -> ItemDef:
-	var d := Comp._weapon(id, rows, 10.0, 1.0, tags)
-	if tags.has("shield"):
-		d.combat.base_stats = {"block": 10.0}
-	return d
+static func _rng(s: int) -> RandomNumberGenerator:
+	var r := RandomNumberGenerator.new()
+	r.seed = s
+	return r
 
 
-static func _small(id: String) -> ItemDef:
-	return Comp._weapon(id, ["1"], 1.0, 1.0, ["weapon", "melee"])
-
-
-static func run_layers(t: TestCase) -> void:
-	t.begin("信仰重构 C · 承托：正交贴边一层、角接触不算、同一邻居只算一次、最多 2 层、包和不参战的不算、按 uid 可复现")
+## 8×6 的棋盘：(0,0) 一件两格的武器（大地），(1,1) 一格（支柱），(3,2) 一件两格（穹顶）
+static func _board() -> GridInventory:
 	var b := GridInventory.new(Vector2i(8, 6), 1, false)
-	var big := ItemInstance.create(_big("t_big", ["weapon", "melee"]))     # 5 格：(1,1)(2,1)(3,1)(1,2)(2,2)
-	b.place(big, Vector2i(1, 1), 0)
-	var corner := ItemInstance.create(_small("t_corner"))
-	b.place(corner, Vector2i(0, 0), 0)     # 只碰角
-	t.eq(EarthSupport.layers(b, &"").get(big.uid, 0), 0, "角接触不算")
-	var long := ItemInstance.create(Comp._weapon("t_long", ["11"], 1.0, 1.0, ["weapon", "melee"]))
-	b.place(long, Vector2i(1, 0), 0)     # 贴着上边两条边
-	t.eq(EarthSupport.layers(b, &""), {big.uid: 1}, "同一个邻居两条边：一层")
-	var right := ItemInstance.create(_small("t_right"))
-	b.place(right, Vector2i(4, 1), 0)
-	var under := ItemInstance.create(_small("t_under"))
-	b.place(under, Vector2i(1, 3), 0)
-	t.eq(EarthSupport.layers(b, &""), {big.uid: 2}, "三件贴边：封顶 2 层")
-	right.set_benched(true)
-	under.set_benched(true)
-	t.eq(EarthSupport.layers(b, &""), {big.uid: 1}, "标了不参战的不算")
-	var four := GridInventory.new(Vector2i(6, 6), 1, false)
-	var mid := ItemInstance.create(Comp._weapon("t_mid", ["11", "11"], 10.0, 1.0, ["weapon", "melee"]))
-	four.place(mid, Vector2i(0, 0), 0)
-	four.place(ItemInstance.create(_small("t_n")), Vector2i(2, 0), 0)
-	t.check(EarthSupport.layers(four, &"", 5).is_empty(), "4 格的中件：基础不算大件")
-	t.eq(EarthSupport.layers(four, &"", 4), {mid.uid: 1}, "一阶起 4 格也算")
-	# 换个放置顺序，结果一样
-	var b2 := GridInventory.new(Vector2i(8, 6), 1, false)
-	var u := ItemInstance.create(_small("t_under"))
-	b2.place(u, Vector2i(1, 3), 0)
-	var big2 := ItemInstance.create(_big("t_big", ["weapon", "melee"]))
-	b2.place(big2, Vector2i(1, 1), 0)
-	t.eq(EarthSupport.layers(b2, &"").get(big2.uid, 0), 1, "先放邻居再放大件：一样一层")
+	b.place(ItemInstance.create(Comp._weapon("t_edge", ["11"], 10.0, 1.0, ["weapon", "melee"])), Vector2i(0, 0), 0)
+	b.place(ItemInstance.create(Comp._item("t_mid", ["1"], ["trinket"])), Vector2i(1, 1), 0)
+	b.place(ItemInstance.create(Comp._item("t_top", ["11"], ["trinket"])), Vector2i(3, 2), 0)
+	return b
 
 
-static func run_effects(t: TestCase) -> void:
-	t.begin("信仰重构 C · 承托：武器减耐力消耗、盾加格挡；开战写战记；三阶按件给护甲（封顶）")
-	var perk := EarthSupportPerk.new()
-	var sword := _big("t_big", ["weapon", "melee"])
-	var mods := perk.mods_for(sword, 2)
-	t.check(mods.size() == 1 and mods[0].stat == BattleStats.STAMINA_COST and is_equal_approx(mods[0].amount, -8.0), "武器 2 层：耐力消耗 −8%")
-	var shield := _big("t_shield", ["shield"])
-	var smods := perk.mods_for(shield, 1)
-	t.check(smods.size() == 1 and smods[0].stat == BattleStats.BLOCK and is_equal_approx(smods[0].amount, 4.0), "盾 1 层：格挡 +4%")
-	t.check(perk.mods_for(Comp._item("t_food", ["1"], ["food"]), 2).is_empty(), "不是武器也不是盾 / 防具：不领")
-	# 编译：按 uid 的修饰进了那一件
-	var b := GridInventory.new(Vector2i(8, 6), 1, false)
-	var big := ItemInstance.create(sword)
-	b.place(big, Vector2i(1, 1), 0)
-	b.place(ItemInstance.create(_small("t_n")), Vector2i(4, 1), 0)
-	var input := CompileInput.of(CombatantBaseline.with_hp(100.0))
-	perk.compile_into(input, b, null)
-	t.eq(input.item_mods.keys(), [big.uid], "只给受承托的那件")
-	var spec := BattleCompiler.compile(b, input)
-	var plain := BattleCompiler.compile(b, CompileInput.of(CombatantBaseline.with_hp(100.0)))
-	t.check(spec.stats_of(big.uid).percent_factor(BattleStats.STAMINA_COST) < plain.stats_of(big.uid).percent_factor(BattleStats.STAMINA_COST), "编译后这件的耐力消耗系数变小了")
-	var res := BattleSim.run(spec, FX._spec(5000.0, []), RandomNumberGenerator.new(), 1.0)
-	var said := false
+static func _me(tune: Dictionary = {}, ranges_pure: bool = false) -> CombatantSpec:
+	var b := _board()
+	var rule := EarthHeavenPerk.new().rule_for(null, b)
+	(rule.trigger as FaithMechanicTrigger).sees_pure = ranges_pure
+	var e := rule.effects[0] as EarthHeaven
+	for k in tune:
+		e.set(k, tune[k])
+	return BattleCompiler.compile_board(b, CombatantBaseline.with_hp(1000.0), [] as Array[StatModifier], [rule] as Array[AbilityRule])
+
+
+static func _hitter(dmg: float, cd: float = 1.0) -> CombatantSpec:
+	var b := GridInventory.new(Vector2i(4, 4), 1, false)
+	b.place(ItemInstance.create(Comp._weapon("t_foe", ["1"], dmg, cd, ["weapon", "melee"])), Vector2i(0, 0), 0)
+	return BattleCompiler.compile_board(b, CombatantBaseline.with_hp(50000.0))
+
+
+static func _mech(res: BattleResult, key: String) -> int:
+	var n := 0
 	for raw in res.log:
 		var e := raw as BattleEvent
-		if e.name == BattleEvent.EFFECT_RESOLVED and String(e.payload.get("key", "")) == "earth_support" and int(e.payload.get("count", 0)) == 1:
-			said = true
-	t.check(said, "开战写一句：1 件受承托")
-	# 三阶护甲
-	var eff := EarthSupport.new()
-	eff.supported = 9
-	eff.armor_percent = 2
-	eff.armor_cap = 10
-	var rule := AbilityRule.new()
-	var trig := FaithMechanicTrigger.new()
-	trig.events = [BattleEvent.BATTLE_START] as Array[StringName]
-	rule.trigger = trig
-	rule.cadence = EffectRegistry.instantiate(&"cadence", &"always")
-	rule.effects.append(eff)
-	var me := FX._spec(1000.0, [])
-	me.set_rules = [rule] as Array[AbilityRule]
-	var r3 := BattleSim.run(me, FX._spec(5000.0, []), RandomNumberGenerator.new(), 0.5)
-	var armor := 0
-	for raw in r3.log:
+		if e.name == BattleEvent.EFFECT_RESOLVED and e.side == 0 and String(e.payload.get("effect", "")) == SkillMomentum.MECHANIC and String(e.payload.get("key", "")) == key:
+			n += 1
+	return n
+
+
+## 开战那一刻（0 秒）打到敌人身上的：[合计, 真实伤害合计]
+static func _opening(res: BattleResult) -> Array:
+	var all := 0.0
+	var pure := 0.0
+	for raw in res.log:
 		var e := raw as BattleEvent
-		if e.name == BattleEvent.RESOURCE_CHANGED and e.side == 0 and String(e.payload.get("key", "")) == "armor":
-			armor = int(e.payload.get("max", 0))
-	t.eq(armor, StatMath.from_float(100.0), "9 件 × 2% 封顶 10%：1000 生命给 100 护甲")
+		if e.name == BattleEvent.DAMAGE and e.side == 1 and e.time == 0:
+			var n := StatMath.to_float(maxi(0, e.get_int(&"amount")))
+			all += n
+			if e.get_bool(&"pure"):
+				pure += n
+	return [all, pure]
+
+
+static func run_roles(t: TestCase) -> void:
+	t.begin("大地之神 · 天地：贴边的是大地，中央那一圈的是穹顶，夹在中间的是支柱；缺格也算边；包不算")
+	var b := _board()
+	var got := EarthHeaven.roles(b)
+	var uid_of := {}
+	for raw in b.items():
+		uid_of[String((raw as ItemInstance).def.id)] = (raw as ItemInstance).uid
+	t.eq(got[uid_of["t_edge"]], EarthHeaven.GROUND, "贴着最外一圈：大地")
+	t.eq(got[uid_of["t_mid"]], EarthHeaven.PILLAR, "第二圈：支柱")
+	t.eq(got[uid_of["t_top"]], EarthHeaven.DOME, "中央那一圈：穹顶")
+	var d := EarthHeaven.depths(b)
+	t.eq([int(d[Vector2i(0, 0)]), int(d[Vector2i(1, 1)]), int(d[Vector2i(3, 2)]), int(d[Vector2i(4, 3)])], [0, 1, 2, 2], "离边界几圈")
+	# 中间挖一个缺格：挨着它的就算贴边
+	var holed := GridInventory.new(Vector2i(8, 6), 1, false)
+	holed.set_blocked(Vector2i(5, 2), true)
+	holed.place(ItemInstance.create(Comp._item("t_by_hole", ["11"], ["trinket"])), Vector2i(3, 2), 0)
+	t.eq(EarthHeaven.roles(holed).values(), [EarthHeaven.GROUND], "挨着缺格：大地")
+	# 标了不参战：分层照算，打仗的时候不算
+	(b.get_item(uid_of["t_top"]) as ItemInstance).set_benched(true)
+	t.eq(EarthHeaven.roles(b, true).size(), 2, "不参战的不进战斗那一份")
+	t.eq(EarthHeaven.roles(b).size(), 3, "地图上照算")
+
+
+static func run_opening(t: TestCase) -> void:
+	t.begin("大地之神 · 开战：磐石给护甲、天光打真实伤害、冲撞 / 万钧 / 玉石俱焚打伤害、擎天一柱给敌人元素")
+	var plain := BattleSim.run(_me(), FX._spec(5000.0, []), _rng(1), 0.1)
+	t.eq(_mech(plain, "earth_ground"), 1, "写战记：有大地")
+	t.eq(_mech(plain, "earth_dome"), 1, "写战记：有穹顶")
+	var e := EarthHeavenPerk.effect_for(null, _board())
+	t.eq([e.ground, e.dome, e.pillar], [1, 1, 1], "一件大地、一件穹顶、一件支柱")
+	var sky := BattleSim.run(_me({"sky_true": 10}), FX._spec(5000.0, []), _rng(1), 0.1)
+	t.check(is_equal_approx(float(_opening(sky)[1]), 10.0), "天光：开战 10 点真实伤害（%s）" % _opening(sky)[1])
+	var hits := BattleSim.run(_me({"ram": 3, "heavy": 7, "jade": 20}), FX._spec(5000.0, []), _rng(1), 0.1)
+	t.check(is_equal_approx(float(_opening(hits)[0]), 30.0) and is_equal_approx(float(_opening(hits)[1]), 0.0), "冲撞 3 + 万钧 7 + 玉石俱焚 20，不是真实伤害（%s）" % _opening(hits)[0])
+	var arm := BattleSim.run(_me({"armor_gain": 16}), _hitter(5.0), _rng(1), 3.0)
+	var absorbed := 0
+	for raw in arm.log:
+		var ev := raw as BattleEvent
+		if ev.name == BattleEvent.RESOURCE_CHANGED and ev.side == 0 and ev.get_name(&"key") == BattleStats.RES_ARMOR and ev.get_int(&"delta") < 0:
+			absorbed += -ev.get_int(&"delta")
+	t.check(absorbed > 0, "磐石：护甲吸收了伤害（%s）" % StatMath.to_float(absorbed))
+	var el := BattleSim.run(_me({"elements": 3}), FX._spec(5000.0, []), _rng(1), 0.1)
+	var stacks := 0
+	for raw in el.log:
+		var ev2 := raw as BattleEvent
+		if ev2.name == BattleEvent.STATUS_STACKED and ev2.side == 1 and SkillMomentum.ELEMENTS.has(ev2.get_name(&"buff")):
+			stacks += ev2.get_int(&"delta")
+	t.check(stacks >= 1, "擎天一柱：敌人身上有随机元素（%d 层；两种元素相遇会起反应）" % stacks)
+	var one := BattleSim.run(_me({"elements": 1}), FX._spec(5000.0, []), _rng(1), 0.1)
+	var n1 := 0
+	for raw in one.log:
+		var ev3 := raw as BattleEvent
+		if ev3.name == BattleEvent.STATUS_STACKED and ev3.side == 1 and SkillMomentum.ELEMENTS.has(ev3.get_name(&"buff")):
+			n1 += ev3.get_int(&"delta")
+	t.eq(n1, 1, "一件支柱：一层")
+
+
+static func run_defence(t: TestCase) -> void:
+	t.begin("大地之神 · 挨打：厚实是格挡来源（只挡直接伤害）；层峦抵挡几次攻击（真实伤害也挡）；反震还真实伤害、有冷却")
+	var thick := BattleSim.run(_me({"thick": 4}), _hitter(5.0), _rng(1), 3.0)
+	var blocked := 0
+	for raw in thick.log:
+		var e := raw as BattleEvent
+		if e.name == BattleEvent.DAMAGE and e.side == 0 and e.get_bool(&"direct"):
+			blocked = maxi(blocked, e.get_int(&"block"))
+	t.check(StatMath.to_float(blocked) >= 3.9, "厚实：每下挡 4 点（%s）" % StatMath.to_float(blocked))
+	var rng_ := BattleSim.run(_me({"ranges": 2}, true), _hitter(5.0, 1.0), _rng(1), 5.5)
+	var cancelled := 0
+	var landed := 0
+	for raw in rng_.log:
+		var e := raw as BattleEvent
+		if e.name == BattleEvent.DAMAGE and e.side == 0:
+			if e.get_bool(&"cancelled"):
+				cancelled += 1
+			elif e.get_int(&"amount") > 0:
+				landed += 1
+	t.eq(cancelled, 2, "层峦两次：头两下攻击当作没发生")
+	t.check(landed > 0, "之后照常挨打")
+	var trig := FaithMechanicTrigger.new()
+	trig.sees_pure = true
+	var ev := BattleEvent.make(BattleEvent.BEFORE_DAMAGE, 0, 0, {"pure": true})
+	t.check(trig.matches(null, ev), "拿了层峦：受伤前也听真实伤害（抵挡攻击连真实伤害一起挡）")
+	trig.sees_pure = false
+	t.check(not trig.matches(null, ev), "没拿：神的机制照旧碰不到真实伤害")
+	var quake := BattleSim.run(_me({"quake": 3, "quake_cd": 6.0}), _hitter(1.0, 0.5), _rng(1), 7.0)
+	t.eq(_mech(quake, "earth_quake"), 2, "反震：7 秒里挨了十几下，冷却 6 秒只还两次")
+	var pure := 0.0
+	for raw in quake.log:
+		var e := raw as BattleEvent
+		if e.name == BattleEvent.DAMAGE and e.side == 1 and e.get_bool(&"pure"):
+			pure += StatMath.to_float(e.get_int(&"amount"))
+	t.check(is_equal_approx(pure, 6.0), "每次 3 点真实伤害（%s）" % pure)

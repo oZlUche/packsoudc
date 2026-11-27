@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_o0sam"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_jrfew"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_gs6n8"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_f1vla"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_amx8l"]
+
+[sub_resource type="Resource" id="Resource_rw1h1"]
+script = ExtResource("2_jrfew")
+values = {
+"pct": 100
+}
+
+[resource]
+script = ExtResource("5_amx8l")
+id = &"god_earth_practice"
+display_name = "修行"
+display_names = {
+"en": "Discipline"
+}
+effects = Array[ExtResource("1_o0sam")]([SubResource("Resource_rw1h1")])

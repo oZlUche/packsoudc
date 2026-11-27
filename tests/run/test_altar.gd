@@ -206,13 +206,13 @@ static func run_perks_and_altar_logic(t: TestCase) -> void:
 	for p in earth.perks_at(3):
 		if p is AltarTrainBoardPerk:
 			train = p
-	# 信仰重构 C：大地换成「空间承托」，踩点赐物、改造此点不再挂在大地身上；构件本身照旧验
+	# 11-26：大地换成「天地」，踩点赐物、改造此点不再挂在大地身上；构件本身照旧验
 	gift = GiftOnEnterPerk.new()
 	gift.by_type = {"battle": ["weapon"], "elite": ["armor", "shield"], "event": ["trinket", "material"], "extract": [], "core": ["valuable"]}
 	reshape = AltarReshapeNodePerk.new()
 	reshape.types = [&"battle", &"elite", &"search", &"event", &"shop"] as Array[StringName]
 	t.check(train != null, "二阶锻炼还在（过渡，等等面积改形的样张）")
-	t.check(earth.perks_at(3).any(func(p): return p is EarthSupportPerk), "大地有承托")
+	t.check(earth.perks_at(3).any(func(p): return p is EarthHeavenPerk), "大地有天地")
 	t.check(train.altar_apply(run, run.current_node()) != "", "锻炼")
 	t.check(run.board.size.y == rows0 + 1 and run.board.item_count() == count0, "棋盘多一行，东西原地不动")
 	var battle_node: MapNode = null

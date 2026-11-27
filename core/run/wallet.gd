@@ -9,6 +9,8 @@ extends RefCounted
 signal changed(balance: int, delta: int, reason: StringName)
 
 var balance: int = 0
+## 进账多给百分之几：`func(reason: StringName) -> float`（大地之神【万象】，[LevelModule] 装上时接；不进存档）。无效 = 不加
+var bonus_pct: Callable = Callable()
 
 
 func _init(p_balance: int = 0) -> void:
@@ -24,6 +26,10 @@ func earn(amount: int, reason: StringName = &"") -> int:
 	var delta := maxi(0, amount)
 	if delta == 0:
 		return 0
+	if bonus_pct.is_valid():
+		var pct := float(bonus_pct.call(reason))
+		if pct > 0.0:
+			delta = roundi(delta * (1.0 + pct / 100.0))
 	balance += delta
 	changed.emit(balance, delta, reason)
 	return delta

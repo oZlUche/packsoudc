@@ -34,6 +34,9 @@ extends Resource
 ## 留给「看着小其实沉」「占地方其实轻」的特例。负重只算作战棋盘上的（含包本身）
 @export var weight: int = 0
 
+## 大地之神【压缩】的大地结晶：同种的拖到一起叠成一摞（[ItemStack]），价值、重量按摞里几个乘
+@export var stackable: bool = false
+
 ## 封存（第 8 阶段 8-4 起）：带这个标签的道具**数据保留、不再出现**（[ItemDatabase.ids] 是唯一拦它的地方）。
 ## 250（作者定）：现代道具已全部删除，sealed 降为内部标签、暂时没人带 —— 留作别的机制
 const SEALED := &"sealed"

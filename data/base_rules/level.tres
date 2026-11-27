@@ -242,6 +242,205 @@ cards = {
 "kind": "god",
 "weight": 0.3
 },
+"god_earth_camp": {
+"god": "earth",
+"kind": "god"
+},
+"god_earth_compress": {
+"god": "earth",
+"kind": "god",
+"once": true
+},
+"god_earth_dig": {
+"god": "earth",
+"kind": "god"
+},
+"god_earth_echo": {
+"god": "earth",
+"kind": "god",
+"qual": true
+},
+"god_earth_echo_up": {
+"god": "earth",
+"kind": "god",
+"upgrade_of": "god_earth_echo"
+},
+"god_earth_gem": {
+"god": "earth",
+"kind": "god",
+"weight": 0.35
+},
+"god_earth_grounded": {
+"god": "earth",
+"kind": "god"
+},
+"god_earth_heavy": {
+"god": "earth",
+"kind": "god",
+"once": true
+},
+"god_earth_jade": {
+"god": "earth",
+"kind": "god",
+"once": true,
+"weight": 0.5
+},
+"god_earth_light": {
+"god": "earth",
+"kind": "god",
+"qual": true
+},
+"god_earth_light_up": {
+"god": "earth",
+"kind": "god",
+"upgrade_of": "god_earth_light"
+},
+"god_earth_myriad": {
+"god": "earth",
+"kind": "god",
+"qual": true
+},
+"god_earth_myriad_up": {
+"god": "earth",
+"kind": "god",
+"upgrade_of": "god_earth_myriad"
+},
+"god_earth_pillar": {
+"god": "earth",
+"kind": "god",
+"qual": true
+},
+"god_earth_pillar_sky": {
+"god": "earth",
+"kind": "god",
+"once": true
+},
+"god_earth_pillar_up": {
+"god": "earth",
+"kind": "god",
+"upgrade_of": "god_earth_pillar"
+},
+"god_earth_practice": {
+"god": "earth",
+"kind": "god",
+"qual": true
+},
+"god_earth_practice_up": {
+"god": "earth",
+"kind": "god",
+"upgrade_of": "god_earth_practice"
+},
+"god_earth_quake": {
+"god": "earth",
+"kind": "god",
+"once": true
+},
+"god_earth_ram": {
+"god": "earth",
+"kind": "god",
+"once": true
+},
+"god_earth_ranges": {
+"god": "earth",
+"kind": "god",
+"once": true
+},
+"god_earth_refine": {
+"after": "god_earth_compress",
+"god": "earth",
+"kind": "god"
+},
+"god_earth_rock": {
+"god": "earth",
+"kind": "god",
+"qual": true
+},
+"god_earth_rock_up": {
+"god": "earth",
+"kind": "god",
+"upgrade_of": "god_earth_rock"
+},
+"god_earth_select": {
+"god": "earth",
+"kind": "god"
+},
+"god_earth_select_0": {
+"god": "earth",
+"hidden": true,
+"kind": "god"
+},
+"god_earth_select_1": {
+"god": "earth",
+"hidden": true,
+"kind": "god"
+},
+"god_earth_select_2": {
+"god": "earth",
+"hidden": true,
+"kind": "god"
+},
+"god_earth_sisyphus": {
+"god": "earth",
+"kind": "god",
+"once": true
+},
+"god_earth_sky": {
+"god": "earth",
+"kind": "god",
+"qual": true
+},
+"god_earth_sky_up": {
+"god": "earth",
+"kind": "god",
+"upgrade_of": "god_earth_sky"
+},
+"god_earth_stone": {
+"god": "earth",
+"kind": "god",
+"qual": true
+},
+"god_earth_stone_up": {
+"god": "earth",
+"kind": "god",
+"upgrade_of": "god_earth_stone"
+},
+"god_earth_strive": {
+"god": "earth",
+"kind": "god"
+},
+"god_earth_thick": {
+"god": "earth",
+"kind": "god",
+"once": true
+},
+"god_earth_toil": {
+"god": "earth",
+"kind": "god",
+"qual": true
+},
+"god_earth_toil_up": {
+"god": "earth",
+"kind": "god",
+"upgrade_of": "god_earth_toil"
+},
+"god_earth_train": {
+"god": "earth",
+"kind": "god",
+"qual": true
+},
+"god_earth_train_up": {
+"god": "earth",
+"kind": "god",
+"upgrade_of": "god_earth_train"
+},
+"god_earth_tunnel": {
+"god": "earth",
+"kind": "god"
+},
+"god_earth_vital": {
+"god": "earth",
+"kind": "god"
+},
 "god_nature_bounty": {
 "god": "nature",
 "kind": "god",

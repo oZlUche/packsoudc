@@ -22,6 +22,8 @@ const LIGHT_TAGS: Array[StringName] = [&"remedy", &"food", &"ammo", &"keepsake",
 const PER_CELL_HEAVY := 4
 const PER_CELL_METAL := 3
 const PER_CELL_STONE := 2
+## 记在实例上的重量倍数（大地之神【宝石化】，[member ItemInstance.state]）
+const WEIGHT_MULT_KEY := "weight_mult"
 
 
 static func of(def: ItemDef) -> int:
@@ -95,7 +97,10 @@ static func of_in_scaled(inst: ItemInstance, c: ItemContainer, rules: Array) -> 
 
 ## 209：放在 [param c] 上的这一件有多重 —— 整件在一个包里就乘包的 [member ItemDef.bag_weight_mult]（四舍五入），其余同 [method of]
 static func of_in(inst: ItemInstance, c: ItemContainer) -> int:
-	var w := of(inst.def)
+	var w := of(inst.def) + int(inst.state.get(ItemInstance.WEIGHT_ADD_KEY, 0))     # 大地之神【提炼】
+	w *= inst.stack_count()     # 【压缩】的大地结晶：一摞几个
+	if inst.state.has(WEIGHT_MULT_KEY):
+		w = roundi(w * float(inst.state[WEIGHT_MULT_KEY]))     # 大地之神【宝石化】：这一件的重量翻倍
 	var bag := bag_def_of(inst, c)
 	return w if bag == null or bag.bag_weight_mult == 1.0 else roundi(float(w) * bag.bag_weight_mult)
 

@@ -44,6 +44,8 @@ const RUN_EFFECTS := {
 const BELT_EFFECTS := {
 	&"smoke_escape": "res://core/run/effects/smoke_escape.gd",
 	&"mend_vitality": "res://core/run/effects/mend_vitality.gd",
+	&"earth_walk": "res://core/run/effects/earth_walk.gd",     # 大地之神【密道】
+	&"earth_camp": "res://core/run/effects/earth_camp.gd",     # 大地之神【驻扎】
 }
 
 ## 一局的机制（069）：难度清单里开的那些
@@ -181,7 +183,7 @@ const FAITH_PERKS := {
 	&"altar_bless": "res://core/run/faith/perks/altar_bless_perk.gd",
 	&"skill_momentum": "res://core/run/faith/perks/skill_momentum_perk.gd",     # 信仰重构 C
 	&"hunt_dismantle": "res://core/run/faith/perks/hunt_dismantle_perk.gd",
-	&"earth_support": "res://core/run/faith/perks/earth_support_perk.gd",
+	&"earth_heaven": "res://core/run/faith/perks/earth_heaven_perk.gd",     # 大地之神【天地】（11-26）
 	&"brute_rage": "res://core/run/faith/perks/brute_rage_perk.gd",     # 信仰重构 D
 	&"sun_cycle": "res://core/run/faith/perks/sun_cycle_perk.gd",
 	&"nature_regrowth": "res://core/run/faith/perks/nature_regrowth_perk.gd",

@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_tunnel",
+  "display_name": "密道",
+  "display_names": {
+    "en": "Secret Passage"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "n": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_jade",
+  "display_name": "玉石俱焚",
+  "display_names": {
+    "en": "Jade and Stone Alike"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "n": 1
+      }
+    }
+  ]
+}

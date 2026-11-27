@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_1y3an"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_44fho"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_p88ck"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_k7jl5"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_fr8jj"]
+
+[sub_resource type="Resource" id="Resource_723uk"]
+script = ExtResource("2_44fho")
+values = {
+"cd": 6
+}
+
+[resource]
+script = ExtResource("5_fr8jj")
+id = &"god_earth_quake"
+display_name = "反震"
+display_names = {
+"en": "Recoil"
+}
+effects = Array[ExtResource("1_1y3an")]([SubResource("Resource_723uk")])

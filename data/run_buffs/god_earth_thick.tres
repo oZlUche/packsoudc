@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RunBuffDef" format=3]
+
+[ext_resource type="Script" path="res://core/effects/effect.gd" id="1_f6r6w"]
+[ext_resource type="Script" path="res://core/run/effects/god_card.gd" id="2_fqpn8"]
+[ext_resource type="Script" path="res://core/battle/stat_modifier.gd" id="3_dj5xv"]
+[ext_resource type="Script" path="res://core/battle/ability_rule.gd" id="4_13yvd"]
+[ext_resource type="Script" path="res://core/run/run_buff_def.gd" id="5_6dnwm"]
+
+[sub_resource type="Resource" id="Resource_6660d"]
+script = ExtResource("2_fqpn8")
+values = {
+"n": 1
+}
+
+[resource]
+script = ExtResource("5_6dnwm")
+id = &"god_earth_thick"
+display_name = "厚实"
+display_names = {
+"en": "Solid"
+}
+effects = Array[ExtResource("1_f6r6w")]([SubResource("Resource_6660d")])

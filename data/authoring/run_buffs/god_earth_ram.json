@@ -1,0 +1,15 @@
+{
+  "id": "god_earth_ram",
+  "display_name": "冲撞",
+  "display_names": {
+    "en": "Charge"
+  },
+  "effects": [
+    {
+      "type": "god_card",
+      "values": {
+        "n": 1
+      }
+    }
+  ]
+}
