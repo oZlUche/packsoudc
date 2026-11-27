@@ -5,6 +5,7 @@
 
 | 版本 | 日期 | 内容 |
 |---|---|---|
+| v9.21 | 2026-11-27 | **装视觉思考 skill + 模块关系图样张**（不动代码）：开源 skill [visual-thinking](https://github.com/gaoyiiiii/visual-thinking)（MIT）装到 `.claude/skills/visual-thinking/`，来源、版本、安全审阅、删掉的 PNG 预览见其 `SOURCE.md`；用它画的[模块关系图样张](diagrams/README.md)在 `docs/diagrams/`。 |
 | v9.20 | 2026-11-26 | **测试报告：v9.19 锋芒英文名**（只有文档）：[报告](reports/testing/2026-11-26-v919-cutting-edge.md)。全量 48219 项断言全过；【锋芒】Cutting Edge 和【锋锐】Keen Edge 分开了，帮助页同步；英文没有重名了，还剩中文【坚韧】一对。 |
 | v9.19 | 2026-11-26 | **英文重名**：技巧之神【锋芒】英文名改成 Cutting Edge（和通用牌【锋锐】Keen Edge 区分开），帮助页同步。 |
 | v9.18 | 2026-11-26 | **测试报告：v9.17 两处牌面修正**（只有文档）：[报告](reports/testing/2026-11-26-v917-card-names.md)。全量 48219 项断言全过；怒意延绵英文名 Lingering Wrath、众星写明每颗 2 枚钱，都改好了。顺带查出两对旧的重名：中文【坚韧】（通用牌和自然之神基础牌）、英文 Keen Edge（通用牌锋锐和技巧之神锋芒）。 |
