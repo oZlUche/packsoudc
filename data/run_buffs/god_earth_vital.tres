@@ -9,7 +9,7 @@
 [sub_resource type="Resource" id="Resource_fcluc"]
 script = ExtResource("2_fqxsn")
 values = {
-"pct": 50
+"pct": 90
 }
 
 [resource]

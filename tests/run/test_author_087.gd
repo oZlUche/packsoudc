@@ -70,7 +70,7 @@ static func run_glossary(t: TestCase) -> void:
 	var kf := ItemTooltip.describe_full(knife)
 	var ktext := String(kf["text"])
 	var kplain := Glossary.strip_bbcode(ktext)
-	t.check(kplain.contains("消耗 3 耐力"), "武器写着每次出手消耗的耐力：%s" % kplain.replace("\n", " / "))
+	t.check(kplain.contains("消耗 4 耐力"), "武器写着每次出手消耗的耐力：%s" % kplain.replace("\n", " / "))
 	t.check(not ktext.contains("冷却") and not ktext.contains("DPS"), "170：不再写冷却与 DPS（武器句已含频率与伤害）")
 	var knames: Array[String] = []
 	for term in (kf["terms"] as Dictionary).values():

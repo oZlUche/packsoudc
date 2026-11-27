@@ -24,7 +24,7 @@ seconds = 2.2
 
 [sub_resource type="Resource" id="Resource_687ik"]
 script = ExtResource("6_7twon")
-amount = 11.0
+amount = 13.0
 
 [sub_resource type="Resource" id="Resource_5cec1"]
 script = ExtResource("8_majj1")
@@ -82,7 +82,7 @@ effects = Array[ExtResource("7_ppq17")]([SubResource("Resource_5cec1"), SubResou
 [sub_resource type="Resource" id="Resource_h5xg3"]
 script = ExtResource("13_r526u")
 base_stats = {
-"damage": 28
+"damage": 34
 }
 rules = Array[ExtResource("3_et8c4")]([SubResource("Resource_y8xr2")])
 

@@ -9,7 +9,7 @@
 [sub_resource type="Resource" id="Resource_nfp2f"]
 script = ExtResource("2_ybgs1")
 values = {
-"per": 1
+"per": 1.8
 }
 
 [resource]

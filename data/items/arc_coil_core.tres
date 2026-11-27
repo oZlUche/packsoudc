@@ -67,7 +67,7 @@ seconds = 1.2
 
 [sub_resource type="Resource" id="Resource_nc6sc"]
 script = ExtResource("17_7dvet")
-amount = 4.0
+amount = 5.0
 
 [sub_resource type="Resource" id="Resource_tx32a"]
 script = ExtResource("18_72qhu")

@@ -131,7 +131,7 @@ static func run_reinforce_battle(t: TestCase) -> void:
 	var horn := _duel(c, "guard_horn")
 	var heals := 0
 	for e in horn.log if horn != null else []:
-		if e.name == BattleEvent.RESOURCE_CHANGED and e.side == 1 and e.get_name(&"key") == BattleStats.RES_HP and e.get_int(&"delta") >= StatMath.from_float(60.0):
+		if e.name == BattleEvent.RESOURCE_CHANGED and e.side == 1 and e.get_name(&"key") == BattleStats.RES_HP and e.get_int(&"delta") >= StatMath.from_float(108.0):     # 403：号角回血 60 → 108
 			heals += 1
 	t.eq(heals, 1, "号角：回一次血")
 	var pact := _duel(c, "guard_pact_fire")

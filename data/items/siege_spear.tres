@@ -23,7 +23,7 @@ seconds = 4.4
 
 [sub_resource type="Resource" id="Resource_48ssr"]
 script = ExtResource("6_864l6")
-amount = 33.0
+amount = 40.0
 
 [sub_resource type="Resource" id="Resource_k6uo1"]
 script = ExtResource("8_6koce")
@@ -31,7 +31,7 @@ metadata/part_ref = &"deal_damage"
 
 [sub_resource type="Resource" id="Resource_k7svj"]
 script = ExtResource("8_6koce")
-amount = 12.0
+amount = 14.0
 damage_stat = &""
 pure = true
 
@@ -67,7 +67,7 @@ effects = Array[ExtResource("7_sqbr0")]([SubResource("Resource_l6icr")])
 [sub_resource type="Resource" id="Resource_pvac5"]
 script = ExtResource("12_7udth")
 base_stats = {
-"damage": 70
+"damage": 84
 }
 rules = Array[ExtResource("3_njg4q")]([SubResource("Resource_8e6py"), SubResource("Resource_7mb3x")])
 

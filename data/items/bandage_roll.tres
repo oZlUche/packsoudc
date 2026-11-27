@@ -26,7 +26,6 @@ stacks = 2
 
 [sub_resource type="Resource" id="Resource_o8o5i"]
 script = ExtResource("8_8eu4l")
-amount = 3.0
 
 [sub_resource type="Resource" id="Resource_8fxj2"]
 script = ExtResource("9_6l720")

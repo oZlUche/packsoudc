@@ -24,7 +24,7 @@
   "material": "wood",
   "combat": {
     "base_stats": {
-      "damage": 14
+      "damage": 17
     },
     "rules": [
       {
@@ -36,14 +36,14 @@
         "costs": [
           {
             "type": "resource",
-            "amount": 4.0
+            "amount": 5.0
           }
         ],
         "effects": [
           "@deal_damage",
           {
             "type": "deal_damage",
-            "amount": 5.0,
+            "amount": 6.0,
             "damage_stat": "",
             "pure": true
           }

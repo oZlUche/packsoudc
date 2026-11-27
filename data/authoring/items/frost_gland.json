@@ -48,7 +48,7 @@
   },
   "wild": {
     "base_stats": {
-      "damage": 3
+      "damage": 4
     },
     "rules": [
       {
@@ -59,7 +59,7 @@
         "costs": [
           {
             "type": "resource",
-            "amount": 4.0
+            "amount": 5.0
           }
         ],
         "effects": [
