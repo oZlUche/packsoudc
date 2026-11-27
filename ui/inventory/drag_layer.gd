@@ -492,7 +492,9 @@ func _update_preview(global_pos: Vector2) -> void:
 		if not ok:
 			var victim := _replaceable_bag(inv, origin)
 			if victim != GridInventory.EMPTY_UID:
-				grid_view.set_preview(cells, origin, true, [victim], true)     # 087：替换那个包
+				var marked: Array[int] = [victim]
+				marked.append_array(_replace_fallen(inv, victim, origin))     # 11-27：会掉出来的那几件一起标
+				grid_view.set_preview(cells, origin, true, marked, true)     # 087：替换那个包
 				return
 		grid_view.set_preview(cells, origin, ok, [], not fallen.is_empty())
 		return
@@ -524,6 +526,7 @@ func _update_preview(global_pos: Vector2) -> void:
 		var bag_victims: Array[int] = []     # 11-04：三元式出来的是无类型数组，传进 Array[int] 参数就报错（调试模式下拖包压包会断住）
 		if victim != GridInventory.EMPTY_UID:
 			bag_victims.append(victim)
+			bag_victims.append_array(_replace_fallen(inv, victim, origin))     # 11-27：会掉出来的那几件一起标
 		grid_view.set_preview(cells, origin, victim != GridInventory.EMPTY_UID, bag_victims, true)
 		return
 
@@ -585,49 +588,43 @@ func _replaceable_bag(inv: GridInventory, origin: Vector2i) -> int:
 	for item in pressed:
 		if not belongs.has(item):
 			return GridInventory.EMPTY_UID
-	if not belongs.is_empty() and (stash == null or not stash.room_for(belongs.size())):
+	# 11-27（作者）：新包放得下的旧东西原位留下，只有掉出来的那些要有地方去（地上）
+	var plan := inv.replace_bag_plan(victim, _inst, _payload, origin, _rot)
+	if not plan["ok"]:
+		return GridInventory.EMPTY_UID
+	var falling := (plan["fallen"] as Array).size() + (plan["carried_fallen"] as Array).size()
+	if falling > 0 and (stash == null or not stash.room_for(falling)):
 		return GridInventory.EMPTY_UID
 	return victim
 
 
-## 087：用手上的包替换 [method _replaceable_bag] 找到的那个：旧包连内容物摘下，新包（连它自己的内容物）放上，
-## 旧包的东西与新包放不下的东西到地上，旧包拿在手上（作为顶替的那一件）。失败时容器原样不动
+## 11-27：手上的包替换 [param victim] 时，旧包里会掉出来的那几件（预览上标红给玩家看）
+func _replace_fallen(inv: GridInventory, victim: int, origin: Vector2i) -> Array[int]:
+	var out: Array[int] = []
+	var plan := inv.replace_bag_plan(victim, _inst, _payload, origin, _rot)
+	for it in plan["fallen"]:
+		out.append((it as ItemInstance).uid)
+	return out
+
+
+## 087：用手上的包替换 [method _replaceable_bag] 找到的那个；旧包拿在手上（作为顶替的那一件）。
+## 11-27（作者）：旧包里的东西新包按原位放得下的就留着不动（[method GridInventory.replace_bag]），
+## 放不下的与新包自己掉的跨包物到地上。失败时容器原样不动
 func _drop_replacing_bag(inv: GridInventory, at: Vector2i) -> Dictionary:
 	var failed := {"ok": false, "victims": []}
 	var victim_uid := _replaceable_bag(inv, at)
 	if victim_uid == GridInventory.EMPTY_UID:
 		return failed
-	var old := inv.get_item(victim_uid)
-	var old_home := old.origin
-	var old_rot := old.rotation
-	var old_payload := inv.detach_bag(victim_uid)
-	if old_payload.is_empty():
+	var res := inv.replace_bag(victim_uid, _inst, _payload, at, _rot)
+	if not res["ok"]:
 		return failed
-	var shed: Array = []
-	shed.append_array(old_payload.get("contents", []))
-	for sd in old_payload.get("straddlers", []):
-		shed.append((sd as Dictionary)["inst"])
-	var ok := false
-	if _payload.is_empty():
-		ok = inv.place(_inst, at, _rot)
-	else:
-		var report := inv.bag_fit_report(_payload, at, _rot)
-		var fallen: Array = report["fallen"]
-		if report["ok"] and (stash != null and stash.room_for(shed.size() + fallen.size()) or (shed.is_empty() and fallen.is_empty())):
-			var res := inv.attach_bag_shedding(_payload, at, _rot)
-			ok = res["ok"]
-			if ok:
-				shed.append_array(res["fallen"])
-	if not ok:
-		if not inv.attach_bag(old_payload, old_home, old_rot):
-			push_error("DragLayer: 替换失败后旧包放不回原位")
-		return failed
+	var shed: Array = res["shed"]
 	if not shed.is_empty():
 		if stash == null or not _admit_all(stash, shed):
 			push_error("DragLayer: 被替换的包里的东西放不到地上")
 		else:
 			items_shed.emit(shed)
-	return {"ok": true, "victims": [old]}
+	return {"ok": true, "victims": [res["old"]]}
 
 
 ## 128：登记过的、铺满屏画 [member stash] 的那层地（没有就 null：放到外面就自动找空处）
