@@ -4,7 +4,7 @@
 ## 形态相关的一切（点摆在哪、衬底画什么、哪里能加点）都问 [MapLayout]。
 ##
 ## 画布由布局按固定间距算出来，**不随视口缩放** —— 六环的图就是比四环大。
-## 看不全靠拖（中键拖动）与缩放（滚轮，围着鼠标缩）；`fit()` 缩到刚好放下。
+## 看不全靠拖（左键或中键拖动；左键要挪过 [constant DRAG_SLOP] 才算拖，没挪够松开算点）与缩放（滚轮，围着鼠标缩）；`fit()` 缩到刚好放下。
 ## 坐标分两套：布局给的是**画布坐标**，所有命中测试与信号都用它；
 ## 屏幕坐标只在 _gui_input 里出现一次，换算完就扔。
 class_name MapView
@@ -214,6 +214,12 @@ var _layout: MapLayout = null
 var _font: Font
 var _hover_id: int = -1
 var _dragging := false
+## 作者 11-27：左键也能拖地图。左键按下先记下来，挪过这么多像素才算拖（不再算点）；没挪够就松开 = 点了按下那一点
+const DRAG_SLOP := 6.0
+## 左键按着、还没定是点还是拖
+var _left_down := false
+var _left_from := Vector2.ZERO
+var _left_shift := false
 ## 岔路口按 graph.version 缓存：呼吸动画每帧都画，不能每帧都找一遍
 var _junction_cache: Dictionary = {}
 var _junction_version: int = -1
@@ -534,6 +540,10 @@ func _gui_input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseMotion:
 		var mm := event as InputEventMouseMotion
+		if _left_down and not _dragging and mm.position.distance_to(_left_from) > DRAG_SLOP:
+			_dragging = true     # 挪够了：这次左键是拖，按下时没挪的那一小段也补上，地图贴着鼠标走
+			mm = mm.duplicate() as InputEventMouseMotion
+			mm.relative = mm.position - _left_from
 		if _dragging:
 			stop_follow()
 			pan += mm.relative
@@ -550,15 +560,31 @@ func _gui_input(event: InputEvent) -> void:
 	var mb := event as InputEventMouseButton
 	if mb == null:
 		return
-	# 中键拖动；滚轮围着鼠标缩放；其余按键才是「点了图上什么」
+	# 中键、左键拖动；滚轮围着鼠标缩放；其余按键才是「点了图上什么」（左键松开时没拖过才算点）
 	if mb.button_index == MOUSE_BUTTON_MIDDLE:
 		_dragging = mb.pressed
+		_left_down = false
+		accept_event()
+		return
+	if mb.button_index == MOUSE_BUTTON_LEFT and not mb.pressed:
+		var was_click := _left_down and not _dragging
+		var at := _left_from
+		_left_down = false
+		_dragging = false
+		if was_click:
+			press(to_canvas(at), MOUSE_BUTTON_LEFT, _left_shift)
 		accept_event()
 		return
 	if not mb.pressed:
 		return
 	if mb.button_index == MOUSE_BUTTON_LEFT and offscreen_rect().has_point(mb.position):
 		recenter_on_player()     # 184：点屏边那枚指向自己的小棋子 = 平移回去
+		accept_event()
+		return
+	if mb.button_index == MOUSE_BUTTON_LEFT:
+		_left_down = true
+		_left_from = mb.position
+		_left_shift = mb.shift_pressed
 		accept_event()
 		return
 	if mb.button_index == MOUSE_BUTTON_WHEEL_UP or mb.button_index == MOUSE_BUTTON_WHEEL_DOWN:
