@@ -314,6 +314,7 @@ func arrange() -> void:
 			if String(groups[key]["anchor"]) == HudLayout.BAR_GROWTH:
 				_place_group(groups[key], growth, HudLayout.BAR_ANCHORS[HudLayout.BAR_GROWTH])
 	_place_xp_bar()
+	_apply_lift()
 	# 再摆右边那一条，量出它占多宽；其余的在剩下那块里摆
 	_right = 0.0
 	for key in order:
@@ -330,12 +331,37 @@ func arrange() -> void:
 	arranged.emit()
 
 
-## 382：经验值条横贯全屏，贴在顶端栏石板的下沿（没栏就贴顶）；排在栏底下一层，日晷压在它上面
+#region 作者 11-27：顶栏读数即时 —— 进点开着叠层时也看得见
+## 叠层（搜索 / 战前 / 战斗 / 战利品……）开着时，顶端栏这一条（栏、栏里的读数、栏下沿的经验值条）抬到多高（0 = 不抬）。
+## 抬起来就不被叠层的压暗盖住，进点拿到的经验、金币、体力当场就看得见（231 的「按住」照旧：回放看完才变）。
+## 只是画在上面：接鼠标仍归叠层（Control 接鼠标看节点先后、不看 z），栏上的键在叠层开着时照旧按不到
+var lifted_z := 0
+
+
+## 地图屏在上面压着叠层时叫它（地图屏的 set_overlaid）；[param z] 0 = 放回去
+func lift_bar(z: int) -> void:
+	lifted_z = z
+	_apply_lift()
+
+
+## 栏这一条里的件：顶端栏本身、排在栏槽里的、经验值条
+func in_bar_strip(w: HudWidget) -> bool:
+	return w.id == &"hud_bar" or w.id == HudLayout.XP_BAR or w.in_bar
+
+
+func _apply_lift() -> void:
+	for w in widgets.values():
+		var hw := w as HudWidget
+		hw.z_index = lifted_z if in_bar_strip(hw) else 0
+#endregion
+
+
+## 382：经验值条横贯全屏，贴在顶端栏石板的下沿（没栏就贴顶；11-27：按栏图的石面高算，不跟 [member _bar_h]）；排在栏底下一层，日晷压在它上面
 func _place_xp_bar() -> void:
 	var xp: HudWidget = widgets.get(HudLayout.XP_BAR, null)
 	if xp == null or not xp.visible:
 		return
-	var y := _bar_h - _bar_margins().y if _bar() != null else 0.0
+	var y := HudBarScript.design_height() if _bar() != null else 0.0     # 作者 11-27（86 OK）：上缘贴着栏石面的下沿，栏里多一行也不往下掉
 	xp.custom_minimum_size.x = size.x
 	xp.position = Vector2(0.0, y)
 	xp.size = Vector2(size.x, xp.get_combined_minimum_size().y)
