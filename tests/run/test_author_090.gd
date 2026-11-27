@@ -180,7 +180,9 @@ static func frame_escape_and_reopen(t: TestCase, root: Window) -> void:
 	t.check(game.escape() and meta.tab() == "expedition", "书架 Esc 回出征页（164；264 起家页改出征页）")
 	meta.show_tab("codex")
 	t.check(game.escape() and meta.shelf_open() == "" and game.escape() and meta.tab() == "expedition" and flow.screen == GameFlow.Screen.META, "基地：图鉴窗 Esc 关窗、再 Esc 回出征页（164 / 264）")
-	t.check(game.escape() and flow.screen == GameFlow.Screen.MAIN_MENU, "仓库页再 Esc 回主菜单")
+	t.check(game.escape() and flow.screen == GameFlow.Screen.META and meta.system_menu_open(), "出征页再 Esc 呼出系统菜单（作者 11-27）")
+	meta.toggle_system_menu()
+	flow.to_main_menu()
 
 	flow.begin(c.chapter, kit, int(found["seed"]))
 	var map = game.base()

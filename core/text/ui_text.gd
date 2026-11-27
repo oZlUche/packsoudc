@@ -901,6 +901,8 @@ const TEXT := {
 	"bias.why_all": {"zh": "这张图的材料全是这一类，选了也一样", "en": "Every material on this map is of this kind already"},
 	"setup.depart": {"zh": "出发", "en": "Set out"},
 	"setup.main_menu": {"zh": "回主菜单", "en": "Main menu"},
+	"meta.system_title": {"zh": "系统", "en": "System"},
+	"meta.system_main_menu": {"zh": "返回主菜单", "en": "Main menu"},
 	"setup.back": {"zh": "返回", "en": "Back"},
 	"setup.rings": {"zh": "%d 环", "en": "%d rings"},
 	"setup.rings_range": {"zh": "%d~%d 环", "en": "%d–%d rings"},
