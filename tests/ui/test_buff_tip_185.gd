@@ -18,7 +18,7 @@ static func run_effect_totals(t: TestCase) -> void:
 	t.check(rage.contains("造成的伤害 +15%") and rage.contains("攻速 +15%"), "血怒 +15%% / +15%%（%s）" % rage)
 	t.check(not rage.contains("不可叠层") and not rage.contains("×"), "血怒：不写不可叠层、不写 ×N")
 	t.check(rage.contains("持续 10 秒"), "限时的写时长（作者 16:24）")
-	t.check(_plain(lib[&"hardy_guard"], 2).contains("护甲上限 +30"), "坚韧 ×2：护甲上限 +30")
+	t.check(_plain(lib[&"hardy_guard"], 2).contains("护甲 +30"), "坚韧 ×2：护甲 +30")
 	t.check(_plain(lib[&"fungal_blood"], 4).contains("恢复量减半，每次恢复获得等量的中毒"), "菌血按作者原话")
 	t.check(_plain(lib[&"scorched_blood"], 3).contains("恢复量归零，每秒受到 3 点火焰伤害"), "燃血按作者原话")
 	t.check(_plain(lib[&"marked"]).contains("格挡 −3"), "标记：格挡 −3")
