@@ -10,7 +10,7 @@
 [sub_resource type="Resource" id="Resource_alcg0"]
 script = ExtResource("2_0tbki")
 stat = &"max_armor"
-amount = 2.0
+amount = 5.0
 
 [sub_resource type="Resource" id="Resource_ysr5f"]
 script = ExtResource("6_ul3w8")
