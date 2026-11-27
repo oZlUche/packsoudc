@@ -213,7 +213,7 @@ static func frame_result_steps(t: TestCase, root: Window) -> void:
 	t.eq(screen.get("_wh"), null, "第 1 步没有仓库面板")
 	t.check(screen.safe_view() != null and screen.find_child("SafeFrame", true, false) != null, "224 补充二：第 1 步账单右边有保险箱（皮带框）")
 	t.eq(_buttons(screen, "继续").size(), 1, "一个「继续」")
-	# 作者 11-27「算分面板排版有错」：372 的等级行多出一行时，明细行压矮、碑板按行重拼，合计仍落在底下那条横带上；等级只写数（Cinzel 里没有 Lv. 字形）
+	# 作者 11-27：明细行多于 11 行（372 等级行）行高不变、只露 11 行，滚轮翻；合计固定在底下横带上；等级只写数（Cinzel 里没有 Lv. 字形）
 	var lv := RunResult.new()
 	lv.outcome = &"extracted"
 	lv.run_level = 7
@@ -221,8 +221,16 @@ static func frame_result_steps(t: TestCase, root: Window) -> void:
 	lv_view.setup(lv, 0)
 	t.eq(lv_view.rows().size(), 13, "等级行：十二行明细 + 合计")
 	t.eq(lv_view.numbers().get("等级"), "7", "等级只写数")
-	t.eq(lv_view.row_height(), LedgerView.ROWS_H / 12.0, "十二行明细平分明细区（44）")
-	t.eq(ledger.row_height(), LedgerView.ROW_H, "十一行照旧 48")
+	t.eq(lv_view.max_scroll(), 1, "十二行明细露十一行，能往下翻一行")
+	lv_view._t = LedgerView.FIRST_DELAY + 11 * LedgerView.ROW_GAP
+	lv_view.follow_newest()
+	t.eq(lv_view.scroll_rows(), 1, "逐行显出：第十二行一出来就自动往下翻一行")
+	lv_view.reveal_all()
+	t.eq(lv_view.scroll_rows(), 1, "全显（含点一下跳过）后停在底部")
+	t.check(not lv_view.scroll_by(1) and lv_view.scroll_rows() == 1, "到底了不再翻")
+	t.check(lv_view.scroll_by(-5) and lv_view.scroll_rows() == 0, "往上翻回顶")
+	t.check(lv_view.scroll_by(1) and lv_view.scroll_rows() == 1, "再翻回底")
+	t.eq(ledger.max_scroll(), 0, "十一行不滚")
 	lv_view.free()
 	var before: int = f.screen
 	_buttons(screen, "继续")[0].pressed.emit()

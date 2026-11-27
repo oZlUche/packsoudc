@@ -13,12 +13,14 @@ signal revealed
 ## 账面（字和线落的那块）；图比它大，左上差 [constant ART_ORIGIN]
 const LEDGER_SIZE := Vector2(864, 576)
 const ROW_H := 48.0
-## 碑板图里明细行那一段（合计那条横带之上）：账面 y 0..[constant ROWS_H]，图里画了 [constant ART_ROWS] 行。
-## 明细行多于这些（372 等级行）时行高压到 ROWS_H / 行数，图按行切开重拼 —— 每行都有横线、竖线贯到底，合计仍落在那条横带上
+## 碑板图里明细行那一段（合计那条横带之上）：账面 y 0..[constant ROWS_H]，正好 [constant VISIBLE_ROWS] 行。
+## 作者 11-27：明细行多了（372 等级行等）行高不变，这一段只露 11 行，滚轮一格翻一行；合计固定在底下那条横带上
 const ROWS_H := 528.0
-const ART_ROWS := 11
-## 图里第一条行间横线的上沿（图坐标；之后每 [constant ROW_H] 一条）
-const ART_FIRST_LINE := 77.0
+const VISIBLE_ROWS := 11
+## 滚动条：明细区右边框里一道细槽（账面 x），只在行数多于 [constant VISIBLE_ROWS] 时画
+const SCROLL_X := 855.0
+const SCROLL_W := 4.0
+const SCROLL_PAD := 6.0
 const ART := "result/ledger_stele"
 const ART_ORIGIN := Vector2(-29, -29)
 ## 图按这个（1x）大小画
@@ -41,6 +43,8 @@ const PARTS_GAP := 24.0
 var _rows: Array[Dictionary] = []
 var _t := 0.0
 var _all := false
+## 明细区往下翻了几行（整行翻，碑板上刻好的格线永远对得上）
+var _scroll := 0
 var _num_font: Font
 var _body_font: Font
 var _bold_font: Font
@@ -59,6 +63,7 @@ func _init() -> void:
 func setup(r: RunResult, lit: int) -> void:
 	_rows = rows_for(r, lit)
 	_t = 0.0
+	_scroll = 0
 	_all = _rows.is_empty()
 	set_process(not _all)
 	queue_redraw()
@@ -164,6 +169,7 @@ func reveal_all() -> void:
 	if _all:
 		return
 	_all = true
+	_scroll = max_scroll()     # 作者 11-27：内容超出时最后停在底部（点一下跳过也一样）
 	set_process(false)
 	queue_redraw()
 	revealed.emit()
@@ -180,60 +186,78 @@ func _progress(i: int) -> float:
 
 func _process(delta: float) -> void:
 	_t += delta
+	follow_newest()
 	queue_redraw()
 	if _t >= FIRST_DELAY + (_rows.size() - 1) * ROW_GAP + ROLL_SEC:
 		reveal_all()
 
 
-## 点一下 / 按任意键：全显（这一下不再往下传 —— 不会顺手点到别的）
+## 点一下 / 按任意键：全显（这一下不再往下传 —— 不会顺手点到别的）；明细区上滚轮：翻行（逐行显出时滚轮也算「点一下」）
 func _input(event: InputEvent) -> void:
-	if _all or not is_visible_in_tree():
+	if not is_visible_in_tree():
 		return
-	var hit := event is InputEventMouseButton and (event as InputEventMouseButton).pressed \
+	var mb := event as InputEventMouseButton
+	if _all:
+		if mb != null and mb.pressed and (mb.button_index == MOUSE_BUTTON_WHEEL_UP or mb.button_index == MOUSE_BUTTON_WHEEL_DOWN) \
+				and Rect2(Vector2.ZERO, Vector2(LEDGER_SIZE.x, ROWS_H)).has_point(get_local_mouse_position()):
+			if scroll_by(-1 if mb.button_index == MOUSE_BUTTON_WHEEL_UP else 1):
+				get_viewport().set_input_as_handled()
+		return
+	var hit := mb != null and mb.pressed \
 		or event is InputEventKey and (event as InputEventKey).pressed and not (event as InputEventKey).echo
 	if hit:
 		reveal_all()
 		get_viewport().set_input_as_handled()
 
 
-## 明细行（不含合计）的行高：图里的 11 行放得下就是 [constant ROW_H]，多了按行数均分 [constant ROWS_H]
-func row_height() -> float:
-	return ROWS_H / maxf(ART_ROWS, _rows.size() - 1)
+## 明细行（不含合计）有几行
+func detail_count() -> int:
+	return maxi(0, _rows.size() - 1)
 
 
-## 碑板：明细行数正好时整张画；多了就按行切开重拼（顶 + 每条行间横线一段 + 底，每段裁掉行中间那片空白，不缩放，线不会糊）
-func _draw_art(tex: Texture2D, rh: float) -> void:
-	var px_per := Vector2(tex.get_width(), tex.get_height()) / ART_SIZE
-	var n := maxi(ART_ROWS, _rows.size() - 1)
-	if n == ART_ROWS:
-		draw_texture_rect(tex, Rect2(ART_ORIGIN, ART_SIZE), false)
+## 逐行显出时跟着最新显出的那行往下翻（作者 11-27：每出一行新的就自动滚），全显之后玩家自己滚
+func follow_newest() -> void:
+	if _all:
 		return
-	var top_art := -ART_ORIGIN.y     # 账面 y 0 在图里的位置
-	var a := floorf(rh / 2.0)
-	var b := rh - a
-	var pieces: Array = [[0.0, top_art + rh - a, 0.0]]     # [图里起, 图里止, 画到图坐标的 y]
-	for k in n - 1:
-		pieces.append([ART_FIRST_LINE - a, ART_FIRST_LINE + b, top_art + rh * (k + 1) - a])
-	var bottom := top_art + ROWS_H - (rh - b)
-	pieces.append([bottom, ART_SIZE.y, bottom])
-	for p in pieces:
-		var src := Rect2(0.0, float(p[0]), ART_SIZE.x, float(p[1]) - float(p[0]))
-		var dst := Rect2(ART_ORIGIN + Vector2(0.0, float(p[2])), src.size)
-		draw_texture_rect_region(tex, dst, Rect2(src.position * px_per, src.size * px_per))
+	var newest := -1
+	for i in detail_count():
+		if _shown(i):
+			newest = i
+	_scroll = clampi(newest - VISIBLE_ROWS + 1, 0, max_scroll())
+
+
+## 最多能往下翻几行
+func max_scroll() -> int:
+	return maxi(0, detail_count() - VISIBLE_ROWS)
+
+
+func scroll_rows() -> int:
+	return _scroll
+
+
+## 往下翻 [param d] 行（负数往上）；真翻动了返回 true
+func scroll_by(d: int) -> bool:
+	var to := clampi(_scroll + d, 0, max_scroll())
+	if to == _scroll:
+		return false
+	_scroll = to
+	queue_redraw()
+	return true
 
 
 func _draw() -> void:
-	var rh := row_height()
 	var tex := UiTheme.art_cached(ART)
 	if tex != null:
-		_draw_art(tex, rh)
-	var lift := (ROW_H - rh) / 2.0     # 行压矮了，字跟着往上收半个差，仍在行中间
+		draw_texture_rect(tex, Rect2(ART_ORIGIN, ART_SIZE), false)
 	for i in _rows.size():
 		if not _shown(i):
 			continue
 		var row := _rows[i]
 		var total := bool(row.get("total", false))
-		var y := ROWS_H if total else i * rh - lift     # 合计总在那条横带上
+		var slot := i - _scroll
+		if not total and (slot < 0 or slot >= VISIBLE_ROWS):
+			continue
+		var y := ROWS_H if total else slot * ROW_H     # 合计总在那条横带上
 		var label := String(row["label"])
 		if total:
 			draw_string(_bold_font, Vector2(LABEL_X, y + 35), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 26, INK_LABEL)
@@ -248,3 +272,16 @@ func _draw() -> void:
 		if parts != "" and _progress(i) >= 1.0:     # 269：总分行里、数的左边一行小字（数滚到位才写；账单框下沿紧贴，放不下另起一行）
 			var pw := _body_font.get_string_size(parts, HORIZONTAL_ALIGNMENT_LEFT, -1, PARTS_PX).x
 			draw_string(_body_font, Vector2(NUMBER_RIGHT - w - PARTS_GAP - pw, y + 33), parts, HORIZONTAL_ALIGNMENT_LEFT, -1, PARTS_PX, INK_DIM)
+	_draw_scrollbar()
+
+
+## 行数多于 11 才画：一道浅槽 + 墨色滑块，滑块长短 = 露出的比例、位置 = 翻到哪
+func _draw_scrollbar() -> void:
+	var n := detail_count()
+	if n <= VISIBLE_ROWS:
+		return
+	var track := Rect2(SCROLL_X, SCROLL_PAD, SCROLL_W, ROWS_H - 2.0 * SCROLL_PAD)
+	draw_rect(track, Color(INK_DIM, 0.25))
+	var h := track.size.y * VISIBLE_ROWS / n
+	var y := track.position.y + (track.size.y - h) * _scroll / maxf(1.0, max_scroll())
+	draw_rect(Rect2(SCROLL_X, y, SCROLL_W, h), Color(INK_LABEL, 0.75))
