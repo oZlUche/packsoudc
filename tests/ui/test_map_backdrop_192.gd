@@ -87,6 +87,41 @@ static func frame_view_camera(t: TestCase, root: Window) -> void:
 	t.check(absf(view.paper_on_screen().end.x - safe.get_center().x) <= 1.0 and absf(view.paper_on_screen().end.y - safe.get_center().y) <= 1.0, "往左上拖到头：右边、下边停在中心线")
 	press.pressed = false
 	view._gui_input(press)
+	# 作者 11-27：左键也能拖；挪不过 DRAG_SLOP 松开算点，挪过了是拖、松开不算点
+	view.fit()
+	var clicks := [0]
+	var count := func() -> void: clicks[0] += 1
+	view.empty_pressed.connect(count)
+	view.node_pressed.connect(func(_id: int, _b: int, _s: bool) -> void: count.call())
+	view.edge_pressed.connect(func(_e, _b: int) -> void: count.call())
+	view.slot_pressed.connect(func(_s) -> void: count.call())
+	var left := InputEventMouseButton.new()
+	left.button_index = MOUSE_BUTTON_LEFT
+	left.pressed = true
+	left.position = view.safe_rect().get_center()
+	var pan0 := view.pan
+	view._gui_input(left)
+	t.eq(clicks[0], 0, "左键按下：先不算点")
+	var nudge := InputEventMouseMotion.new()
+	nudge.position = left.position + Vector2(MapView.DRAG_SLOP - 2.0, 0)
+	nudge.relative = Vector2(MapView.DRAG_SLOP - 2.0, 0)
+	view._gui_input(nudge)
+	t.eq(view.pan, pan0, "挪不够：地图不动")
+	left.pressed = false
+	view._gui_input(left)
+	t.eq(clicks[0], 1, "没挪够松开：算点了一下")
+	view.zoom_at(view.safe_rect().get_center(), 1.15 * 1.15 * 1.15)
+	pan0 = view.pan
+	left.pressed = true
+	view._gui_input(left)
+	var pull := InputEventMouseMotion.new()
+	pull.position = left.position + Vector2(-40, -30)
+	pull.relative = Vector2(-36, -27)
+	view._gui_input(pull)
+	t.check(view.pan != pan0, "挪过了：左键拖动地图（%s → %s）" % [pan0, view.pan])
+	left.pressed = false
+	view._gui_input(left)
+	t.eq(clicks[0], 1, "拖过之后松开：不算点")
 	view.skin = &"cursed_depths"
 	t.check(_near(view.paper(), MapSkin.paper_rect(&"cursed_depths", view.canvas_rect()), 0.01), "换底图：纸跟着换")
 	view.skin = &""

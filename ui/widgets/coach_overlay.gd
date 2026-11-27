@@ -23,6 +23,8 @@ const RIM := 2.0
 const ARROW_ART := "res://assets/ui/coach/arrow.png"
 const ARROW_SIZE := Vector2(160, 80)
 const PAPER_WIDTH := 380.0
+## 作者 11-27：不指某个部件、讲整块屏的操作（拖地图这类）—— 不挖洞、不画箭头，说明放正中；每个屏都认
+const SCREEN := &"screen"
 
 ## `func(target_id: StringName) -> Rect2`（全局坐标；空矩形 = 找不到，不挖洞、说明放正中）
 var target_rect: Callable = Callable()
@@ -98,7 +100,7 @@ static func problems(p_steps: Array, known_ids: Array = []) -> Array[String]:
 	for i in p_steps.size():
 		var s: Dictionary = p_steps[i]
 		var target := StringName(String(s.get("target", "")))
-		var known := known_ids.has(target) if not known_ids.is_empty() else (HudWidgets.has(target) or HudWidgets.BAR_ENDS.has(target))
+		var known := target == SCREEN or (known_ids.has(target) if not known_ids.is_empty() else (HudWidgets.has(target) or HudWidgets.BAR_ENDS.has(target)))
 		if not known:
 			out.append("steps[%d]：没有这个目标 '%s'" % [i, target])
 		if String(s.get("text", "")) == "":
@@ -243,7 +245,7 @@ func step() -> Dictionary:
 ## 这一步的洞（本控件坐标；找不到目标是空矩形）
 func hole() -> Rect2:
 	var s := step()
-	if s.is_empty() or not target_rect.is_valid():
+	if s.is_empty() or not target_rect.is_valid() or StringName(String(s.get("target", ""))) == SCREEN:
 		return Rect2()
 	var r: Rect2 = target_rect.call(StringName(String(s.get("target", ""))))
 	if r.size == Vector2.ZERO:
