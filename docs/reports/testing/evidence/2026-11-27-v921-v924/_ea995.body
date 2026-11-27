@@ -1,0 +1,144 @@
+extends SceneTree
+## 游戏测试 v9.21 / v9.22（PR #988 / #995）：大地结晶「×N」、穿行 / 扎营腰带图标；v9.24 顶栏星辰读数。参数 <outdir>
+const TAG := "EA995"
+const D383 := preload("res://tests/ui/test_departure_383.gd")
+##HEAD##
+var _c1: ItemInstance = null
+
+func _settle() -> bool:
+	var scr := _flow.screen
+	if scr == GameFlow.Screen.EVENT:
+		if bool(_flow.last_payload.get("briefing", false)): _flow.close_briefing()
+		else:
+			var top = _game.overlay() if _game.overlay() != null else _game.base()
+			if top != null and top.has_method("choose_event"): top.choose_event(0)
+			elif top != null and top.has_method("proceed"): top.proceed()
+			else: _flow.resume()
+		return false
+	if scr != GameFlow.Screen.MAP: return false
+	for c in root.find_children("*", "CoachOverlay", true, false):
+		(c as CoachOverlay).next(); return false
+	return true
+
+
+func _start_click() -> void:
+	var sb: Button = _ms().get("_new_run_btn")
+	if sb != null and sb.is_visible_in_tree(): _click(sb)
+	elif sb != null: sb.pressed.emit()
+
+
+func _setup_go() -> void:
+	var sp: Node = null
+	for n in root.find_children("*", "", true, false):
+		if n.has_method("step_difficulty") and n.has_method("depart"): sp = n
+	if sp == null: return
+	var gb = sp.god_book() if sp.has_method("god_book") else null
+	if gb != null: sp.close_god_book(); return
+	for c in root.find_children("*", "CoachOverlay", true, false):
+		(c as CoachOverlay).next(); return
+	if sp.needs_spawn(): sp.pick_spawn(sp._preview.entry_ids()[0]); return
+	if not sp.next_page(): sp.depart()
+
+
+func _assist() -> void:
+	var bk := _flow.meta.commissions
+	for f in Commissions.factions():
+		bk.arrived[String(f.id)] = 0
+	for id in Commissions.FEATURES:
+		bk.grants[String(id)] = true
+	D383._two_menus(_flow)
+	for id in ["mountain_yam", "fowl_leg", "sour_wheat"]:
+		_put(id, _flow.meta.canteen.store)
+	_flow.meta.funds += 500
+	_flow.sync_commissions(); _flow.save_meta(); _flow.meta.changed.emit()
+	L("测试辅助：各方到营地 %s；开了 %s；食堂配方 %d 份；金币 %d" % [str(bk.arrived.keys()), str(bk.grants.keys()), _flow.meta.canteen.menus.size(), _flow.meta.funds])
+
+
+func _visit(p: Array) -> void:
+	var kind: String = p[0]
+	var key: String = p[1]
+	match kind:
+		"tab": _tab(key)
+		"sub":
+			if not _ms()._sub_btns.has(key): L("后勤没有「%s」小键：%s" % [key, str(_ms()._sub_btns.keys())]); return
+			_click(_ms()._sub_btns[key])
+		"shelf":
+			var sb: Dictionary = _ms().sub_tab_buttons("shelf")
+			if not sb.has(key): L("书架没有「%s」小键：%s" % [key, str(sb.keys())]); return
+			_ms().close_shelf()     # 上一扇窗开着时先关上（窗盖住小键，点下去只会关窗）
+			_click(sb[key])
+
+
+
+func _process(_d: float) -> bool:
+	_f += 1
+	if _f % 250 == 0: print("%s ♥ f %d st %d 屏 %d wait %d" % [TAG, _f, _st, _flow.screen if _flow != null else -1, _wait])
+	if _flow == null:
+		_flow = _game.flow
+		return false
+	if _f > 9000:
+		L("超时 st %d 屏 %d" % [_st, _flow.screen]); shot("timeout"); quit(1); return true
+	if _wait > 0:
+		_wait -= 1
+		return false
+	var scr := _flow.screen
+	if _st < 3:
+		if _boot(): _st = 3
+		return false
+	match _st:
+		3:
+			_assist()
+			_tab("expedition"); _wait = 30; _st = 4
+		4:
+			_start_click(); _wait = 40; _st = 5
+		5:
+			if scr == GameFlow.Screen.META:
+				_start_click(); _wait = 40; return false
+			if scr == GameFlow.Screen.SETUP:
+				_setup_go(); _wait = 20; return false
+			if not _settle(): _wait = 10; return false
+			if _flow.run.phase == RunState.Phase.PICK_SPAWN:
+				_game.base().pick_spawn(_flow.run.map.entry_ids[0]); _wait = 20; return false
+			var lp: Array = root.find_children("*", "LevelPickPanel", true, false)
+			for p in lp:
+				if (p as Control).is_visible_in_tree():
+					(p as LevelPickPanel).choose(0); _wait = 30; return false
+			var run := _flow.run
+			var d := run.items.get_def(&"earth_crystal")
+			var big := ItemInstance.create(d); big.set_stack(12)
+			var one := ItemInstance.create(d)
+			var huge := ItemInstance.create(d); huge.set_stack(196)
+			var placed := []
+			for it in [big, one, huge]:
+				placed.append(run.board.try_add(it))
+			run.board.touch()
+			var belt := BeltModule.of(run)
+			belt.add(&"earth_walk", 1); belt.add(&"earth_camp", 1)
+			belt.changed.emit()
+			var lv := LevelModule.of(run)
+			lv.taken["god_sun_stars"] = 1
+			lv.god_state[SunCyclePerk.STARS_KEY] = 7
+			lv.god_state_changed.emit()
+			L("测试辅助：背包放结晶 12 个、1 个、196 个（放进去 %s）；腰带加穿行、扎营：%s；记上众星、星辰 7 颗（奉 %s）" % [str(placed), str(belt.ids()), str(run.active_faith_id())])
+			_hover_at(Vector2(4, 1196)); _wait = 40; _st = 6
+		6:
+			L("地图屏排版：%s" % _overflow(_game.base()))
+			shot("map_with_crystals"); _st = 7
+		7:
+			var bp: Node = null
+			for n in root.find_children("*", "", true, false):
+				if n.has_method("open_status") : bp = n
+			var r := BeltModule.of(_flow.run).use(&"earth_walk")
+			L("用穿行：%s；能去 %d 个点" % ["用了" if r == "" else r, EarthHeavenPerk.walk_targets(_flow.run).size()])
+			_wait = 40; _st = 8
+		8:
+			shot("walk_armed"); _st = 9
+		9:
+			_game.base().toggle_bag(); _wait = 40; _st = 10
+		10:
+			_hover_at(Vector2(4, 1196)); _wait = 20; _st = 11
+		11:
+			shot("bag_crystals"); _st = 99
+		99:
+			L("完 err=0"); quit(0); return true
+	return false

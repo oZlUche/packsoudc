@@ -1,0 +1,37 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+EA988 神殿开放：brute true，sun true，nature true，skill true，earth true，hunt false
+EA988 分层 真实开局棋盘 (7, 6)，离边界最多 2 圈；大地 8、穹顶 1、支柱 0
+EA988   knife 占 [(0, 0), (0, 1)]，圈数 0～0 → ground
+EA988   knife 占 [(1, 0), (1, 1)]，圈数 0～1 → ground
+EA988   knife 占 [(2, 0), (2, 1)]，圈数 0～1 → ground
+EA988   earth_crystal 占 [(3, 0)]，圈数 0～0 → ground
+EA988   earth_crystal 占 [(4, 0)]，圈数 0～0 → ground
+EA988   earth_crystal 占 [(5, 0)]，圈数 0～0 → ground
+EA988   earth_crystal 占 [(6, 0)]，圈数 0～0 → ground
+EA988   knight_plate 占 [(3, 1), (3, 2), (3, 3), (4, 1), (4, 2), (5, 1), (5, 2), (5, 3)]，圈数 1～2 → dome
+EA988   kite_shield 占 [(0, 2), (0, 3), (0, 4), (1, 2), (1, 3), (1, 4)]，圈数 0～1 → ground
+EA988 选牌 大地之神 30 局：可出的牌 38 张，一次都没出过的 []；甄选窗 36 次；god_earth_jade 出现 43 / 拿 16；god_earth_gem 出现 50 / 拿 17；god_earth_compress 出现 72 / 拿 23；god_earth_refine 出现 51 / 拿 14；god_earth_tunnel 出现 130 / 拿 42；god_earth_camp 出现 121 / 拿 38；god_earth_select 出现 127 / 拿 36
+EA988 穿行 种子 800：3 步内能去 14 个点（都在 3 步内 true），用了之后再用「腰带里没有这个」；传到 39（event，不在 2 步内 true），成功 true，步数 0 → 1，还攒着 false
+EA988 扎营 种子 800：event → rest（）
+EA988 穿行 种子 801：3 步内能去 16 个点（都在 3 步内 true），用了之后再用「腰带里没有这个」；传到 31（elite，不在 2 步内 true），成功 true，步数 0 → 1，还攒着 false
+EA988 扎营 种子 801：elite → rest（）
+EA988 穿行 种子 802：3 步内能去 16 个点（都在 3 步内 true），用了之后再用「腰带里没有这个」；传到 32（extract，不在 2 步内 true），成功 true，步数 0 → 1，还攒着 false
+EA988 扎营 种子 802：在 extract 上用不了：核心和撤离点上扎不了营
+EA988 穿行 种子 803：3 步内能去 16 个点（都在 3 步内 true），用了之后再用「腰带里没有这个」；传到 38（battle，不在 2 步内 true），成功 true，步数 0 → 1，还攒着 false
+EA988 扎营 种子 803：battle → rest（）
+EA988 穿行 种子 804：3 步内能去 16 个点（都在 3 步内 true），用了之后再用「腰带里没有这个」；传到 36（event，不在 2 步内 true），成功 true，步数 0 → 1，还攒着 false
+EA988 扎营 种子 804：event → rest（）
+EA988 穿行 种子 805：3 步内能去 18 个点（都在 3 步内 true），用了之后再用「腰带里没有这个」；传到 35（shop，不在 2 步内 true），成功 true，步数 0 → 1，还攒着 false
+EA988 扎营 种子 805：在 shop 上用不了：先把这个点的事办完
+EA988 穿行成功 6 次，扎营成功 4 次；用不了的原因 { "开局点 spawn": "", "extract": "核心和撤离点上扎不了营", "shop": "先把这个点的事办完" }
+EA988 压缩 没拿牌：can_compress_any false
+EA988 压缩：knife 值 10 → 2 个，knight_plate 值 600 → 120 个，steel_greatsword 值 180 → 36 个，kite_shield 值 180 → 36 个；包能压 false，结晶能压 false
+EA988 压缩 4 件 → 一摞 194 个（应 194），价值 970、重量 970，在背包里 true
+EA988 堆叠：2 个那摞拖到 194 个那摞上 → true，现在 196 个，原来那摞还在 false
+EA988 提炼 1 张：那一摞 196 个，价值 1176（每个 6）；新压的一摞每个 6，能和旧的叠 true
+EA988 不能叠：小刀叠到结晶上 false
+EA988 开战 种子 1：大地 6、穹顶 0、支柱 0；战记 { "earth_ground": 1, "earth_ram": 1, "earth_heavy": 1, "earth_quake": 5 }；开战打到敌人的 ["6", "117"]
+EA988 开战 种子 2：大地 6、穹顶 0、支柱 0；战记 { "earth_ground": 1, "earth_ram": 1, "earth_heavy": 1, "earth_quake": 5 }；开战打到敌人的 ["6", "117"]
+EA988 合计不对 0 处
+EA988 完
