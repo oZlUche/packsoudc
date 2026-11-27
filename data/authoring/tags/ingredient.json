@@ -9,5 +9,6 @@
     "en": "Raw fare for the Grey Lamp canteen pot; can't be eaten on an expedition."
   },
   "tip": false,
-  "category": "kind"
+  "category": "kind",
+  "icon": "food"
 }

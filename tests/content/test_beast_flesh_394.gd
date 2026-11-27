@@ -142,7 +142,9 @@ static func run_glands_and_pot(t: TestCase) -> void:
 	var got: Dictionary = meal.get("traits", {})
 	t.check(is_equal_approx(float(got.get("damage", 0.0)), 16.0) and is_equal_approx(float(got.get("scorch", 0.0)), 1.0), "两颗狼心 + 火焰腺下锅：特性叠起来（%s）" % str(got))
 	t.check(is_equal_approx(float((meal["flat"] as Dictionary).get("max_stamina", 0.0)), 3.0), "狼腿肉照旧按肉类给耐力上限 +3，器官不给（%s）" % str(meal["flat"]))
-	t.check(ItemTooltip.canteen_line(db.get_def(&"wolf_heart")).contains("造成的伤害 +8%，受到的伤害 +4%"), "配菜提示：器官写特性，好处在前")
+	var heart_tip := Glossary.strip_bbcode(ItemTooltip.canteen_line(db.get_def(&"wolf_heart")))
+	t.check(heart_tip.find("造成的伤害") >= 0 and heart_tip.find("造成的伤害") < heart_tip.find("受到的伤害") and heart_tip.contains("+8%") and heart_tip.contains("+4%"), "配菜提示：器官一条特性一行，好处在前（%s）" % heart_tip)
+	t.check(ItemTooltip.canteen_line(db.get_def(&"wolf_heart")).contains(ItemTooltip.POT_GOOD) and ItemTooltip.canteen_line(db.get_def(&"wolf_heart")).contains(ItemTooltip.POT_BAD), "好处绿、代价红")
 	# 进一局：饱腹归零也不失效
 	var run := G388._start(3951)
 	var mm := MealModule.new()

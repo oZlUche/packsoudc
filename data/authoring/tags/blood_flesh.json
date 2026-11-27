@@ -9,6 +9,7 @@
   },
   "tip": false,
   "category": "affiliation",
+  "icon": "flesh",
   "parents": [
     "material",
     "ingredient"

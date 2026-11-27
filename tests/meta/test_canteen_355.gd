@@ -199,11 +199,47 @@ static func run_viewer(t: TestCase) -> void:
 		UiText.t("canteen.final") % [UiText.t("canteen.stat_max_stamina"), "80", "84"],
 	] as Array[String], "终值两行：负重 20 → 23、耐力上限 80 → 84")
 	Canteen.viewer = ch
-	t.check(ItemTooltip.canteen_line(db.get_def(&"fowl_wing")).contains(UiText.t("canteen.tip_for") % [Names.of(ch), UiText.t("canteen.stat_max_stamina"), "1.6"]), "提示窗：试吃 耐力上限 +1.6")
+	var wing_tip := Glossary.strip_bbcode(ItemTooltip.canteen_line(db.get_def(&"fowl_wing")))
+	t.check(wing_tip.contains(UiText.t("canteen.stat_max_stamina")) and wing_tip.contains("+2%") and wing_tip.contains(Names.of(ch) + " +1.6"), "下锅小节（作者 11-27，71）：耐力上限 +2%%，名字后挂「试吃 +1.6」（%s）" % wing_tip)
+	t.check(not ItemTooltip.canteen_line(db.get_def(&"wild_scallion")).contains(Names.of(ch)), "固定值食材（野葱）：对谁都一样，不另写角色实得（免得看成能直接吃）")
+	t.check(not ItemTooltip.canteen_line(db.get_def(&"meat_scrap")).contains(Names.of(ch)), "固定值食材（兽肉碎）：同上")
+	var wheat_tip := Glossary.strip_bbcode(ItemTooltip.canteen_line(db.get_def(&"sour_wheat")))
+	t.check(wheat_tip.contains(UiText.t("canteen.satiety_name")) and wheat_tip.contains("+5") and not wheat_tip.contains("·") and not wheat_tip.contains("下锅："), "饱腹单独一行，不再「下锅：」前缀和「·」连写（%s）" % wheat_tip)
+	t.eq(ItemTooltip.canteen_line(db.get_def(&"broadsword")), "", "不是食材：没有下锅小节")
+	var full := ItemTooltip.describe_full(ItemInstance.create(db.get_def(&"fowl_wing")))
+	t.check(String(full.get("pot", "")) != "" and Glossary.strip_bbcode(String(full.get("pot_title", ""))) == UiText.t("canteen.pot_title"), "悬浮窗分块里有「下锅」小节（标题 + 两列）")
+	t.check(not Glossary.strip_bbcode(String(full.get("body", ""))).contains(UiText.t("canteen.stat_max_stamina")), "正文里不再重复写下锅那行")
 	ch.weight_capacity = 0
 	t.check(not ItemTooltip.canteen_line(db.get_def(&"sour_wheat")).contains(Names.of(ch)), "没有负重的角色：主食不写对角色加多少")
 	t.eq(Canteen.final_lines(ch, meal).size(), 1, "终值只列耐力上限")
 	Canteen.viewer = null
+
+
+static func run_blessed(t: TestCase) -> void:
+	t.begin("作者 11-27（确认清单 73「让赐福的更值钱，然后效果统一 +50%」）：赐福食材下锅照本体算 ×1.5，饱腹不变，器官特性也 ×1.5，售价高于本体；标签行（72）食材 / 草木 / 血肉有图标")
+	var db := T110._db()
+	for pair in [[&"wild_scallion", "flat"], [&"fowl_wing", "pct"], [&"sour_wheat", "flat"]]:
+		var base := db.get_def(pair[0])
+		var blessed := db.get_def(Blessings.variant_id(pair[0], &"nature"))
+		if blessed == null:
+			continue
+		var a := Canteen.entry_of(base)
+		var b := Canteen.entry_of(blessed)
+		t.check(not b.is_empty() and is_equal_approx(float(b[pair[1]]), float(a[pair[1]]) * 1.5), "%s：下锅 %s → %s" % [Names.of(blessed), str(a.get(pair[1])), str(b.get(pair[1]))])
+		t.eq(int(b.get("satiety", -1)), int(a.get("satiety", -2)), "%s：饱腹不变" % Names.of(blessed))
+		t.eq(ItemValue.of(blessed), roundi(ItemValue.of(base) * 1.5), "%s：售价 = 本体 %d × 1.5（作者 11-27，78）" % [Names.of(blessed), ItemValue.of(base)])
+	var scallion := db.get_def(Blessings.variant_id(&"wild_scallion", &"nature"))
+	t.check(scallion != null, "野葱有自然之神的赐福版")
+	if scallion != null:
+		var meal := Canteen.meal_of([ItemInstance.create(scallion)])
+		t.check(is_equal_approx(float((meal["flat"] as Dictionary).get(String(BattleStats.REGEN_STAMINA), 0.0)), 0.15), "赐福野葱下锅：耐力回复 0.1 × 1.5 = 0.15")
+	var heart := db.get_def(Blessings.variant_id(&"wolf_heart", &"nature"))
+	if heart != null:
+		t.check(is_equal_approx(float(heart.eat_trait.get("damage", heart.eat_trait.get(&"damage", 0.0))), 12.0), "赐福狼心：造成的伤害 8%% × 1.5 = 12%%（%s）" % str(heart.eat_trait))
+	for id in [&"wolf_heart", &"meat_scrap", &"fire_gland", &"fowl_wing"]:
+		t.check(TagRegistry.first_per_category(db.get_def(id).tags).has(&"ingredient"), "%s 的标签行画食材（面包），压过素材" % id)
+	for pair in [[&"ingredient", "food"], [&"plant", "herb"], [&"blood_flesh", "flesh"]]:
+		t.eq(TagRegistry.icon_path(pair[0]), "res://assets/ui/tags/%s.png" % pair[1], "%s 标签画 %s 图标、不写字" % pair)
 
 
 static func run_sources(t: TestCase) -> void:

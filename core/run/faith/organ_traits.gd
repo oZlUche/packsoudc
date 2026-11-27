@@ -10,6 +10,8 @@ const KEYS: Array[StringName] = [&"damage", &"haste", &"max_hp", &"regen_hp", &"
 ## 395 第六节（作者 11-25 19:02「三种腺体改成每次攻击对自己和敌人额外附加一层对应元素」）：这几个键是元素印的状态 id，
 ## 数 = 己方武器每出手一次给敌我各叠几层
 const MARKS: Array[StringName] = [&"scorch", &"chill", &"poison"]
+## 写成百分数的键（[method rows]）
+const PCT_KEYS: Array[StringName] = [&"damage", &"haste", &"taken"]
 ## 1 = 越大越好，-1 = 越小越好（受到的伤害）
 const GOOD := {&"damage": 1, &"haste": 1, &"max_hp": 1, &"regen_hp": 1, &"scorch": 1, &"chill": 1, &"poison": 1, &"taken": -1}
 
@@ -112,6 +114,20 @@ static func lines(values: Dictionary) -> Array[String]:
 			good.append(one)
 		else:
 			bad.append(one)
+	return good + bad
+
+
+## 作者 11-27（71）：拆成两列的行 [[名字, 数, 是不是好处]]，好处在前（「下锅」小节用）
+static func rows(values: Dictionary) -> Array:
+	var good: Array = []
+	var bad: Array = []
+	for k in KEYS:
+		var v := float(values.get(k, values.get(String(k), 0.0)))
+		if v == 0.0:
+			continue
+		var amount := UiText.t("trait_name.stacks") % TextTemplate.num(v) if MARKS.has(k) else ("+" if v > 0.0 else "") + TextTemplate.num(v) + ("%" if PCT_KEYS.has(k) else "")
+		var row := [UiText.t("trait_name." + String(k)), amount, v * float(GOOD[k]) > 0.0]
+		(good if row[2] else bad).append(row)
 	return good + bad
 
 
