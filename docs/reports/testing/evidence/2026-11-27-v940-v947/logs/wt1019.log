@@ -1,0 +1,8 @@
+WT knife zh：匕首 / 普通 / res://assets/ui/tags/weapon.png / 暴击伤害 160% / 每 0.6 秒造成 4.2 点伤害，消耗 4 耐力 / 可拼为：+ 磨刀石 → 淬火匕首　+ 木棍 → 短矛　+ 匕首 → 双刀　+ 毒药瓶 → 涂毒匕首 / res://assets/ui/tip/coin.png10　res://assets/ui/tip/weight.png6
+WT knife en：Knife / Common / res://assets/ui/tags/weapon.png / Crit damage 160% / Every 0.6s, deals 4.2 damage, costs 4 Stamina / Fuses: + Whetstone → Quenched Dagger   + Wooden Stick → Short Spear   + Knife → Twin Blades   + Poison Vial → Poisoned Knife / res://assets/ui/tip/coin.png10   res://assets/ui/tip/we
+WT steel_greatsword zh：钢双手剑 / 稀有 / res://assets/ui/tags/weapon.png / 每 2 秒造成 46.9 点伤害，其中 7 点真实伤害，消耗 12 耐力 / res://assets/ui/tip/coin.png180　res://assets/ui/tip/weight.png24
+WT steel_greatsword en：Steel Greatsword / Rare / res://assets/ui/tags/weapon.png / Every 2s, deals 46.9 damage, 7 of it as true damage, costs 12 Stamina / res://assets/ui/tip/coin.png180   res://assets/ui/tip/weight.png24
+WT salve zh：伤药 / 优良 / res://assets/ui/tags/remedy.png res://assets/ui/tags/nature.png /  每场最多 1 次，回复 45 点生命 / 可拼为：+ 蜂蜡块 → 浓缩伤药 / res://assets/ui/tip/coin.png12　res://assets/ui/tip/weight.png1
+WT salve en：Salve / Uncommon / res://assets/ui/tags/remedy.png res://assets/ui/tags/nature.png /  At most 1 times per battle, restore 45 Health / Fuses: + Beeswax → Strong Salve / res://assets/ui/tip/coin.png12   res://assets/ui/tip/weight.png1
+WT herb_pouch zh：药草囊 / 优良 / 包：2×2，放进去的东西才参战；只收 草药、药剂、食物 / 　包里每件东西：每秒回血 +0.9 / res://assets/ui/tip/coin.png48　res://assets/ui/tip/weight.png0
+WT herb_pouch en：Herb Pouch / Uncommon / Bag: 2×2. Only what's inside it fights; holds only Herb, Remedy, Food /   Each item inside: Health regen +0.9 / res://assets/ui/tip/coin.png48   res://assets/ui/tip/weight.png0

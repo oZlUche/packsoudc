@@ -1,0 +1,10 @@
+BS1015 bag_small 形状 4 格，收 []
+BS1015 bag_long 形状 4 格，收 []
+BS1015 herb_pouch 形状 4 格，收 [&"herb", &"remedy", &"food"]
+BS1015 war_pack 形状 12 格，收 []
+BS1015 bag_leather 形状 9 格，收 []
+BS1015 皮包 9 → bag_small：包里 ["bandage@(3, 0)", "knife@(4, 0)"]；预案 留 2 掉 0；换了 true；留在原位 ["bandage@(3, 0)", "knife@(4, 0)"]；掉出 []；新包在 true
+BS1015 皮包 9 → bag_long：包里 ["bandage@(3, 0)", "knife@(4, 0)"]；预案 留 1 掉 1；换了 true；留在原位 ["bandage@(3, 0)"]；掉出 ["knife"]；新包在 true
+BS1015 皮包 9 → herb_pouch：包里 ["bandage@(3, 0)", "knife@(4, 0)"]；预案 留 1 掉 1；换了 true；留在原位 ["bandage@(3, 0)"]；掉出 ["knife"]；新包在 true
+BS1015 皮包 9 → war_pack：包里 ["bandage@(3, 0)", "knife@(4, 0)"]；预案 留 2 掉 0；换了 true；留在原位 ["bandage@(3, 0)", "knife@(4, 0)"]；掉出 []；新包在 true
+BS1015 完

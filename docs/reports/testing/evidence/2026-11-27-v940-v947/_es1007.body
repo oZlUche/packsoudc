@@ -1,0 +1,110 @@
+extends SceneTree
+## 游戏测试 v9.44（PR #1007）：基地 Esc 系统菜单【返回主菜单】【设置】【百科】、逐层返回、右下角回主菜单键删了。真按 Esc。参数 <outdir>
+const TAG := "ES1007"
+##HEAD##
+var _q: Array = []
+
+
+func _esc() -> void:
+	for down in [true, false]:
+		var k := InputEventKey.new()
+		k.keycode = KEY_ESCAPE; k.physical_keycode = KEY_ESCAPE; k.pressed = down
+		Input.parse_input_event(k)
+
+
+func _dismiss() -> bool:
+	for n in root.find_children("*", "Button", true, false):
+		var b := n as Button
+		if b.is_visible_in_tree() and (b.text == "知道了" or b.text.to_lower() == "got it"): _click(b); return true
+	return false
+
+
+func _state() -> String:
+	var m = _ms()
+	return "屏 %d；页 %s；菜单 %s；设置 %s；百科 %s" % [_flow.screen, str(m.get("_tab")) if m != null else "-", str(m.system_menu_open()) if m != null else "-", str(m.system_settings_open()) if m != null else "-", str(m.system_encyclopedia_open()) if m != null else "-"]
+
+
+func _menu_keys() -> Array:
+	var m = _ms()
+	var sm: Node = m.get("_sys_menu") if m != null else null
+	if sm == null: return []
+	var o := []
+	for b in sm.find_children("*", "BaseButton", true, false):
+		if (b as Control).is_visible_in_tree() and b.get("text") != null and String(b.text) != "": o.append(b)
+	return o
+
+
+func _menu_key(i: int) -> Control:
+	var ks := _menu_keys()
+	return ks[i] if i < ks.size() else null
+
+
+func _process(_d: float) -> bool:
+	_f += 1
+	if _f % 300 == 0: print("%s ♥ f %d st %d" % [TAG, _f, _st])
+	if _flow == null:
+		_flow = _game.flow
+		return false
+	if _f > 9000: L("超时 st %d" % _st); shot("timeout"); quit(1); return true
+	if _wait > 0: _wait -= 1; return false
+	if _st < 3:
+		if _boot(): _st = 3
+		return false
+	match _st:
+		1000:
+			if _q.is_empty(): return false
+			var a: Array = _q.pop_front()
+			(a[0] as Callable).call()
+			_wait = int(a[1])
+		3:
+			if _dismiss(): _wait = 30; return false
+			var old := []
+			for n in root.find_children("*", "BaseButton", true, false):
+				var t := String(n.get("text")) if n.get("text") != null else ""
+				if (n as Control).is_visible_in_tree() and (t.contains("回主菜单") or t.to_lower().contains("main menu")): old.append(t)
+			L("营地：%s；看得见的「回主菜单」键 %s" % [_state(), str(old)])
+			if not old.is_empty(): L("BAD 右下角回主菜单键还在")
+			shot("base")
+			_tab("warehouse"); _wait = 30; _st = 4
+		4:
+			_q = [
+				[func(): L("仓库页：%s" % _state()); _esc(), 20],
+				[func():
+					L("仓库页按 Esc：%s（应回出征页、不开菜单）" % _state())
+					_esc(), 20],
+				[func():
+					L("出征页按 Esc：%s；菜单键 %s" % [_state(), str(_menu_keys().map(func(b): return b.text))])
+					shot("system_menu")
+					var k := _menu_key(1)
+					if k != null: _click(k), 30],
+				[func():
+					L("点【设置】：%s" % _state())
+					shot("system_settings")
+					_esc(), 20],
+				[func():
+					L("设置里按 Esc：%s（应回菜单）" % _state())
+					var k := _menu_key(2)
+					if k != null: _click(k), 30],
+				[func():
+					L("点【百科】：%s" % _state())
+					shot("system_encyclopedia")
+					_esc(), 20],
+				[func():
+					L("百科里按 Esc：%s（应回菜单）" % _state())
+					_esc(), 20],
+				[func():
+					L("菜单里按 Esc：%s（应关菜单）" % _state())
+					_esc(), 20],
+				[func():
+					L("再按 Esc：%s" % _state())
+					var k := _menu_key(0)
+					if k != null: _click(k), 40],
+				[func():
+					L("点【返回主菜单】：屏 %d（主菜单 = %d）" % [_flow.screen, GameFlow.Screen.MAIN_MENU])
+					shot("main_menu")
+					_st = 99, 1],
+			]
+			_st = 1000
+		99:
+			L("完"); quit(0); return true
+	return false
