@@ -9,7 +9,7 @@
       "type": "god_card",
       "values": {
         "every": 10,
-        "pct": 3
+        "armor": 2
       }
     }
   ]

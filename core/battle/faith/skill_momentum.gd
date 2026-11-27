@@ -41,10 +41,10 @@ const ELEMENTS: Array[StringName] = [&"scorch", &"chill", &"poison", &"numb"]
 ## 行云：至少几层时武器耐力消耗降低几成（百分数，0 = 没拿）
 @export var light_at: int = 10
 @export var light_pct: float = 0.0
-## 招架：每累积几层给几点护甲（0 = 没拿）
+## 招架：每累积几层回一次护甲
 @export var parry_every: int = 10
-## 【招架】（作者 11-26 09:54）：回复身上防具护甲上限的百分之几
-@export var parry_pct: float = 0.0
+## 【招架】（作者 11-27「改成固定回复」）：每次回几点护甲（0 = 没拿；多拿几张相加）
+@export var parry_armor: float = 0.0
 ## 回气、气血：清零时每层回几点
 @export var breath_per: float = 0.0
 @export var vigor_per: float = 0.0
@@ -212,13 +212,14 @@ func _gain(ctx: RuleContext, n: int) -> void:
 			g = g % gap_every
 			st["gap_armed"] = true
 		st["gap_acc"] = g
-	if parry_pct > 0.0 and parry_every > 0:
+	if parry_armor > 0.0 and parry_every > 0:
 		var p := int(st.get("parry_acc", 0)) + n
 		@warning_ignore("integer_division")
 		var times := p / parry_every
 		st["parry_acc"] = p - times * parry_every
 		if times > 0:
-			me.restore_armor(parry_pct * times)
+			if me.resources.has(BattleStats.RES_ARMOR):     # 没有护甲池（没穿防具、也没有别处给的护甲）就没有
+				me.resources.change(BattleStats.RES_ARMOR, StatMath.from_float(parry_armor * times), BattleEvent.REASON_HEAL)
 	_sync_flow(ctx)
 	_light(ctx)
 
