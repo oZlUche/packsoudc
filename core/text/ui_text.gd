@@ -182,6 +182,10 @@ const TEXT := {
 	"gift.left": {"zh": "还可领 %d 份", "en": "%d left to claim"},
 	"gift.claim": {"zh": "领取", "en": "Claim"},
 	"gift.close": {"zh": "关闭", "en": "Close"},
+	"hand_in.picked": {"zh": "已选 %d / %d", "en": "Chosen %d / %d"},     # 作者 2026-11-27：交货窗（自己挑交哪几件）
+	"hand_in.fill": {"zh": "填满", "en": "Fill"},
+	"hand_in.cancel": {"zh": "取消", "en": "Cancel"},
+	"hand_in.value": {"zh": "价值 %d", "en": "Value %d"},
 	"node.unknown": {"zh": "？？？？", "en": "????"},
 	"node.news_title": {"zh": "声望到了 %d", "en": "Standing reached %d"},
 	"node.effect_inquiry": {"zh": "开放调查委托和许可单", "en": "Inquiry commissions and the permit open"},
@@ -989,7 +993,6 @@ const TEXT := {
 	"ledger.total": {"zh": "总分", "en": "Score"},
 	"ledger.score_parts": {"zh": "战利 %d · 战绩 %d · 探索 %d", "en": "Loot %d · Battles %d · Exploration %d"},
 	"ledger.level": {"zh": "等级", "en": "Level"},     # 372
-	"ledger.level_fmt": {"zh": "Lv.%d", "en": "Lv.%d"},
 	"ledger.score_growth": {"zh": " · 成长 %d", "en": " · Growth %d"},
 	"ledger.score_mult": {"zh": " · 难度 ×%s", "en": " · Difficulty ×%s"},
 	"ledger.dot": {"zh": "%d · %d", "en": "%d · %d"},

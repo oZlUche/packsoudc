@@ -11,6 +11,8 @@ extends VBoxContainer
 const AlchemyPanelScript := preload("res://ui/game/alchemy_panel.gd")     # 354：尘图
 
 signal changed()
+## 作者 2026-11-27：点【打造】—— 营地页弹选料窗，玩家自己挑扣哪几件（[method forge] 带 picks）
+signal pick_requested(id: StringName)
 
 const LAYOUT := "smithy/layout"
 const BG := "smithy/bg"
@@ -87,7 +89,7 @@ func setup(p_flow: GameFlow, p_font: Font) -> void:
 	l.text = UiText.t("smithy.group_empty")
 	_empty.add_child(l)
 	_stage.add_child(_empty)     # 这一类还没有配方：一块签压在空格子区正中
-	_scroll = RecipeScroll.make(font, func(): forge(_open))
+	_scroll = RecipeScroll.make(font, func(): request_forge(_open))
 	_scroll.on_dust_toggle = toggle_dust
 	_dust_have = UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 10, 2, 10, 2)     # 354
 	_dust_have.name = "DustHave"
@@ -316,11 +318,23 @@ func dust_choice() -> Dictionary:
 	return _dust
 
 
-## 打这一张；返回空串 = 打了，否则是原因（说一句）
-func forge(id: StringName) -> String:
+## 作者 2026-11-27：打造键 —— 还有要挑的真材料就弹选料窗（[signal pick_requested]），全用尘补齐的直接打
+func request_forge(id: StringName) -> void:
+	var r := SmithRecipeDef.find(flow.smith_recipes, id)
+	if r == null:
+		return
+	var dust := _dust if id == _open else {}
+	if Smithy.line_keys(r).any(func(k: String) -> bool: return Smithy.line_need(r, k, dust) > 0):
+		pick_requested.emit(id)
+	else:
+		forge(id)
+
+
+## 打这一张；返回空串 = 打了，否则是原因（说一句）。[param picks]：选料窗挑的（键 → uid；空 = 默认挑法）
+func forge(id: StringName, picks: Dictionary = {}) -> String:
 	var r := SmithRecipeDef.find(flow.smith_recipes, id)
 	var def := flow.items.get_def(r.output) if r != null else null
-	var why := flow.forge(id, _dust if id == _open else {})
+	var why := flow.forge(id, _dust if id == _open else {}, picks)
 	if why == "":
 		_dust.clear()
 	var name_ := Names.of(def) if def != null else String(id)
