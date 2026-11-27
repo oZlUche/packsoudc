@@ -53,6 +53,9 @@ static func run_layout(t: TestCase) -> void:
 	for id in HudWidgets.KINDS:
 		t.not_null(HudWidgets.create(id), "%s 造得出来" % id)
 	t.check(HudWidgets.create(&"nope") == null, "不认识的 id：null")
+	var stars := HudWidgets.create(&"stars")
+	t.check(stars.get("star") != null and (stars.get("star") as HudIcon).texture != null, "星辰读数用美术的图标（assets/ui/hud/star.png，v9.27）")
+	stars.free()
 	var cw = load("res://ui/hud/widgets/commissions_widget.gd")
 	t.eq([cw.short_name("初次奉神"), cw.short_name("Check the Medicine Packs"), cw.short_name("Check the Medicine Packs").length()], ["初次奉神", "Check the Medic…", 16], "委托小牌：长名字截到 16 个字加「…」，短的不动")
 	t.check(not HudWidgets.has(&"bag_button") and d.entry_of(&"bag_button").is_empty(), "235：右槽小背包钮退役（并进栏的右头）")
