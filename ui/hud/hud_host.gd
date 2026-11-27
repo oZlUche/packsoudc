@@ -356,12 +356,12 @@ func _apply_lift() -> void:
 #endregion
 
 
-## 382：经验值条横贯全屏，贴在顶端栏石板的下沿（没栏就贴顶）；排在栏底下一层，日晷压在它上面
+## 382：经验值条横贯全屏，贴在顶端栏石板的下沿（没栏就贴顶；11-27：按栏图的石面高算，不跟 [member _bar_h]）；排在栏底下一层，日晷压在它上面
 func _place_xp_bar() -> void:
 	var xp: HudWidget = widgets.get(HudLayout.XP_BAR, null)
 	if xp == null or not xp.visible:
 		return
-	var y := _bar_h - _bar_margins().y if _bar() != null else 0.0
+	var y := HudBarScript.design_height() if _bar() != null else 0.0     # 作者 11-27（86 OK）：上缘贴着栏石面的下沿，栏里多一行也不往下掉
 	xp.custom_minimum_size.x = size.x
 	xp.position = Vector2(0.0, y)
 	xp.size = Vector2(size.x, xp.get_combined_minimum_size().y)

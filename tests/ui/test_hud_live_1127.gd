@@ -76,9 +76,9 @@ static func frame_bar_above_overlay(t: TestCase, root: Window) -> void:
 		var w := host.widget(id)
 		if w != null:
 			t.eq(w.z_index, up, "叠层开着：%s 抬到叠层上面" % id)
-	var below := host.widget(&"commissions")
+	var below := host.widget(&"status_slate")
 	if below != null:
-		t.eq(below.z_index, 0, "栏外的读数（委托）不抬")
+		t.eq(below.z_index, 0, "栏外的读数（状态石板）不抬")
 	var vit := host.widget(&"vitality")
 	var pos: Vector2 = vit.get_global_rect().get_center()
 	var ev := InputEventMouseMotion.new()
