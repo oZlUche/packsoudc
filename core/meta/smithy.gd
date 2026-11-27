@@ -97,6 +97,108 @@ static func _augment(u: int, units: Array[int], slots: Array[Dictionary], pool: 
 	return false
 
 
+## 作者 2026-11-27（待确认 77「要」）：打造的料由玩家自己挑。材料行的键：点名的那几样按 id 排在前（键 = id），材料格跟在后（键 = `slot:<序号>`），
+## 和打造界面上的格同一顺序
+static func line_keys(recipe: SmithRecipeDef) -> Array[String]:
+	var out: Array[String] = []
+	if recipe == null:
+		return out
+	var keys: Array = recipe.inputs.keys()
+	keys.sort()
+	for k in keys:
+		out.append(String(k))
+	for i in recipe.slots().size():
+		out.append(SLOT_KEY % i)
+	return out
+
+
+## 这一行要几件真材料（用尘补的那几件不用挑）
+static func line_need(recipe: SmithRecipeDef, key: String, dust: Dictionary = {}) -> int:
+	if recipe == null:
+		return 0
+	var n := 0
+	if key.begins_with("slot:"):
+		var i := int(key.substr(5))
+		var slots := recipe.slots()
+		n = int(slots[i]["count"]) if i >= 0 and i < slots.size() else 0
+	else:
+		n = int(recipe.inputs.get(key, recipe.inputs.get(StringName(key), 0)))
+	return maxi(0, n - maxi(0, int(dust.get(key, 0))))
+
+
+## 这件能不能顶这一行
+static func line_fits(recipe: SmithRecipeDef, key: String, inst: ItemInstance) -> bool:
+	if recipe == null or inst == null or inst.def == null or inst.is_locked_by_player():
+		return false
+	if key.begins_with("slot:"):
+		var i := int(key.substr(5))
+		var slots := recipe.slots()
+		if i < 0 or i >= slots.size() or recipe.inputs.has(inst.def.id) or recipe.inputs.has(String(inst.def.id)):
+			return false
+		return SmithRecipeDef.slot_fits(slots[i], inst.def)
+	return String(inst.def.id) == key
+
+
+## 这一行能挑的：仓库里合格、没锁的，价值低的在前（同价稀有度低的在前）
+static func line_choices(meta: MetaState, recipe: SmithRecipeDef, key: String) -> Array[ItemInstance]:
+	var out: Array[ItemInstance] = []
+	if meta == null or recipe == null:
+		return out
+	for inst in meta.warehouse.items():
+		if line_fits(recipe, key, inst as ItemInstance):
+			out.append(inst as ItemInstance)
+	out.sort_custom(func(a: ItemInstance, b: ItemInstance) -> bool:
+		var va := ItemValue.of_instance(a)
+		var vb := ItemValue.of_instance(b)
+		if va != vb:
+			return va < vb
+		if a.def.rarity != b.def.rarity:
+			return a.def.rarity < b.def.rarity
+		return a.uid < b.uid)
+	return out
+
+
+## 玩家挑的料（键 → uid 数组）对不对：每一行件数正好、件件合格、一件只顶一行
+static func picks_ok(meta: MetaState, recipe: SmithRecipeDef, picks: Dictionary, dust: Dictionary = {}) -> bool:
+	if meta == null or recipe == null:
+		return false
+	var seen := {}
+	for key in line_keys(recipe):
+		var uids: Array = picks.get(key, [])
+		if uids.size() != line_need(recipe, key, dust):
+			return false
+		for u in uids:
+			if seen.has(int(u)) or not line_fits(recipe, key, meta.warehouse.get_item(int(u))):
+				return false
+			seen[int(u)] = true
+	return true
+
+
+## 【填满】：已挑的留着，每一行按价值最低补满（别的行挑了的不重复拿；要求高的格先补）
+static func fill_picks(meta: MetaState, recipe: SmithRecipeDef, picks: Dictionary, dust: Dictionary = {}) -> Dictionary:
+	var out := {}
+	var used := {}
+	for key in line_keys(recipe):
+		out[key] = (picks.get(key, []) as Array).duplicate()
+		for u in out[key]:
+			used[int(u)] = true
+	var order := line_keys(recipe)
+	var slots := recipe.slots() if recipe != null else [] as Array[Dictionary]
+	order.sort_custom(func(a: String, b: String) -> bool:
+		var ma := int(slots[int(a.substr(5))]["min"]) if a.begins_with("slot:") else 99
+		var mb := int(slots[int(b.substr(5))]["min"]) if b.begins_with("slot:") else 99
+		return ma > mb)
+	for key in order:
+		var need := line_need(recipe, key, dust)
+		for it in line_choices(meta, recipe, key):
+			if (out[key] as Array).size() >= need:
+				break
+			if not used.has(it.uid):
+				(out[key] as Array).append(it.uid)
+				used[it.uid] = true
+	return out
+
+
 ## 能不能打：空串 = 行；否则是说给玩家听的那一句（科技没点 / 级不够 / 缺素材 / 钱不够 / 仓库放不下）。
 ## 354：[param dust] = 哪几项用万物之尘补几件（键同 [method have]；[method Alchemy.why_not_dust] 管能不能这样补），不给就是原来的行为
 static func can_forge(meta: MetaState, recipe: SmithRecipeDef, items: ItemDatabase, dust: Dictionary = {}) -> String:
@@ -126,9 +228,12 @@ static func can_forge(meta: MetaState, recipe: SmithRecipeDef, items: ItemDataba
 
 ## 打一件：扣素材（仓库顺序在前的先扣）、扣钱、产物进仓库、图鉴点亮。不能打返回 null，什么也不动。
 ## 354：[param dust] 那几项先用尘补（只补缺的，真材料有几件扣几件），尘和钱、料同一次扣；补的那一格不升品质
-static func forge(meta: MetaState, recipe: SmithRecipeDef, items: ItemDatabase, dust: Dictionary = {}) -> ItemInstance:
+## 作者 2026-11-27：[param picks] 给了（键 → uid 数组，[method picks_ok]）就只扣挑的那几件；空 = 原来的默认挑法
+static func forge(meta: MetaState, recipe: SmithRecipeDef, items: ItemDatabase, dust: Dictionary = {}, picks: Dictionary = {}) -> ItemInstance:
 	if can_forge(meta, recipe, items, dust) != "":
 		return null
+	if not picks.is_empty():
+		return _forge_picked(meta, recipe, items, dust, picks)
 	var out := ItemInstance.create(items.get_def(recipe.output), 0)
 	out.uid = meta.allocate_uid()
 	var q := _material_quality(meta, recipe)     # 279 补充二：材料比要求高几档，产物就几档品质；和吃掉的那把取较高，不累加
@@ -156,6 +261,39 @@ static func forge(meta: MetaState, recipe: SmithRecipeDef, items: ItemDatabase, 
 	meta.dust -= Alchemy.dust_cost(recipe, items, dust)
 	meta.light_codex(out.def)
 	meta.mark_forged(recipe.id)     # 354：打造过（以后能用万物之尘补料）
+	meta.changed.emit()
+	return out
+
+
+## 照玩家挑的料打（[method forge] 带 picks）。品质：旧的一类一件格用的那件比要求高几档；点名的那几样取吃掉那把的品质；取较高
+static func _forge_picked(meta: MetaState, recipe: SmithRecipeDef, items: ItemDatabase, dust: Dictionary, picks: Dictionary) -> ItemInstance:
+	if not picks_ok(meta, recipe, picks, dust):
+		return null
+	var out := ItemInstance.create(items.get_def(recipe.output), 0)
+	out.uid = meta.allocate_uid()
+	var q := 0
+	var slots := recipe.slots()
+	meta.warehouse.begin_batch()
+	for key in line_keys(recipe):
+		for u in picks.get(key, []):
+			var it := meta.warehouse.get_item(int(u))
+			if key.begins_with("slot:"):
+				var i := int(key.substr(5))
+				if i < recipe.material_inputs.size():
+					q = maxi(q, it.def.rarity - int(slots[i]["min"]))
+			else:
+				q = maxi(q, it.quality())
+			meta.warehouse.remove(it.uid)
+	out.set_quality(q)
+	var placed := meta.warehouse.try_add(out, true)
+	meta.warehouse.end_batch()
+	if not placed:
+		push_warning("Smithy.forge: %s 放不进仓库（can_forge 查过，不该到这里）" % recipe.output)
+		return null
+	meta.spend_funds(recipe.funds)
+	meta.dust -= Alchemy.dust_cost(recipe, items, dust)
+	meta.light_codex(out.def)
+	meta.mark_forged(recipe.id)
 	meta.changed.emit()
 	return out
 
