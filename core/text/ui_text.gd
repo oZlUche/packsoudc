@@ -182,6 +182,10 @@ const TEXT := {
 	"gift.left": {"zh": "还可领 %d 份", "en": "%d left to claim"},
 	"gift.claim": {"zh": "领取", "en": "Claim"},
 	"gift.close": {"zh": "关闭", "en": "Close"},
+	"hand_in.picked": {"zh": "已选 %d / %d", "en": "Chosen %d / %d"},     # 作者 2026-11-27：交货窗（自己挑交哪几件）
+	"hand_in.fill": {"zh": "填满", "en": "Fill"},
+	"hand_in.cancel": {"zh": "取消", "en": "Cancel"},
+	"hand_in.value": {"zh": "价值 %d", "en": "Value %d"},
 	"node.unknown": {"zh": "？？？？", "en": "????"},
 	"node.news_title": {"zh": "声望到了 %d", "en": "Standing reached %d"},
 	"node.effect_inquiry": {"zh": "开放调查委托和许可单", "en": "Inquiry commissions and the permit open"},
@@ -873,6 +877,7 @@ const TEXT := {
 	"nursery.ripe": {"zh": "可收获", "en": "Ripe"},
 	"nursery.why_room": {"zh": "这一片摆不下了", "en": "No room left in this field"},
 	"nursery.why_seed": {"zh": "仓库里没有种苗", "en": "No seedlings in the warehouse"},
+	"nursery.why_seed_named": {"zh": "仓库里没有%s", "en": "No %s in the warehouse"},
 	"nursery.why_unripe": {"zh": "还没熟", "en": "Not ripe yet"},
 	"nursery.why_full": {"zh": "仓库放不下，先留在地里", "en": "No room in the warehouse; it stays in the ground"},
 	"nursery.why_unknown": {"zh": "现在种不了", "en": "Not possible right now"},
@@ -884,9 +889,6 @@ const TEXT := {
 	"nursery.group_fruit": {"zh": "水果", "en": "Fruit"},
 	"nursery.bonus": {"zh": "偶尔多收 %s", "en": "Sometimes also %s"},
 	"nursery.ripe_n": {"zh": "熟了 %d 株", "en": "%d plants ripe"},
-	"nursery.place_hint": {"zh": "点地里的空格种%s", "en": "Click an empty cell to plant %s"},
-	"nursery.pick": {"zh": "选中", "en": "Pick"},
-	"nursery.pick_tip": {"zh": "选中后点地里的空格，种在那里", "en": "Pick, then click an empty cell to plant it there"},
 	"bias.spawn_title": {"zh": "%s · 偏%s", "en": "%s · %s"},     # 383 第七节
 	"bias.spawn_line": {"zh": "这一局搜索更容易出%s", "en": "Searches this run turn up more %s"},
 	"bias.dir_none": {"zh": "无倾向", "en": "No focus"},
@@ -991,7 +993,6 @@ const TEXT := {
 	"ledger.total": {"zh": "总分", "en": "Score"},
 	"ledger.score_parts": {"zh": "战利 %d · 战绩 %d · 探索 %d", "en": "Loot %d · Battles %d · Exploration %d"},
 	"ledger.level": {"zh": "等级", "en": "Level"},     # 372
-	"ledger.level_fmt": {"zh": "Lv.%d", "en": "Lv.%d"},
 	"ledger.score_growth": {"zh": " · 成长 %d", "en": " · Growth %d"},
 	"ledger.score_mult": {"zh": " · 难度 ×%s", "en": " · Difficulty ×%s"},
 	"ledger.dot": {"zh": "%d · %d", "en": "%d · %d"},

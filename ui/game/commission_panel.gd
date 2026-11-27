@@ -15,6 +15,8 @@ signal facility_requested(facility: StringName)
 signal reported(got: Dictionary)
 ## 389 第七节：点了某一方的【赠礼】（营地弹窗列出这一份里有什么、【领取】【关闭】）
 signal gift_requested(faction_id: StringName)
+## 作者 2026-11-27：点【交货】—— 营地页弹交货窗，玩家自己挑交哪几件（[method report] 带 uids）
+signal hand_in_requested(id: StringName)
 
 const KEY_SIZE := Vector2(182, 46)
 const KEY_FONT := 18
@@ -650,7 +652,7 @@ func _add_action(row: Container, d: CommissionDef) -> void:
 		return
 	var goal := d.stages[s].goal
 	if goal == &"hand_in" and Commissions.can_report(book, d, flow.meta):
-		var rb := ScrollKey.make(UiText.t("commission.hand_over"), func(): report(d.id))
+		var rb := ScrollKey.make(UiText.t("commission.hand_over"), func(): hand_in_requested.emit(d.id))
 		rb.name = "Report_" + String(d.id)
 		row.add_child(rb)
 	elif GO_TO.has(goal):
@@ -735,9 +737,10 @@ func take(id: StringName) -> String:
 	return why
 
 
-## 342 B2：营地当场那一步（【交货】；营地报到走 [method finish]）。返回 [method GameFlow.report_commission] 的结果
-func report(id: StringName) -> Dictionary:
-	var got := flow.report_commission(id)
+## 342 B2：营地当场那一步（【交货】；营地报到走 [method finish]）。[param uids]：交货窗里挑的那几件（空 = 默认挑法）。
+## 返回 [method GameFlow.report_commission] 的结果
+func report(id: StringName, uids: Array = []) -> Dictionary:
+	var got := flow.report_commission(id, uids)
 	if bool(got.get("ok", false)):
 		changed.emit()
 		reported.emit(got)

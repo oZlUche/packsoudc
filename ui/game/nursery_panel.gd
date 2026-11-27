@@ -1,7 +1,7 @@
 ## 342 B3：后勤「苗圃」页（[Nursery]）。作者 2026-11-21 19:07：每片地是一块棋盘，作物照形状一株一株摆进去 ——
 ## 占位排版（等 UI设计 的样张）：顶上一排片键（两片以上）；左边这一片地的棋盘（套框画格线），每株右下角写还差几局，熟了的描金边；
 ## 右边【收获】（这一片熟了的全收）；下面一排栏键（药材 / 主食 / 蔬菜 / 水果；食堂没开只有药材），一栏一排作物纸条。
-## 种法：纸条上【种下】摆进第一个空处；或先点【选中】，再点地里的空格摆在那里（摆不下就转个向再试）
+## 种法：纸条上【种下】摆进第一个空处（作者 2026-11-27：去掉【选中】，点【种下】就种）；种不了的纸条上直接写原因
 extends VBoxContainer
 
 signal changed()
@@ -11,6 +11,8 @@ signal said(text: String, warn: bool)
 const CP := preload("res://ui/game/commission_panel.gd")
 const INK := Color("2e2219")
 const INK_DIM := Color("5a4a3a")
+## 纸条上「种不了」的原因（深红墨）
+const WHY_INK := Color("8a2f22")
 ## 背景上的浅字
 const LIGHT := Color("f1e3c2")
 const CELL := 64.0
@@ -21,10 +23,9 @@ const ICON := 22.0
 const RIPE := Color("e8c25a")
 
 var flow: GameFlow = null
-## 看哪一片、纸条看哪一栏、选中了哪种（点地里的空格就种它）
+## 看哪一片、纸条看哪一栏
 var shown_plot := 0
 var group: StringName = Nursery.GROUP_HERB
-var picked: StringName = &""
 var field_view: InventoryView = null
 var _body: VBoxContainer = null
 var _overlay: Control = null
@@ -109,12 +110,6 @@ func show_group(g: StringName) -> void:
 	refresh()
 
 
-## 选中一种（再点就取消）；点地里的空格就种它
-func pick(crop: StringName) -> void:
-	picked = &"" if picked == crop else crop
-	refresh()
-
-
 func _def(id: StringName) -> ItemDef:
 	return flow.items.get_def(id) if flow.items != null and id != &"" else null
 
@@ -165,7 +160,7 @@ func _add_field(i: int) -> void:
 	field_view.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	row.add_child(field_view)
 	BoardFrame.wrap(field_view)     # 所有棋盘都画外框和格线
-	_overlay = Control.new()     # 还差几局、熟了的金边、点空格种下
+	_overlay = Control.new()     # 还差几局、熟了的金边、悬停写名字
 	_overlay.name = "Growth"
 	_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -181,11 +176,6 @@ func _add_field(i: int) -> void:
 	b.disabled = ripe == 0
 	b.tooltip_text = UiText.t("nursery.ripe_n") % ripe if ripe > 0 else UiText.t("nursery.why_unripe")
 	side.add_child(b)
-	if picked != &"":
-		var hint := UiTheme.make_label(UiText.t("nursery.place_hint") % crop_name(picked), 15, LIGHT)
-		hint.name = "PlaceHint"
-		hint.set_meta(&"exempt_bare_text", true)
-		side.add_child(hint)
 
 
 ## 每株：没熟的压暗、右下角写还差几局；熟了的描金边
@@ -220,29 +210,6 @@ func _overlay_tip(at: Vector2) -> String:
 func _on_field_input(e: InputEvent) -> void:
 	if e is InputEventMouseMotion:
 		_overlay.tooltip_text = _overlay_tip((e as InputEventMouseMotion).position)
-		return
-	if not (e is InputEventMouseButton) or not (e as InputEventMouseButton).pressed or (e as InputEventMouseButton).button_index != MOUSE_BUTTON_LEFT:
-		return
-	if picked == &"":
-		return
-	var cell := field_view.cell_at_local((e as InputEventMouseButton).position)
-	if cell.x < 0 or cell.y < 0:
-		return
-	sow_at(shown_plot, picked, cell)
-
-
-## 点了地里的空格：照这个朝向摆得下就摆，不行转个向再试。返回原因（空 = 种上了）
-func sow_at(i: int, crop: StringName, cell: Vector2i) -> String:
-	var why := ""
-	for rot in 4:
-		why = flow.sow_crop(i, crop, cell, rot)
-		if why != Nursery.WHY_ROOM:
-			break
-	if why != "":
-		said.emit(UiText.t("nursery.why_" + why), true)
-	refresh()
-	changed.emit()
-	return why
 
 
 ## 下面一排栏键 + 这一栏的纸条
@@ -264,7 +231,7 @@ func _add_slips(i: int) -> void:
 		grid.add_child(_slip(i, c))
 
 
-## 一张作物纸条：收成图标、名字、种苗 → 收成 ×N、几局、偶尔多收什么、【选中】【种下】
+## 一张作物纸条：收成图标、名字、种苗 → 收成 ×N、几局、偶尔多收什么、【种下】（种不了：键上面写原因）
 func _slip(i: int, crop: StringName) -> Control:
 	var spec: Dictionary = Nursery.CROPS.get(crop, {})
 	var p := UiTheme.panel_margins(PanelContainer.new(), UiTheme.PANEL_PARCHMENT, 10, 8, 10, 8)
@@ -307,23 +274,33 @@ func _slip(i: int, crop: StringName) -> Control:
 		var bl := UiTheme.make_label(UiText.t("nursery.bonus") % (Names.of(bd) if bd != null else "?"), 13, INK_DIM)
 		bl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		col.add_child(bl)
-	var btns := UiTheme.hbox(4)
-	btns.alignment = BoxContainer.ALIGNMENT_CENTER
-	col.add_child(btns)
 	var why := Nursery.why_not_sow(flow.meta, i, crop, flow.items)
-	var sel := UiTheme.make_button(UiText.t("nursery.pick"), func(): pick(crop), UiPalette.Tier.SECONDARY, 14)
-	sel.name = "Pick_" + String(crop)
-	sel.tooltip_text = UiText.t("nursery.pick_tip")
-	UiTheme.mark(sel, picked == crop)
-	sel.disabled = why != "" and why != Nursery.WHY_ROOM
-	btns.add_child(sel)
-	var b := UiTheme.make_stone_button(UiText.t("nursery.sow"), func(): sow(i, crop), true, Vector2(80, 34), 16)
+	if why != "":
+		var wl := UiTheme.make_label(why_text(crop, why), 13, WHY_INK)
+		wl.name = "Why_" + String(crop)
+		wl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		wl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		col.add_child(wl)
+	var b := UiTheme.make_stone_button(UiText.t("nursery.sow"), func(): sow(i, crop), true, Vector2(120, 34), 16)
 	b.name = "Sow_%d_%s" % [i, String(crop)]
+	b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	b.disabled = why != ""
 	if why != "":
-		b.tooltip_text = UiText.t("nursery.why_" + why)
-	btns.add_child(b)
+		b.tooltip_text = why_text(crop, why)
+	col.add_child(b)
 	return CP._pinned(p, "pin_growers")
+
+
+## 种不了的原因写给玩家看：缺种苗时点名缺哪样（「仓库里没有干草药束」）
+func why_text(crop: StringName, why: String) -> String:
+	if why == Nursery.WHY_SEED:
+		var names: Array[String] = []
+		var seed_: Dictionary = (Nursery.CROPS.get(crop, {}) as Dictionary).get("seed", {})
+		for id in seed_:
+			var d := _def(StringName(id))
+			names.append(Names.of(d) if d != null else String(id))
+		return UiText.t("nursery.why_seed_named") % "、".join(names)
+	return UiText.t("nursery.why_" + why)
 
 
 ## 【种下】：摆进第一个空处
