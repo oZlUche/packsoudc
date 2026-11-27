@@ -153,9 +153,9 @@ static func run_stack_cards(t: TestCase) -> void:
 		if e.name == BattleEvent.DAMAGE and e.side == 1 and e.get_bool(&"crit"):
 			crits += 1
 	t.check(crits > 0, "锋芒：层数上来就暴击（%d 次）" % crits)
-	# 招架（作者 11-26 09:54）：每 10 层回复防具护甲上限的 3%；没穿防具没有
-	var parry := BattleSim.run(_me({"parry_every": 10, "parry_pct": 3.0}, 0.0, true, 0.0, 100.0), _hitter(20.0), _rng(3), 10.0)
-	var bare := BattleSim.run(_me({"parry_every": 10, "parry_pct": 3.0}), _hitter(20.0), _rng(3), 10.0)
+	# 招架（作者 11-27「改成固定回复」）：每 10 层回 2 点护甲；没有护甲池就没有
+	var parry := BattleSim.run(_me({"parry_every": 10, "parry_armor": 2.0}, 0.0, true, 0.0, 100.0), _hitter(20.0), _rng(3), 10.0)
+	var bare := BattleSim.run(_me({"parry_every": 10, "parry_armor": 2.0}), _hitter(20.0), _rng(3), 10.0)
 	var restored := [0, 0]
 	var biggest := 0
 	for pair in [[parry, 0], [bare, 1]]:
@@ -164,7 +164,7 @@ static func run_stack_cards(t: TestCase) -> void:
 			if e.name == BattleEvent.RESOURCE_CHANGED and e.side == 0 and String(e.payload.get("key", "")) == "armor" and e.get_int(&"delta") > 0:
 				restored[pair[1]] += 1
 				biggest = maxi(biggest, e.get_int(&"delta")) if pair[1] == 0 else biggest
-	t.check(restored[0] > 0 and biggest <= StatMath.from_float(3.0) * 2, "招架：穿着 100 护甲的防具，被打掉后每次回 3 点（回了 %d 次，最多 %.1f）" % [restored[0], StatMath.to_float(biggest)])
+	t.check(restored[0] > 0 and biggest <= StatMath.from_float(2.0) * 2, "招架：护甲被打掉后每次回 2 点（回了 %d 次，最多 %.1f）" % [restored[0], StatMath.to_float(biggest)])
 	t.eq(restored[1], 0, "招架：没穿防具就没有")
 	var flow := BattleSim.run(_me({"flow_per": 0.5}, 40.0), _dummy(), _rng(3), 20.0)
 	var flow_drop := false

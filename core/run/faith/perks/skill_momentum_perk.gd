@@ -91,8 +91,8 @@ func effect_for(lv: LevelModule) -> SkillMomentum:
 		e.light_at = roundi(lv.god_value(CLOUD, "at", 10.0) / lv.count_of(CLOUD))
 		e.light_pct = lv.god_value(CLOUD, "pct")
 	if lv.has_card(PARRY):
-		e.parry_every = roundi(lv.card_value(PARRY, "every", 10.0))     # 作者 11-27：间隔固定，每多一张只加比例
-		e.parry_pct = lv.god_value(PARRY, "pct")
+		e.parry_every = roundi(lv.card_value(PARRY, "every", 10.0))     # 作者 11-27：间隔固定，每多一张只加回复量
+		e.parry_armor = lv.god_value(PARRY, "armor")
 	e.breath_per = lv.god_value(BREATH, "per")
 	e.vigor_per = lv.god_value(VIGOR, "per")
 	if lv.has_card(POISE):
