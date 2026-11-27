@@ -61,7 +61,7 @@ const SHELF_WIN := Vector2(1100, 820)
 const FULL_TABS := ["market", "smithy", "canteen", "pantheon"]     # 355：食堂页自己带两块盘，右边仓库收起；377：万神院页不露仓库
 ## 264 §三（作者 17:01 定稿）：集市 / 铁匠铺两页换整屏背景（`market/scene`、`smithy/scene`，cover），别的页回基地底图；换时淡入淡出 [constant SCENE_FADE] 秒。
 ## 有场景图的页不垫粗布
-const SCENES := {"market": "market/scene", "smithy": "smithy/scene", "expedition": "home/scene_expedition"}     # 271：出征页也有自己的场景图（UI替换美术 出图）
+const SCENES := {"market": "market/scene", "smithy": "smithy/scene", "expedition": "home/scene_expedition", "nursery": "nursery/scene"}     # 271：出征页也有自己的场景图（UI替换美术 出图）
 const SCENE_FADE := 0.25
 
 var _wh = null
@@ -348,15 +348,8 @@ func open(payload: Dictionary) -> void:
 #region 三列与仓库的大小（164）
 ## 中列一页的底：一块粗布，占满中列
 func _build_nursery_page() -> void:     # 342 B3：苗圃页（右边照常露仓库，收获进仓库）
-	var ns_page := _cloth()     # 作者 2026-11-21 选 B 花槽：不垫粗布，墙透出来（以后是野外农田背景）
-	ns_page.theme_type_variation = UiTheme.PANEL_BARE
-	var farm := TextureRect.new()     # 静态美术设计 2026-11-21 C 菜畦：铺满中列，按比例裁边
-	farm.name = "FarmBackdrop"
-	farm.texture = UiTheme.art("nursery/bg_farm")
-	farm.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	farm.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	farm.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	ns_page.add_child(farm)
+	var ns_page := _cloth()     # 作者 2026-11-21 选 B 花槽：不垫粗布
+	ns_page.theme_type_variation = UiTheme.PANEL_BARE     # 作者 2026-11-27：农田背景铺满整屏（SCENES["nursery"]），不再只铺中列
 	_nursery = NurseryPanelScript.new()
 	_nursery.setup(flow)
 	_nursery.changed.connect(_refresh)
