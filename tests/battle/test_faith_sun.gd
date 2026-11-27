@@ -132,7 +132,7 @@ static func run_timeline(t: TestCase) -> void:
 	t.eq(dusk.next_boundary(_s(6.2)), _s(7.0), "残阳的尾巴结束也是结算点")
 	var dawn := SunCycle.new()
 	dawn.dawn_sec = 2.0
-	t.eq(dawn.states_at(_s(0.5)), Vector2i(1, 0), "斜月：开战那段白昼不算（不是从黑夜进来的）")
+	t.eq(dawn.states_at(_s(0.5)), Vector2i(1, 1), "斜月：开战那段白昼也算进入白昼（报告 393 第 11 条，和日出当作、黎明统一）")
 	t.eq(dawn.states_at(_s(13.0)), Vector2i(1, 1), "斜月：进白昼的头 2 秒也算黑夜")
 	t.eq(dawn.night_ends(_s(6.0), _s(60.0)), _s(14.0), "黑夜连着斜月：到第 14 秒才不算黑夜")
 
@@ -179,17 +179,16 @@ static func run_cards(t: TestCase) -> void:
 	var shield_plain := _taken(BattleSim.run(_shielded({"day_sec": 0.0}), _hitter(20.0), _rng(4), 6.0))
 	var shield_veil := _taken(BattleSim.run(_shielded({"day_sec": 0.0, "veil": 50.0}), _hitter(20.0), _rng(4), 6.0))
 	t.check(shield_veil < shield_plain, "夜幕 50%%：盾格挡 10 → 15，一直黑夜时受到的少（%d < %d）" % [shield_veil, shield_plain])
-	# 黎明（作者 11-26 09:54）：进白昼回复防具护甲上限的几成；没穿防具就没有
-	var dawn := BattleSim.run(_shielded({"dawn_armor": 25.0, "day_sec": 2.0, "night_sec": 2.0}, 100.0), _hitter(30.0, 0.5), _rng(4), 9.0)
-	var dawn_bare := BattleSim.run(_me({"dawn_armor": 25.0, "day_sec": 2.0, "night_sec": 2.0}), _hitter(30.0, 0.5), _rng(4), 9.0)
+	# 黎明（作者 11-27）：进入白昼时恢复生命上限的几成；开战那一刻也算
+	var dawn := BattleSim.run(_me({"dawn_heal": 20.0, "day_sec": 2.0, "night_sec": 2.0}), _hitter(30.0, 0.5), _rng(4), 9.0)
+	var dawn_plain := BattleSim.run(_me({"day_sec": 2.0, "night_sec": 2.0}), _hitter(30.0, 0.5), _rng(4), 9.0)
 	var healed := [0, 0]
-	for pair in [[dawn, 0], [dawn_bare, 1]]:
+	for pair in [[dawn, 0], [dawn_plain, 1]]:
 		for raw in (pair[0] as BattleResult).log:
 			var e := raw as BattleEvent
-			if e.name == BattleEvent.RESOURCE_CHANGED and e.side == 0 and String(e.payload.get("key", "")) == "armor" and e.get_int(&"delta") > 0:
+			if e.name == BattleEvent.RESOURCE_CHANGED and e.side == 0 and String(e.payload.get("key", "")) == "hp" and e.get_int(&"delta") > 0:
 				healed[pair[1]] += e.get_int(&"delta")
-	t.check(healed[0] > 0 and healed[0] <= StatMath.from_float(25.0) * 2, "黎明：穿着 100 护甲，进白昼回护甲（共 %.0f，每次至多 25）" % StatMath.to_float(healed[0]))
-	t.eq(healed[1], 0, "黎明：没穿防具就没有")
+	t.check(healed[0] > healed[1], "黎明：进白昼回生命（%.0f > 不拿 %.0f）" % [StatMath.to_float(healed[0]), StatMath.to_float(healed[1])])
 	var humble := _taken(BattleSim.run(_me({"day_sec": 0.0, "humble": 20.0}), _hitter(20.0), _rng(4), 6.0))
 	t.check(humble < plain, "谦卑：受到的也少（%d / %d）" % [humble, plain])
 	# 黄昏：进黑夜回耐力；日落当息：黑夜回血、武器停表

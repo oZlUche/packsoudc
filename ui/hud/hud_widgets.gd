@@ -15,6 +15,7 @@ const KINDS := {
 	&"legend": "res://ui/hud/widgets/legend_widget.gd",
 	&"commissions": "res://ui/hud/widgets/commissions_widget.gd",     # 336
 	&"meal": "res://ui/hud/widgets/meal_widget.gd",     # 355
+	&"stars": "res://ui/hud/widgets/stars_widget.gd",     # 作者 11-27：日神【众星】点亮几颗（没拿不显示）
 	&"level": "res://ui/hud/widgets/level_widget.gd",     # 372 / 382：等级格（星 + 等级数，待选红点）
 	&"xp_bar": "res://ui/hud/widgets/xp_bar_widget.gd",     # 381 / 382：栏下沿的透明经验值条
 	&"dev_drawer": PART,

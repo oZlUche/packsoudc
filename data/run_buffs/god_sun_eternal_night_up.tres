@@ -9,7 +9,7 @@
 [sub_resource type="Resource" id="Resource_4rbnn"]
 script = ExtResource("2_anfvb")
 values = {
-"hp": 10,
+"hp": 35,
 "pct": 99
 }
 
