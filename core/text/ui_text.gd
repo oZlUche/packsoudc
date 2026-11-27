@@ -812,7 +812,7 @@ const TEXT := {
 	"canteen.unnamed": {"zh": "自由组合", "en": "Free mix"},
 	"canteen.for": {"zh": "按%s算", "en": "For %s"},
 	"canteen.final": {"zh": "%s %s → %s", "en": "%s %s → %s"},
-	"canteen.tip_for": {"zh": "%s：%s +%s", "en": "%s: %s +%s"},
+	"canteen.tip_for": {"zh": "下锅给%s：%s +%s", "en": "In the pot for %s: %s +%s"},
 	"canteen.prep_title": {"zh": "这一锅", "en": "This pot"},
 	"canteen.eaten_mark": {"zh": "已开饭", "en": "Served"},     # 383
 	"canteen.eaten_note": {"zh": "在食堂开过饭了，这一锅不能再换", "en": "Already served at the canteen; this pot can't be changed"},

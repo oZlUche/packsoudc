@@ -798,7 +798,8 @@ static func canteen_line(def: ItemDef) -> String:
 		parts.append(UiText.t("canteen.tip_satiety") % int(e["satiety"]))
 	var out := UiText.t("canteen.tip_line") % " · ".join(parts)
 	var ch := Canteen.viewer     # 355：对当前角色实际加多少，玩家不用自己算固定值和百分比哪个划算
-	if ch != null and not (stat == Canteen.CARRY and ch.weight_capacity <= 0):
+	# 2026-11-27：只有百分比才要折算；固定值对谁都一样，再写一行带角色名的同数会被看成「直接吃的效果」（食材局里不能吃）
+	if ch != null and e.has("pct") and not (stat == Canteen.CARRY and ch.weight_capacity <= 0):
 		out += "\n" + UiText.t("canteen.tip_for") % [Names.of(ch), UiText.t("canteen.stat_" + String(stat)), Canteen.num(Canteen.gain_for(ch, meal, stat))]
 	return out
 

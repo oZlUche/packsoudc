@@ -200,6 +200,8 @@ static func run_viewer(t: TestCase) -> void:
 	] as Array[String], "终值两行：负重 20 → 23、耐力上限 80 → 84")
 	Canteen.viewer = ch
 	t.check(ItemTooltip.canteen_line(db.get_def(&"fowl_wing")).contains(UiText.t("canteen.tip_for") % [Names.of(ch), UiText.t("canteen.stat_max_stamina"), "1.6"]), "提示窗：试吃 耐力上限 +1.6")
+	t.check(not ItemTooltip.canteen_line(db.get_def(&"wild_scallion")).contains(Names.of(ch)), "固定值食材（野葱）：对谁都一样，不另写带角色名的一行（免得看成能直接吃）")
+	t.check(not ItemTooltip.canteen_line(db.get_def(&"meat_scrap")).contains(Names.of(ch)), "固定值食材（兽肉碎）：同上")
 	ch.weight_capacity = 0
 	t.check(not ItemTooltip.canteen_line(db.get_def(&"sour_wheat")).contains(Names.of(ch)), "没有负重的角色：主食不写对角色加多少")
 	t.eq(Canteen.final_lines(ch, meal).size(), 1, "终值只列耐力上限")
