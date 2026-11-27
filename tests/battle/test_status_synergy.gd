@@ -1,5 +1,5 @@
 ## 130（作者定）：流派倾向道具 —— 三个新构件（某状态被施加时 / 转化状态 / 状态条件）、status_applied 事件、
-## 放血刀吃对手的层、锯齿箭与毒匠手套只给对应武器挂规则、苦艮根只减毒伤、导入器拦自转与自环
+## 放血刀按对手流血层数加伤（不吃层）、锯齿箭与毒匠手套只给对应武器挂规则、苦艮根只减毒伤、导入器拦自转与自环
 extends RefCounted
 
 const H := preload("res://tests/battle/test_effect_system.gd")
@@ -161,7 +161,7 @@ static func run_condition(t: TestCase) -> void:
 
 
 static func run_items(t: TestCase) -> void:
-	t.begin("130 · 十件道具：放血刀吃六层打一刀、蝰蛇毒腺加剧毒、创口盐对流血目标加伤、苦艮根只减毒伤")
+	t.begin("130 · 十件道具：放血刀六层起加伤不吃层、蝰蛇毒腺加剧毒、创口盐对流血目标加伤、苦艮根只减毒伤")
 	var db := _items()
 	for id in ["bloodlust_bracer", "bloodhound_sigil", "bloodletter", "serrated_arrows", "wound_salt",
 			"viper_gland", "envenomed_gauntlet", "blight_censer", "bitter_root", "festering_blade"]:
@@ -169,15 +169,18 @@ static func run_items(t: TestCase) -> void:
 	var bleed_buff := ((db.get_def(&"scimitar").combat.rules[0] as AbilityRule).effects[1] as ApplyStatus).buff
 	var poison_buff := ((db.get_def(&"poisoned_knife").combat.rules[0] as AbilityRule).effects[1] as ApplyStatus).buff
 
-	# 放血刀第二条（132 起按目标层数 ×3）：对手攒够六层流血 → 每层 3 点、打完清掉流血
+	# 放血刀第二条（132 起按目标层数 ×3；v9.26 作者定：不再消耗层数）：自己出手时对手至少六层流血 → 每层 3 点，流血留着
 	var burst := db.get_def(&"bloodletter").combat.rules[1] as AbilityRule
+	t.check(burst.trigger is OnItemFired, "跟着放血刀自己出手")
+	for c in burst.effective_costs():
+		t.check(not (c is StatusStackCost), "不吃对手的层")
 	var ctx := _ctx([_opener([_apply(bleed_buff, 5)]), burst])
 	_start(ctx)
 	t.eq(ctx.sides[1].stacks_of(&"bleed"), 5, "五层：不触发")
 	t.eq(_hp(ctx, 1), 100, "没挨刀")
 	ctx = _ctx([_opener([_apply(bleed_buff, 6)]), burst])
 	_start(ctx)
-	t.eq(ctx.sides[1].stacks_of(&"bleed"), 0, "六层全扣")
+	t.eq(ctx.sides[1].stacks_of(&"bleed"), 6, "六层照留")
 	t.eq(_hp(ctx, 1), 82, "放血一刀 6 × 3 = 18 点")
 
 	# 蝰蛇毒腺（175 补充四：剧毒改成「受到的毒素伤害每层 +25%」）：自己施加中毒时，对手再挂一层剧毒，中毒照留

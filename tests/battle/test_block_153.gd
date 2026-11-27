@@ -144,7 +144,7 @@ static func run_armor_rename(t: TestCase) -> void:
 	t.eq(BattleStats.RES_ARMOR, &"armor", "资源键 armor")
 	t.eq(BattleStats.MAX_ARMOR, &"max_armor", "上限属性 max_armor")
 	t.eq(BattleStats.resource_of_max(BattleStats.MAX_ARMOR), BattleStats.RES_ARMOR, "max_armor 派生出 armor 资源池")
-	t.eq(Glossary.stat_name(BattleStats.MAX_ARMOR), "护甲上限", "属性名护甲上限")
+	t.eq(Glossary.stat_name(BattleStats.MAX_ARMOR), "护甲", "属性名护甲（作者 11-27：不叫护甲上限）")
 	t.eq(Glossary.resource_name(BattleStats.RES_ARMOR), "护甲", "资源名护甲")
 	t.check(Glossary.term_text("护甲").contains("先于生命"), "词条「护甲」")
 	t.eq(Glossary.term_text("护盾"), "", "词条「护盾」没了")

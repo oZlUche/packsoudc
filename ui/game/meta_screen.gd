@@ -63,7 +63,7 @@ const SHELF_WIN := Vector2(1100, 820)
 const FULL_TABS := ["market", "smithy", "canteen", "pantheon"]     # 355：食堂页自己带两块盘，右边仓库收起；377：万神院页不露仓库
 ## 264 §三（作者 17:01 定稿）：集市 / 铁匠铺两页换整屏背景（`market/scene`、`smithy/scene`，cover），别的页回基地底图；换时淡入淡出 [constant SCENE_FADE] 秒。
 ## 有场景图的页不垫粗布
-const SCENES := {"market": "market/scene", "smithy": "smithy/scene", "expedition": "home/scene_expedition"}     # 271：出征页也有自己的场景图（UI替换美术 出图）
+const SCENES := {"market": "market/scene", "smithy": "smithy/scene", "expedition": "home/scene_expedition", "nursery": "nursery/scene"}     # 271：出征页也有自己的场景图（UI替换美术 出图）
 const SCENE_FADE := 0.25
 
 var _wh = null
@@ -296,6 +296,7 @@ func open(payload: Dictionary) -> void:
 		_commissions.facility_requested.connect(func(fac: StringName): show_tab(String(fac)))
 		_commissions.reported.connect(_on_reported)
 		_commissions.gift_requested.connect(func(fid: StringName): show_gift(fid))     # 389 第七节
+		_commissions.hand_in_requested.connect(func(id: StringName): show_hand_in(id))     # 作者 2026-11-27：交货自己挑
 		cm_page.add_child(_commissions)
 		_pages["commissions"] = cm_page
 	# 图鉴页、成就页（091）
@@ -338,15 +339,8 @@ func open(payload: Dictionary) -> void:
 #region 三列与仓库的大小（164）
 ## 中列一页的底：一块粗布，占满中列
 func _build_nursery_page() -> void:     # 342 B3：苗圃页（右边照常露仓库，收获进仓库）
-	var ns_page := _cloth()     # 作者 2026-11-21 选 B 花槽：不垫粗布，墙透出来（以后是野外农田背景）
-	ns_page.theme_type_variation = UiTheme.PANEL_BARE
-	var farm := TextureRect.new()     # 静态美术设计 2026-11-21 C 菜畦：铺满中列，按比例裁边
-	farm.name = "FarmBackdrop"
-	farm.texture = UiTheme.art("nursery/bg_farm")
-	farm.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	farm.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	farm.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	ns_page.add_child(farm)
+	var ns_page := _cloth()     # 作者 2026-11-21 选 B 花槽：不垫粗布
+	ns_page.theme_type_variation = UiTheme.PANEL_BARE     # 作者 2026-11-27：农田背景铺满整屏（SCENES["nursery"]），不再只铺中列
 	_nursery = NurseryPanelScript.new()
 	_nursery.setup(flow)
 	_nursery.changed.connect(_refresh)
@@ -638,6 +632,264 @@ func close_gift() -> void:
 		_arrival = null
 
 
+## 作者 2026-11-27：交货窗一行几格、最多露几行（多了在格子区里滚）、一格多大
+const HAND_COLS := 5
+const HAND_ROWS := 2
+const HAND_CELL := Vector2(118, 132)
+## 交货窗开着的是哪一份、选中了哪几件（uid，按点的先后）
+var _hand_id: StringName = &""
+var _hand_sel: Array = []
+
+
+## 作者 2026-11-27（「不该让我选择上交哪些吗？」）：点【交货】—— 同一张石刻：阵营牌，下面一块格子区摆仓库里这一步收的
+## （没锁的，价值低的在前），点一格选上 / 再点取消，最多选到还差的件数；深石板写这一步要什么、已选几件。
+## 【交货】（选了才亮，交选中的）、【填满】（减负：按价值最低补满还差的）、【取消】
+func show_hand_in(id: StringName) -> Control:
+	if _arrival != null and _hand_id != id:
+		return _arrival
+	var d := Commissions.def(id)
+	var s := Commissions.current_stage(flow.meta.commissions, id)
+	if d == null or s < 0 or s >= d.stages.size() or d.stages[s].goal != &"hand_in":
+		return null
+	if _arrival != null:
+		_arrival.queue_free()
+		_arrival = null
+	if _hand_id != id:
+		_hand_sel = []
+	_hand_id = id
+	var choices := Commissions.hand_in_choices(flow.meta, d, s)
+	var need := Commissions.hand_in_need(flow.meta, d, s)
+	var alive := {}
+	for it in choices:
+		alive[it.uid] = true
+	_hand_sel = _hand_sel.filter(func(u) -> bool: return alive.has(int(u))).slice(0, need)
+	var tray := _pick_tray(choices, _hand_sel, {}, HAND_ROWS, toggle_hand_in)
+	tray.name = "HandInShelf"
+	var st := d.stages[s]
+	var text := Names.pick(st.texts, st.text) + "\n" + UiText.t("hand_in.picked") % [_hand_sel.size(), need]
+	var keys: Array = [[UiText.t("commission.hand_over"), confirm_hand_in, true], [UiText.t("hand_in.fill"), fill_hand_in, false],
+		[UiText.t("hand_in.cancel"), close_hand_in, false]]
+	_stone_notice(d.faction, tray, text, keys)
+	_arrival.name = "HandInNotice"
+	(_arrival.find_child("Key_0", true, false) as Button).disabled = _hand_sel.is_empty()
+	(_arrival.find_child("Key_1", true, false) as Button).disabled = _hand_sel.size() >= mini(need, choices.size())
+	return _arrival
+
+
+## 交货窗、打造选料窗的格子区（铁匠铺那块深铁框）：[param choices] 一件一格（[RecipeCell]，悬停写名字和价值），
+## [param selected] 里的描红框，[param dimmed] 里的（uid → true，别的行挑走了）压灰；一行 [constant HAND_COLS] 格，
+## 多于 [param max_rows] 行在框里竖着滚。点一格调 [param on_click]（uid）
+func _pick_tray(choices: Array[ItemInstance], selected: Array, dimmed: Dictionary, max_rows: int, on_click: Callable) -> PanelContainer:
+	var tray := RecipeCell.shelf()
+	tray.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	var grid := GridContainer.new()
+	grid.name = "Grid"
+	grid.columns = HAND_COLS
+	RecipeCell.space(grid)
+	var slots := maxi(HAND_COLS, ceili(choices.size() / float(HAND_COLS)) * HAND_COLS)
+	@warning_ignore("integer_division")
+	var rows := slots / HAND_COLS
+	for i in slots:
+		var cell: RecipeCell = null
+		if i < choices.size():
+			var it := choices[i]
+			cell = RecipeCell.make(StringName(str(it.uid)), it.def, Names.of(it.def), HAND_CELL)
+			cell.name = "Pick_%d" % it.uid
+			cell.selected = selected.has(it.uid)
+			cell.lit = not dimmed.has(it.uid)
+			cell.tooltip_text = Names.of(it.def) + "\n" + UiText.t("hand_in.value") % ItemValue.of_instance(it)
+			var uid := it.uid
+			cell.clicked.connect(func(_c: RecipeCell): on_click.call(uid))
+		else:
+			cell = RecipeCell.blank(HAND_CELL)
+		cell.line_right = i % HAND_COLS != HAND_COLS - 1
+		@warning_ignore("integer_division")
+		cell.line_bottom = i / HAND_COLS != rows - 1
+		grid.add_child(cell)
+	if rows > max_rows:
+		var scroll := ScrollContainer.new()
+		scroll.name = "Scroll"
+		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		scroll.custom_minimum_size = Vector2(HAND_CELL.x * HAND_COLS, HAND_CELL.y * (max_rows + 0.5))
+		scroll.add_child(grid)
+		tray.add_child(scroll)
+	else:
+		tray.add_child(grid)
+	return tray
+
+
+## 点一格：没选的选上（满了不再加），选了的取消
+func toggle_hand_in(uid: int) -> void:
+	if _hand_sel.has(uid):
+		_hand_sel.erase(uid)
+	else:
+		var d := Commissions.def(_hand_id)
+		if _hand_sel.size() >= Commissions.hand_in_need(flow.meta, d, Commissions.current_stage(flow.meta.commissions, _hand_id)):
+			return
+		_hand_sel.append(uid)
+	show_hand_in(_hand_id)
+
+
+## 【填满】：选中的留着，按价值最低补到还差的件数
+func fill_hand_in() -> void:
+	var d := Commissions.def(_hand_id)
+	var s := Commissions.current_stage(flow.meta.commissions, _hand_id)
+	var need := Commissions.hand_in_need(flow.meta, d, s)
+	for it in Commissions.hand_in_choices(flow.meta, d, s):
+		if _hand_sel.size() >= need:
+			break
+		if not _hand_sel.has(it.uid):
+			_hand_sel.append(it.uid)
+	show_hand_in(_hand_id)
+
+
+## 【交货】：交选中的那几件（先关窗，办成了的通知好接着放）。返回 [method GameFlow.report_commission] 的结果
+func confirm_hand_in() -> Dictionary:
+	var id := _hand_id
+	var uids := _hand_sel.duplicate()
+	close_hand_in()
+	if uids.is_empty() or _commissions == null:
+		return {"ok": false, "step": false, "done": false}
+	return _commissions.report(id, uids)
+
+
+func close_hand_in() -> void:
+	if _arrival != null:
+		_arrival.queue_free()
+		_arrival = null
+	_hand_id = &""
+	_hand_sel = []
+
+
+#region 作者 2026-11-27（待确认 77「要」）：铁匠铺打造自己挑料 —— 和交货窗同一套
+## 选料窗开着的是哪张配方、每一行挑了哪几件（键同 [method Smithy.line_keys] → uid 数组）
+var _forge_id: StringName = &""
+var _forge_sel: Dictionary = {}
+
+
+## 点【打造】：石刻窗，每一样料一行 —— 深石签上这一格的样子 + 「已选 x / 要几」，下面一块格子区摆仓库里能顶的（价值低的在前），
+## 别的行挑走的压灰；用尘补齐的行不列。深石板写产物名。【打造】（每行挑够才亮）、【填满】（每行按价值最低补满）、【取消】
+func show_forge_pick(id: StringName) -> Control:
+	if _arrival != null and _forge_id != id:
+		return _arrival
+	var r := SmithRecipeDef.find(flow.smith_recipes, id)
+	if r == null or _smithy == null:
+		return null
+	if _arrival != null:
+		_arrival.queue_free()
+		_arrival = null
+	if _forge_id != id:
+		_forge_sel = {}
+	_forge_id = id
+	var dust: Dictionary = _smithy.dust_choice()
+	var used := {}
+	for key in _forge_sel:
+		for u in _forge_sel[key]:
+			used[int(u)] = String(key)
+	var col := UiTheme.vbox(8)
+	col.name = "ForgeLines"
+	col.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	var lines: Array[String] = []
+	for k in Smithy.line_keys(r):
+		if Smithy.line_need(r, k, dust) > 0:
+			lines.append(k)
+	var slots := r.slots()
+	for key in lines:
+		var need := Smithy.line_need(r, key, dust)
+		var sel: Array = _forge_sel.get(key, [])
+		var head := PanelContainer.new()
+		head.name = "Line_" + key.replace(":", "_")
+		UiTheme.stone(head, UiTheme.ART_STONE_SLATE, 6)
+		head.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		var hrow := UiTheme.hbox(8)
+		head.add_child(hrow)
+		var sample: ItemDef = SmithRecipeDef.slot_sample(slots[int(key.substr(5))], flow.items) if key.begins_with("slot:") else flow.items.get_def(StringName(key))
+		var icon := TextureRect.new()
+		icon.texture = ItemPainter.art_of(sample) if sample != null else null
+		icon.custom_minimum_size = Vector2(32, 32)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		hrow.add_child(icon)
+		var lab := UiTheme.make_label(UiText.t("hand_in.picked") % [sel.size(), need], 16, UiTheme.STONE_GOLD)
+		UiTheme.fixed_color(lab, UiTheme.STONE_GOLD)
+		hrow.add_child(lab)
+		col.add_child(head)
+		var dim := {}
+		for u in used:
+			if String(used[u]) != key:
+				dim[u] = true
+		var line_key := key
+		var tray := _pick_tray(Smithy.line_choices(flow.meta, r, key), sel, dim, 1 if lines.size() > 1 else HAND_ROWS,
+			func(uid: int): toggle_forge_pick(line_key, uid))
+		tray.name = "Tray_" + key.replace(":", "_")
+		col.add_child(tray)
+	var out := flow.items.get_def(r.output)
+	var name_ := Names.pick(r.display_names, r.display_name) if r.display_name != "" else (Names.of(out) if out != null else String(r.output))
+	var keys: Array = [[UiText.t("smithy.forge"), confirm_forge_pick, true], [UiText.t("hand_in.fill"), fill_forge_pick, false],
+		[UiText.t("hand_in.cancel"), close_forge_pick, false]]
+	_stone_notice(&"", col, name_, keys)
+	_arrival.name = "ForgePickNotice"
+	(_arrival.find_child("Key_0", true, false) as Button).disabled = not Smithy.picks_ok(flow.meta, r, _forge_sel, dust)
+	(_arrival.find_child("Key_1", true, false) as Button).disabled = not _fill_adds(r, dust)
+	return _arrival
+
+
+## 【填满】还补不补得上一件
+func _fill_adds(r: SmithRecipeDef, dust: Dictionary) -> bool:
+	var filled := Smithy.fill_picks(flow.meta, r, _forge_sel, dust)
+	for key in filled:
+		if (filled[key] as Array).size() > (_forge_sel.get(key, []) as Array).size():
+			return true
+	return false
+
+
+## 点一格：这一行没挑的挑上（满了、别的行挑走了的不加），挑了的取消
+func toggle_forge_pick(key: String, uid: int) -> void:
+	var r := SmithRecipeDef.find(flow.smith_recipes, _forge_id)
+	if r == null:
+		return
+	var sel: Array = _forge_sel.get(key, [])
+	if sel.has(uid):
+		sel.erase(uid)
+	else:
+		for k in _forge_sel:
+			if (_forge_sel[k] as Array).has(uid):
+				return
+		if sel.size() >= Smithy.line_need(r, key, _smithy.dust_choice()):
+			return
+		sel.append(uid)
+	_forge_sel[key] = sel
+	show_forge_pick(_forge_id)
+
+
+## 【填满】：挑了的留着，每一行按价值最低补满
+func fill_forge_pick() -> void:
+	var r := SmithRecipeDef.find(flow.smith_recipes, _forge_id)
+	if r == null:
+		return
+	_forge_sel = Smithy.fill_picks(flow.meta, r, _forge_sel, _smithy.dust_choice())
+	show_forge_pick(_forge_id)
+
+
+## 【打造】：照挑的打（先关窗）。返回 [method GameFlow.forge] 的原因（空 = 打了）
+func confirm_forge_pick() -> String:
+	var id := _forge_id
+	var sel := _forge_sel.duplicate(true)
+	close_forge_pick()
+	if id == &"" or _smithy == null:
+		return UiText.t("smithy.no_recipe")
+	return _smithy.forge(id, sel)
+
+
+func close_forge_pick() -> void:
+	if _arrival != null:
+		_arrival.queue_free()
+		_arrival = null
+	_forge_id = &""
+	_forge_sel = {}
+#endregion
+
+
 ## 389 定稿：「委托」导航键右上的红点 —— 各方可领赠礼的合计（[RedDot]）
 func _sync_gift_dot() -> void:
 	if _tab_btns.has("commissions"):
@@ -663,20 +915,21 @@ func _stone_notice(faction_id: StringName, mid: Control, text: String, keys: Arr
 	var col := _vbox(16)
 	col.alignment = BoxContainer.ALIGNMENT_CENTER
 	_arrival.get_child(0).add_child(col)
-	var plate := PanelContainer.new()
-	plate.name = "Plate"
-	UiTheme.stone(plate, UiTheme.ART_HUD_WELL, 16)
-	plate.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	col.add_child(plate)
-	var head := UiTheme.hbox(12)
-	head.alignment = BoxContainer.ALIGNMENT_CENTER
-	plate.add_child(head)
-	head.add_child(load("res://ui/game/commission_panel.gd").emblem(faction_id, 72))
-	var title := UiTheme.make_label(Names.of(f) if f != null else String(faction_id), 30, UiTheme.STONE_INK)
-	title.theme_type_variation = UiTheme.LABEL_NOTE_TITLE
-	UiTheme.fixed_color(title, UiTheme.STONE_INK)
-	head.add_child(title)
-	UiMotion.fade(plate, UiMotion.enabled(flow.settings), 0.0, 1.0, 0.4)     # 牌子亮起
+	if faction_id != &"":     # 作者 2026-11-27：铁匠铺选料窗不挂阵营牌
+		var plate := PanelContainer.new()
+		plate.name = "Plate"
+		UiTheme.stone(plate, UiTheme.ART_HUD_WELL, 16)
+		plate.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		col.add_child(plate)
+		var head := UiTheme.hbox(12)
+		head.alignment = BoxContainer.ALIGNMENT_CENTER
+		plate.add_child(head)
+		head.add_child(load("res://ui/game/commission_panel.gd").emblem(faction_id, 72))
+		var title := UiTheme.make_label(Names.of(f) if f != null else String(faction_id), 30, UiTheme.STONE_INK)
+		title.theme_type_variation = UiTheme.LABEL_NOTE_TITLE
+		UiTheme.fixed_color(title, UiTheme.STONE_INK)
+		head.add_child(title)
+		UiMotion.fade(plate, UiMotion.enabled(flow.settings), 0.0, 1.0, 0.4)     # 牌子亮起
 	if mid != null:
 		col.add_child(mid)
 	var slate := PanelContainer.new()
@@ -1080,6 +1333,7 @@ func _build_smithy(root: Control) -> Control:
 	_smithy = SmithyPanelScript.new()
 	_smithy.setup(flow, font)
 	_smithy.changed.connect(_refresh)
+	_smithy.pick_requested.connect(func(id: StringName): show_forge_pick(id))     # 作者 2026-11-27：打造自己挑料
 	root.add_child(_smithy)
 	return _smithy
 

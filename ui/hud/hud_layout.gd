@@ -26,8 +26,9 @@ const TIERS := {"large": HudWidget.Tier.LARGE, "small": HudWidget.Tier.SMALL, "d
 ## 布局文件的版本：默认布局改了就加一，旧版本存的那份不用（回默认）。2 = 作者 2026-10-12：提示行进调试台、去掉行动点与距离、顶栏 200%；
 ## 3 = 160：腰带挪到右下角；4 = 166：顶端栏三个槽、右列取消（撤离 / 回主菜单删掉，日志与地上件数进调试台）、左下图例；
 ## 6 = 179：「行动点」读数删掉（玩家面前只说步，倒计时就是它）；7 = 186：顶端栏正下方居中的提示行；
-## 8 = 382 A：饱腹收进栏左槽第一行，等级与信仰挪到日晷右边（`bar_growth`），栏下沿一根全屏宽的经验值条
-const VERSION := 8
+## 8 = 382 A：饱腹收进栏左槽第一行，等级与信仰挪到日晷右边（`bar_growth`），栏下沿一根全屏宽的经验值条；
+## 9 = 作者 11-27（85 A）：buff 挪出栏、和委托小牌合成左上一块可收起的石板（`status_slate`）
+const VERSION := 9
 ## 「摆读数」松手时吸附的网格
 const GRID := 8
 const DEV_DIR := "res://data/authoring/ui_layouts"
@@ -39,7 +40,7 @@ var entries: Array[Dictionary] = []
 
 
 ## 166（作者定）：地图屏 = 横贯顶部的顶端栏（`hud_bar`）+ 栏里三个槽：
-## 左槽第一行体力 / 货币 / 信仰（两倍档），第二行 buff / 侵蚀（小档；v5.62：负重与距离两件读数删了）；中槽倒计时（大档）；
+## 左槽第一行体力 / 货币 / 信仰（两倍档），第二行侵蚀（小档；11-27：buff 挪进左上石板；v5.62：负重与距离两件读数删了）；中槽倒计时（大档）；
 ## 右槽放大镜 / 主动技能 / 调试台箭头（235：背包并进栏的右头）。左下角路线在上、图例在下，右下角腰带。
 ## 日志与「地上 N 件」不再是部件（在调试台里），撤离按钮与「存档并回主菜单」删了（撤离点的事件屏里撤、进点自动存档）
 static func default_for(p_screen: String) -> HudLayout:
@@ -49,8 +50,7 @@ static func default_for(p_screen: String) -> HudLayout:
 		l.entries.append(entry(&"hud_bar", "top", Vector2.ZERO))
 		for id in [&"vitality", &"wallet", &"stars", &"meal"]:     # 382：饱腹收进栏里（没吃饭不显示）；星辰挨着货币（没拿众星不显示）
 			l.entries.append(entry(id, "bar_left", Vector2.ZERO, 0, "double"))
-		for id in [&"buffs", &"erosion"]:
-			l.entries.append(entry(id, "bar_left", Vector2.ZERO, 1, "small"))
+		l.entries.append(entry(&"erosion", "bar_left", Vector2.ZERO, 1, "small"))
 		l.entries.append(entry(&"countdown", "bar_center", Vector2.ZERO, 0, "large"))
 		for id in [&"level", &"faith"]:     # 382 A：成长一组紧挨日晷右边
 			l.entries.append(entry(id, BAR_GROWTH, Vector2.ZERO, 0, "double"))
@@ -59,7 +59,7 @@ static func default_for(p_screen: String) -> HudLayout:
 		l.entries.append(entry(&"routes", "bottom_left", CORNER_OFFSET, 0))
 		l.entries.append(entry(&"legend", "bottom_left", CORNER_OFFSET, 1))
 		l.entries.append(entry(&"belt", "bottom_right", BELT_OFFSET))     # 160：腰带常驻右下角
-		l.entries.append(entry(&"commissions", "top_left", COMMISSIONS_OFFSET))     # 336：委托小牌（没带委托不显示）
+		l.entries.append(entry(&"status_slate", "top_left", SLATE_OFFSET))     # 作者 11-27（85 A）：状态 + 委托一块石板（都没有不显示）
 		l.entries.append(entry(&"xp_bar", "top", Vector2.ZERO))     # 381 / 382：栏下沿全屏宽的经验值条（宿主贴着栏摆）
 	return l
 
@@ -68,7 +68,8 @@ static func default_for(p_screen: String) -> HudLayout:
 const BAR_RIGHT: Array[StringName] = [&"reopen_button", &"skills", &"dev_drawer"]
 ## 退役的组件：旧布局文件里读到就静默丢掉（不算坏文件、不整份回默认）。235：右槽小背包钮并进顶端栏右头；
 ## v5.62：默认藏着的「距离」「负重」两件读数删了（负重看背包界面里的「负重 X / Y」那一行，[InventoryPanel]）
-const RETIRED: Array[StringName] = [&"bag_button", &"distances", &"encumbrance"]
+## 作者 11-27（85 A）：buff 一行与委托小牌合进左上的石板（`status_slate`）
+const RETIRED: Array[StringName] = [&"bag_button", &"distances", &"encumbrance", &"buffs", &"commissions"]
 
 
 ## 默认藏不藏：主动技能藏着（166 补充一，[constant RunSkills.ACTIVE_HIDDEN]）时的技能按钮
@@ -76,10 +77,10 @@ static func hidden_by_default(id: StringName) -> bool:
 	return id == &"skills" and RunSkills.ACTIVE_HIDDEN
 ## 160：腰带在右下角；166：路线与图例在左下角
 const BELT_OFFSET := Vector2(-8, -8)
-## 336：委托小牌在左上（顶端栏下面）
-const COMMISSIONS_OFFSET := Vector2(16, 16)
+## 作者 11-27（85 A）：状态 / 委托石板在左上（顶端栏下面，1600×900 下约 left 14、top 110）
+const SLATE_OFFSET := Vector2(14, 12)
 ## 336：后来才加的件 —— 旧布局文件里没有就按默认补上（不升 [constant VERSION]，玩家摆过的别的件照旧）
-const ADDED_LATER: Array[StringName] = [&"commissions", &"meal", &"level", &"xp_bar", &"stars"]
+const ADDED_LATER: Array[StringName] = [&"status_slate", &"meal", &"level", &"xp_bar", &"stars"]
 ## 浮在地图上面的件：不算进地图要躲开的上边（[method HudHost.top_inset]）。382：经验值条贴着栏下沿，宿主自己摆（不进组）
 const FLOATS: Array[StringName] = [&"xp_bar"]
 const XP_BAR := &"xp_bar"

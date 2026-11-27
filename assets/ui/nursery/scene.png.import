@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ddkakxh0lk3fu"
-path="res://.godot/imported/bg_farm@2x.png-ff3459e10ddb37ec517de70f3d7620b1.ctex"
+uid="uid://turl7k5ephga"
+path="res://.godot/imported/scene.png-6c40eba5c54a00d8607140ab856f21c4.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/nursery/bg_farm@2x.png"
-dest_files=["res://.godot/imported/bg_farm@2x.png-ff3459e10ddb37ec517de70f3d7620b1.ctex"]
+source_file="res://assets/ui/nursery/scene.png"
+dest_files=["res://.godot/imported/scene.png-6c40eba5c54a00d8607140ab856f21c4.ctex"]
 
 [params]
 

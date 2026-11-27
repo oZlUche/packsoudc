@@ -18,7 +18,7 @@
   "bag_mods": [
     {
       "stat": "max_armor",
-      "amount": 2.0
+      "amount": 5.0
     }
   ]
 }

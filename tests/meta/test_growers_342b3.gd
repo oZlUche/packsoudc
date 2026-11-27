@@ -183,6 +183,13 @@ static func frame_page(t: TestCase, root: Window) -> void:
 	t.eq(tab.tooltip_text, UiText.t("nursery.ripe"), "悬停写「可收获」")
 	var p = s.nursery_panel()
 	t.check(p != null and p.find_child("Harvest_0", true, false) != null, "有【收获】")
+	t.eq(s.backdrop_name(), "nursery/scene", "作者 11-27：农田背景铺满整屏")
+	t.check(p.find_child("Pick_bitter_leaf", true, false) == null, "作者 11-27：没有【选中】键")
+	var why_l := p.find_child("Why_bitter_leaf", true, false) as Label
+	var seedless: bool = Nursery.seed_picks(f.meta, &"bitter_leaf").is_empty()
+	t.eq(why_l != null, seedless, "缺种苗才在纸条上写原因")
+	if why_l != null:
+		t.check(why_l.text.contains("干草药束"), "写明缺哪样：%s" % why_l.text)
 	t.eq(Bare.audit(p, "nursery342"), [] as Array[String], "字不裸")
 	p.harvest(0)
 	t.check(not mark.visible, "收了：标记没了")
