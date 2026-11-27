@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="2040" viewBox="0 0 1600 2040" role="img" aria-labelledby="title" aria-describedby="desc">
+<title id="title">大问题地图 · 5W1H</title>
+<desc id="desc">中央圆代表同一个核心问题。左右各三个方形区域分别承载谁、什么、何时、何地、为什么、如何六个提问方向与待补充的内容；两条正交分支将六区连接到同一个主题。连线不表示先后、因果或必须填满。读者可从最不清楚的方向进入，补充一条信息后回到中心检查问题是否需要修正。此图是通用5W1H框架的自主编排。</desc>
+<style data-vt-theme="">:root{--vt-bg:#191A18;--vt-ink:#EFEEE7;--vt-muted:#B0B2A8;--vt-accent:#EFEEE7;--vt-surface:#272925;--vt-secondary:#383B34;--vt-line:1.8;--vt-title:53px;--vt-section:34px;--vt-label:22px;--vt-note:18px;}text{font-family:"PingFang SC","Noto Sans CJK SC","Source Han Sans SC","Microsoft YaHei","Helvetica Neue",sans-serif}</style>
+<rect width="1600" height="2040" fill="var(--vt-bg)" data-decoration="background"/>
+<text x="90" y="119" font-size="53" fill="var(--vt-ink)" font-weight="600" text-anchor="start">大问题地图 · 5W1H</text>
+<text x="90" y="176" font-size="28" fill="var(--vt-muted)" font-weight="400" text-anchor="start">Big Question Map</text>
+<path d="M90 213H1010" stroke="var(--vt-muted)" stroke-opacity=".42" stroke-width="1" fill="none" data-decoration="guide"/>
+<rect id="who" data-node="" data-vt-geometry="inquiry-region" x="90" y="620" width="360" height="220" fill="var(--vt-bg)" stroke="var(--vt-muted)" stroke-width="1.4"/>
+<rect id="what" data-node="" data-vt-geometry="inquiry-region" x="1150" y="620" width="360" height="220" fill="var(--vt-bg)" stroke="var(--vt-muted)" stroke-width="1.4"/>
+<rect id="when" data-node="" data-vt-geometry="inquiry-region" x="90" y="930" width="360" height="220" fill="var(--vt-bg)" stroke="var(--vt-muted)" stroke-width="1.4"/>
+<rect id="where" data-node="" data-vt-geometry="inquiry-region" x="1150" y="930" width="360" height="220" fill="var(--vt-bg)" stroke="var(--vt-muted)" stroke-width="1.4"/>
+<rect id="why" data-node="" data-vt-geometry="inquiry-region" x="90" y="1240" width="360" height="220" fill="var(--vt-bg)" stroke="var(--vt-muted)" stroke-width="1.4"/>
+<rect id="how" data-node="" data-vt-geometry="inquiry-region" x="1150" y="1240" width="360" height="220" fill="var(--vt-bg)" stroke="var(--vt-muted)" stroke-width="1.4"/>
+<circle id="question" data-node="" data-vt-geometry="shared-question" cx="800" cy="1040" r="145" fill="var(--vt-ink)"/>
+<circle id="left-branch" data-node="" cx="550" cy="1040" r="3" fill="var(--vt-ink)"/>
+<circle id="right-branch" data-node="" cx="1050" cy="1040" r="3" fill="var(--vt-ink)"/>
+<path id="question-left" data-edge="" data-from="question" data-to="left-branch" d="M655 1040H550" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+<path id="question-right" data-edge="" data-from="question" data-to="right-branch" d="M945 1040H1050" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+<path id="to-who" data-edge="" data-from="left-branch" data-to="who" d="M550 1040V742A12 12 0 0 0 538 730H450" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+<path id="to-when" data-edge="" data-from="left-branch" data-to="when" d="M550 1040H450" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+<path id="to-why" data-edge="" data-from="left-branch" data-to="why" d="M550 1040V1338A12 12 0 0 1 538 1350H450" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+<path id="to-what" data-edge="" data-from="right-branch" data-to="what" d="M1050 1040V742A12 12 0 0 1 1062 730H1150" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+<path id="to-where" data-edge="" data-from="right-branch" data-to="where" d="M1050 1040H1150" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+<path id="to-how" data-edge="" data-from="right-branch" data-to="how" d="M1050 1040V1338A12 12 0 0 0 1062 1350H1150" fill="none" stroke="var(--vt-ink)" stroke-width="var(--vt-line)"/>
+<text x="120" y="681" font-size="34" fill="var(--vt-ink)" font-weight="500" text-anchor="start" data-in-node="who" data-padding="16">谁</text>
+<text x="420" y="678" font-size="19" fill="var(--vt-muted)" font-weight="400" text-anchor="end" data-in-node="who" data-padding="16">WHO</text>
+<text x="120" y="739" font-size="22" fill="var(--vt-muted)" font-weight="400" text-anchor="start" data-in-node="who" data-padding="16">谁参与？谁受到影响？</text>
+<path d="M120 797H420" stroke="var(--vt-muted)" stroke-opacity=".42" stroke-width="1" fill="none" data-decoration="content-space"/>
+<text x="1180" y="681" font-size="34" fill="var(--vt-ink)" font-weight="500" text-anchor="start" data-in-node="what" data-padding="16">什么</text>
+<text x="1480" y="678" font-size="19" fill="var(--vt-muted)" font-weight="400" text-anchor="end" data-in-node="what" data-padding="16">WHAT</text>
+<text x="1180" y="739" font-size="22" fill="var(--vt-muted)" font-weight="400" text-anchor="start" data-in-node="what" data-padding="16">发生了什么？要弄清什么？</text>
+<path d="M1180 797H1480" stroke="var(--vt-muted)" stroke-opacity=".42" stroke-width="1" fill="none" data-decoration="content-space"/>
+<text x="120" y="991" font-size="34" fill="var(--vt-ink)" font-weight="500" text-anchor="start" data-in-node="when" data-padding="16">何时</text>
+<text x="420" y="988" font-size="19" fill="var(--vt-muted)" font-weight="400" text-anchor="end" data-in-node="when" data-padding="16">WHEN</text>
+<text x="120" y="1049" font-size="22" fill="var(--vt-muted)" font-weight="400" text-anchor="start" data-in-node="when" data-padding="16">何时发生？前后如何变化？</text>
+<path d="M120 1107H420" stroke="var(--vt-muted)" stroke-opacity=".42" stroke-width="1" fill="none" data-decoration="content-space"/>
+<text x="1180" y="991" font-size="34" fill="var(--vt-ink)" font-weight="500" text-anchor="start" data-in-node="where" data-padding="16">何地</text>
+<text x="1480" y="988" font-size="19" fill="var(--vt-muted)" font-weight="400" text-anchor="end" data-in-node="where" data-padding="16">WHERE</text>
+<text x="1180" y="1049" font-size="22" fill="var(--vt-muted)" font-weight="400" text-anchor="start" data-in-node="where" data-padding="16">在哪里？处于什么情境？</text>
+<path d="M1180 1107H1480" stroke="var(--vt-muted)" stroke-opacity=".42" stroke-width="1" fill="none" data-decoration="content-space"/>
+<text x="120" y="1301" font-size="34" fill="var(--vt-ink)" font-weight="500" text-anchor="start" data-in-node="why" data-padding="16">为什么</text>
+<text x="420" y="1298" font-size="19" fill="var(--vt-muted)" font-weight="400" text-anchor="end" data-in-node="why" data-padding="16">WHY</text>
+<text x="120" y="1359" font-size="22" fill="var(--vt-muted)" font-weight="400" text-anchor="start" data-in-node="why" data-padding="16">可能原因？依据是什么？</text>
+<path d="M120 1417H420" stroke="var(--vt-muted)" stroke-opacity=".42" stroke-width="1" fill="none" data-decoration="content-space"/>
+<text x="1180" y="1301" font-size="34" fill="var(--vt-ink)" font-weight="500" text-anchor="start" data-in-node="how" data-padding="16">如何</text>
+<text x="1480" y="1298" font-size="19" fill="var(--vt-muted)" font-weight="400" text-anchor="end" data-in-node="how" data-padding="16">HOW</text>
+<text x="1180" y="1359" font-size="22" fill="var(--vt-muted)" font-weight="400" text-anchor="start" data-in-node="how" data-padding="16">怎样发生、如何运作？</text>
+<path d="M1180 1417H1480" stroke="var(--vt-muted)" stroke-opacity=".42" stroke-width="1" fill="none" data-decoration="content-space"/>
+<text x="800" y="1032" font-size="31" fill="var(--vt-bg)" font-weight="600" text-anchor="middle" data-in-node="question" data-padding="16">核心问题</text>
+<text x="800" y="1083" font-size="19" fill="var(--vt-bg)" font-weight="400" text-anchor="middle" data-in-node="question" data-padding="16">把主题放在这里</text>
+<path d="M710 1810H1510" stroke="var(--vt-muted)" stroke-opacity=".42" stroke-width="1" fill="none" data-decoration="guide"/>
+<text x="1510" y="1860" font-size="25" fill="var(--vt-ink)" font-weight="500" text-anchor="end">从最不清楚的一处进入，再回看核心问题。</text>
+<text x="1510" y="1905" font-size="20" fill="var(--vt-muted)" font-weight="400" text-anchor="end">连线表示围绕同一主题提问，不表示先后或因果。</text>
+<text x="1510" y="1944" font-size="20" fill="var(--vt-muted)" font-weight="400" text-anchor="end">六区可以择一进入，无需按顺序填满。</text>
+<text x="1510" y="1994" font-size="17" fill="var(--vt-muted)" font-weight="400" text-anchor="end">通用 5W1H 提问框架 · 自主编排</text>
+</svg>

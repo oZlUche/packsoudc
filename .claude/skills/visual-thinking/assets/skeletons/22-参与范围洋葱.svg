@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="2900" viewBox="0 0 2400 2900" role="img" aria-labelledby="title" aria-describedby="desc">
+<title id="title">参与范围：还漏掉了谁？</title>
+<desc id="desc">通用参与范围骨架。同心边界表达围绕同一系统或活动扩大的角色范围，角色点可增加或多重归属；环距不代表重要性。沿角色诉求检查遗漏并回看安排。</desc>
+<style data-vt-theme="">:root{--vt-bg:#191A18;--vt-ink:#EFEEE7;--vt-muted:#B0B2A8;--vt-accent:#EFEEE7;--vt-surface:#272925;--vt-secondary:#383B34;--vt-line:1.8;}text{font-family:"PingFang SC","Noto Sans CJK SC","Source Han Sans SC","Microsoft YaHei","Helvetica Neue",sans-serif}</style>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="11" markerHeight="11" orient="auto" markerUnits="userSpaceOnUse"><path d="M2 2L10 6L2 10" fill="none" stroke="var(--vt-ink)" stroke-width="1.5" /></marker></defs>
+<rect width="2400" height="2900" fill="var(--vt-bg)" data-decoration="background" />
+<text x="120" y="160" font-size="76" font-weight="600" fill="var(--vt-ink)" text-anchor="start">参与范围：还漏掉了谁？</text>
+<text x="120" y="239" font-size="40" font-weight="400" fill="var(--vt-muted)" text-anchor="start">Stakeholder scope: whose voice is missing?</text>
+<path data-decoration="annotation" d="M120 288H1950" fill="none" stroke="var(--vt-muted)" stroke-width="1.5" />
+<text x="120" y="347" font-size="30" font-weight="400" fill="var(--vt-muted)" text-anchor="start">通用骨架：围绕同一个系统或活动，查找运行、支持及更广的受影响角色。</text>
+<circle data-decoration="semantic-boundary" cx="1120" cy="1390" r="760" fill="none" stroke="var(--vt-ink)" stroke-width="2.6" />
+<circle data-decoration="semantic-boundary" cx="1120" cy="1390" r="540" fill="none" stroke="var(--vt-ink)" stroke-width="1.9" />
+<circle data-decoration="semantic-boundary" cx="1120" cy="1390" r="340" fill="none" stroke="var(--vt-ink)" stroke-width="1.9" />
+<circle id="event" data-node="" cx="1120" cy="1390" r="160" fill="none" stroke="var(--vt-ink)" stroke-width="2.2" />
+<text x="1120" y="732" font-size="41" font-weight="500" fill="var(--vt-ink)" text-anchor="middle">更广的影响范围</text>
+<text x="1120" y="960" font-size="37" font-weight="500" fill="var(--vt-ink)" text-anchor="middle">受益与支持范围</text>
+<text x="1120" y="1165" font-size="34" font-weight="500" fill="var(--vt-ink)" text-anchor="middle">直接运行范围</text>
+<text x="1120" y="1375" font-size="48" font-weight="500" fill="var(--vt-ink)" text-anchor="middle" data-in-node="event" data-padding="12">系统／活动</text>
+<text x="1120" y="1435" font-size="26" font-weight="400" fill="var(--vt-muted)" text-anchor="middle" data-in-node="event" data-padding="12">先界定讨论对象</text>
+<circle id="host" data-node="" cx="900" cy="1390" r="9" fill="var(--vt-ink)" stroke="var(--vt-ink)" stroke-width="1.9" />
+<text x="900" y="1338" font-size="29" font-weight="400" fill="var(--vt-ink)" text-anchor="middle">运行者 A</text>
+<circle id="volunteer" data-node="" cx="1120" cy="1620" r="9" fill="var(--vt-ink)" stroke="var(--vt-ink)" stroke-width="1.9" />
+<text x="1120" y="1680" font-size="28" font-weight="400" fill="var(--vt-ink)" text-anchor="middle">运行者 B</text>
+<circle id="reader" data-node="" cx="1540" cy="1390" r="9" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="1.9" />
+<path data-decoration="annotation" d="M1555 1390H1920" fill="none" stroke="var(--vt-muted)" stroke-width="1.5" />
+<text x="1960" y="1350" font-size="33" font-weight="500" fill="var(--vt-ink)" text-anchor="start">使用者</text>
+<text x="1960" y="1447" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="start">实际需要什么？</text>
+<circle id="venue" data-node="" cx="850" cy="1730" r="9" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="1.9" />
+<path data-decoration="annotation" d="M835 1730H425" fill="none" stroke="var(--vt-muted)" stroke-width="1.5" />
+<text x="120" y="1690" font-size="33" font-weight="500" fill="var(--vt-ink)" text-anchor="start">资源提供者</text>
+<text x="120" y="1784" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="start">谁提供必要支持？</text>
+<circle id="neighbour" data-node="" cx="1740" cy="1740" r="9" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="1.9" />
+<path data-decoration="annotation" d="M1755 1740H1920" fill="none" stroke="var(--vt-muted)" stroke-width="1.5" />
+<text x="1960" y="1700" font-size="33" font-weight="500" fill="var(--vt-ink)" text-anchor="start">受影响者</text>
+<text x="1960" y="1795" font-size="27" font-weight="400" fill="var(--vt-muted)" text-anchor="start">不直接使用，也可能受影响。</text>
+<text x="1960" y="1842" font-size="26" font-weight="400" fill="var(--vt-muted)" text-anchor="start">还有谁未被听见？</text>
+<circle id="rules" data-node="" cx="690" cy="1040" r="9" fill="var(--vt-bg)" stroke="var(--vt-ink)" stroke-width="1.9" />
+<path data-decoration="annotation" d="M675 1040H425" fill="none" stroke="var(--vt-muted)" stroke-width="1.5" />
+<text x="120" y="1000" font-size="33" font-weight="500" fill="var(--vt-ink)" text-anchor="start">约束相关者</text>
+<text x="120" y="1090" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="start">有哪些外部规则？</text>
+<text x="1120" y="1987" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">中心是讨论对象；靠近中心不等于更重要。</text>
+<text x="1120" y="2040" font-size="26" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">同一人也可能同时承担多个角色。</text>
+<path data-decoration="annotation" d="M120 2470H2280" fill="none" stroke="var(--vt-muted)" stroke-width="1.5" />
+<text x="2280" y="2550" font-size="42" font-weight="500" fill="var(--vt-ink)" text-anchor="end">补进一个遗漏角色，哪些安排需要重查？</text>
+<text x="2280" y="2615" font-size="29" font-weight="400" fill="var(--vt-muted)" text-anchor="end">把“我替他设想的需求”与“他实际表达的诉求”分开。</text>
+<text x="120" y="2710" font-size="25" font-weight="400" fill="var(--vt-muted)" text-anchor="start">[2] Alexander (2004). A Better Fit—Characterising the Stakeholders. REBPS / CAISE.</text>
+<text x="120" y="2754" font-size="24" font-weight="400" fill="var(--vt-muted)" text-anchor="start">scenarioplus.org.uk/papers/stakeholders/a_better_fit.htm</text>
+<text x="120" y="2820" font-size="24" font-weight="400" fill="var(--vt-muted)" text-anchor="start">自主绘制的通用骨架；角色可多重归属，圈层不表示人数、权力或重要性；不是原作者图版。</text>
+</svg>

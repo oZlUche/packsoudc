@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="3170" viewBox="0 0 1900 3170" role="img" aria-labelledby="title" aria-describedby="desc">
+<title id="title">V 图：围绕一个问题组织研究</title>
+<desc id="desc">按所提供V Map原型组织研究：顶端是研究主题；V形左外侧上部是已有知识，下部是关键概念；V内上部是研究工具；右外侧上部是完成研究后的结论与发现，下部是包含日期和活动的研究计划；V尖端下方保留具体研究问题及书写位置。填写时先明确主题、已有知识和概念，形成具体问题，选择工具与计划，按研究进度填写实际发现，未取得证据时留待查。V是区分研究所需内容的框架，不表示数量比例、漏斗流量或因果，不改成普通流程图。所有区域留作实际内容的填写位置，没有预填研究结论。右上由记录与分析形成回答及限制，左侧猜测须与已有资料分开；拟议计划与实际实施分别记录。本图为独立排版与自绘几何。</desc>
+<style data-vt-theme="">:root{--vt-bg:#191A18;--vt-ink:#EFEEE7;--vt-muted:#B0B2A8;--vt-accent:#EFEEE7;--vt-surface:#272925;--vt-secondary:#383B34;--vt-line:1.8;--vt-title:54px;--vt-section:34px;--vt-label:23px;--vt-note:19px;}text{font-family:"PingFang SC","Noto Sans CJK SC","Source Han Sans SC","Microsoft YaHei","Helvetica Neue",sans-serif}</style>
+<rect width="1900" height="3170" fill="var(--vt-bg)" data-decoration="background"/>
+<text x="90" y="122" font-size="54" fill="var(--vt-ink)" text-anchor="start" font-weight="600">V 图：围绕一个问题组织研究</text>
+<text x="90" y="184" font-size="30" fill="var(--vt-muted)" text-anchor="start" font-weight="400">V Map</text>
+<path d="M90 228H1160" fill="none" stroke="var(--vt-muted)" stroke-opacity=".42" stroke-width="1" data-decoration="guide"/>
+<path id="v-boundary" data-decoration="semantic-boundary" data-vt-geometry="V-boundary" d="M90 760H500L950 2150L1400 760H1810" fill="none" stroke="var(--vt-ink)" stroke-width="3" stroke-linejoin="miter"/>
+<rect id="topic" data-node="" data-vt-geometry="writing-region" x="140" y="570" width="1620" height="120" fill="var(--vt-bg)" stroke="none"/>
+<rect id="known" data-node="" data-vt-geometry="writing-region" x="140" y="815" width="350" height="430" fill="var(--vt-bg)" stroke="none"/>
+<rect id="concepts" data-node="" data-vt-geometry="writing-region" x="140" y="1400" width="520" height="430" fill="var(--vt-bg)" stroke="none"/>
+<rect id="tools" data-node="" data-vt-geometry="writing-region" x="720" y="815" width="460" height="370" fill="var(--vt-bg)" stroke="none"/>
+<rect id="findings" data-node="" data-vt-geometry="writing-region" x="1430" y="815" width="340" height="430" fill="var(--vt-bg)" stroke="none"/>
+<rect id="plan" data-node="" data-vt-geometry="writing-region" x="1290" y="1400" width="480" height="430" fill="var(--vt-bg)" stroke="none"/>
+<rect id="question" data-node="" data-vt-geometry="writing-region" x="450" y="2180" width="1000" height="240" fill="var(--vt-bg)" stroke="none"/>
+<text x="172" y="633" font-size="34" fill="var(--vt-ink)" text-anchor="start" font-weight="500" data-in-node="topic" data-padding="20">研究主题</text>
+<text x="450" y="633" font-size="24" fill="var(--vt-muted)" text-anchor="start" font-weight="400" data-in-node="topic" data-padding="20">写入本次想研究的主题范围</text>
+<path d="M450 658H1728" fill="none" stroke="var(--vt-muted)" stroke-opacity=".42" stroke-width="1" data-decoration="writing-line"/>
+<text x="172" y="878" font-size="34" fill="var(--vt-ink)" text-anchor="start" font-weight="500" data-in-node="known" data-padding="20">我已知道什么</text>
+<text x="172" y="925" font-size="17" fill="var(--vt-muted)" text-anchor="start" font-weight="400" data-in-node="known" data-padding="20">WHAT I ALREADY KNOW</text>
+<text x="172" y="1000" font-size="23" fill="var(--vt-muted)" text-anchor="start" font-weight="400" data-in-node="known" data-padding="20">哪些已有资料或观察？</text>
+<text x="172" y="1042" font-size="23" fill="var(--vt-muted)" text-anchor="start" font-weight="400" data-in-node="known" data-padding="20">标明来源；猜测另列。</text>
+<path d="M172 1121H458" fill="none" stroke="var(--vt-muted)" stroke-opacity=".42" stroke-width="1" data-decoration="writing-line"/>
+<path d="M172 1185H458" fill="none" stroke="var(--vt-muted)" stroke-opacity=".42" stroke-width="1" data-decoration="writing-line"/>
+<text x="172" y="1463" font-size="34" fill="var(--vt-ink)" text-anchor="start" font-weight="500" data-in-node="concepts" data-padding="20">关键概念</text>
+<text x="172" y="1510" font-size="18" fill="var(--vt-muted)" text-anchor="start" font-weight="400" data-in-node="concepts" data-padding="20">KEY CONCEPTS</text>
+<text x="172" y="1587" font-size="23" fill="var(--vt-muted)" text-anchor="start" font-weight="400" data-in-node="concepts" data-padding="20">哪些定义、原理会影响取证？</text>
+<text x="172" y="1629" font-size="23" fill="var(--vt-muted)" text-anchor="start" font-weight="400" data-in-node="concepts" data-padding="20">明确含义，假设标为待检验。</text>
+<path d="M172 1710H628" fill="none" stroke="var(--vt-muted)" stroke-opacity=".42" stroke-width="1" data-decoration="writing-line"/>
+<path d="M172 1774H628" fill="none" stroke="var(--vt-muted)" stroke-opacity=".42" stroke-width="1" data-decoration="writing-line"/>
+<text x="950" y="878" font-size="34" fill="var(--vt-ink)" text-anchor="middle" font-weight="500" data-in-node="tools" data-padding="20">研究工具</text>
+<text x="950" y="925" font-size="18" fill="var(--vt-muted)" text-anchor="middle" font-weight="400" data-in-node="tools" data-padding="20">RESEARCH TOOLS</text>
+<text x="950" y="1000" font-size="23" fill="var(--vt-muted)" text-anchor="middle" font-weight="400" data-in-node="tools" data-padding="20">从哪里取证，怎样分析？</text>
+<text x="950" y="1042" font-size="21" fill="var(--vt-muted)" text-anchor="middle" font-weight="400" data-in-node="tools" data-padding="20">资料、收集办法与分析各有用途。</text>
+<path d="M760 1121H1140" fill="none" stroke="var(--vt-muted)" stroke-opacity=".42" stroke-width="1" data-decoration="writing-line"/>
+<text x="1462" y="878" font-size="34" fill="var(--vt-ink)" text-anchor="start" font-weight="500" data-in-node="findings" data-padding="20">结论与发现</text>
+<text x="1462" y="925" font-size="16" fill="var(--vt-muted)" text-anchor="start" font-weight="400" data-in-node="findings" data-padding="20">CONCLUSION &amp; FINDINGS</text>
+<text x="1462" y="1000" font-size="23" fill="var(--vt-muted)" text-anchor="start" font-weight="400" data-in-node="findings" data-padding="20">未取得证据，先留待查。</text>
+<text x="1462" y="1042" font-size="21" fill="var(--vt-muted)" text-anchor="start" font-weight="400" data-in-node="findings" data-padding="20">记录 → 分析 → 回答与限制</text>
+<path d="M1462 1121H1738" fill="none" stroke="var(--vt-muted)" stroke-opacity=".42" stroke-width="1" data-decoration="writing-line"/>
+<path d="M1462 1185H1738" fill="none" stroke="var(--vt-muted)" stroke-opacity=".42" stroke-width="1" data-decoration="writing-line"/>
+<text x="1322" y="1463" font-size="34" fill="var(--vt-ink)" text-anchor="start" font-weight="500" data-in-node="plan" data-padding="20">研究计划</text>
+<text x="1322" y="1510" font-size="18" fill="var(--vt-muted)" text-anchor="start" font-weight="400" data-in-node="plan" data-padding="20">RESEARCH PLAN</text>
+<text x="1322" y="1587" font-size="23" fill="var(--vt-muted)" text-anchor="start" font-weight="400" data-in-node="plan" data-padding="20">何时做什么，怎样取得资料？</text>
+<text x="1322" y="1629" font-size="23" fill="var(--vt-muted)" text-anchor="start" font-weight="400" data-in-node="plan" data-padding="20">拟议与实际实施分开记录。</text>
+<path d="M1322 1710H1738" fill="none" stroke="var(--vt-muted)" stroke-opacity=".42" stroke-width="1" data-decoration="writing-line"/>
+<path d="M1322 1774H1738" fill="none" stroke="var(--vt-muted)" stroke-opacity=".42" stroke-width="1" data-decoration="writing-line"/>
+<text x="950" y="2243" font-size="36" fill="var(--vt-ink)" text-anchor="middle" font-weight="500" data-in-node="question" data-padding="20">研究问题</text>
+<text x="950" y="2293" font-size="19" fill="var(--vt-muted)" text-anchor="middle" font-weight="400" data-in-node="question" data-padding="20">THE RESEARCH QUESTION(S)</text>
+<text x="950" y="2343" font-size="24" fill="var(--vt-muted)" text-anchor="middle" font-weight="400" data-in-node="question" data-padding="20">明确对象与情境，提出能探究的问题。</text>
+<path d="M550 2385H1350" fill="none" stroke="var(--vt-muted)" stroke-opacity=".42" stroke-width="1" data-decoration="writing-line"/>
+<path d="M760 2760H1810" fill="none" stroke="var(--vt-muted)" stroke-opacity=".42" stroke-width="1" data-decoration="guide"/>
+<text x="1810" y="2816" font-size="29" fill="var(--vt-ink)" text-anchor="end" font-weight="500">围绕研究问题，把已有认识与研究发现分开。</text>
+<text x="1810" y="2866" font-size="23" fill="var(--vt-muted)" text-anchor="end" font-weight="400">先形成具体问题与计划，完成调查后再写结论。</text>
+<text x="1810" y="2910" font-size="21" fill="var(--vt-muted)" text-anchor="end" font-weight="400">V 形组织研究所需的内容，不表示比例、流量或因果。</text>
+<text x="760" y="2980" font-size="19" fill="var(--vt-muted)" text-anchor="start" font-weight="400">方法依据：The Use of Graphic Organizers to Enhance Thinking Skills</text>
+<text x="760" y="3015" font-size="19" fill="var(--vt-muted)" text-anchor="start" font-weight="400">in the Learning of Economics · V Map, pp. 90–93.</text>
+<text x="1810" y="3090" font-size="17" fill="var(--vt-muted)" text-anchor="end" font-weight="400">依教学图式关系自主排版与绘制；方法来源不作为本题事实证据。</text>
+</svg>

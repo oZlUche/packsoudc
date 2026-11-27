@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "referenceWidth": 1200,
+  "type": {
+    "title": 68,
+    "section": 36,
+    "label": 26,
+    "note": 19
+  },
+  "themes": {
+    "monochrome": {
+      "name": "黑白几何",
+      "bg": "#191A18",
+      "ink": "#EFEEE7",
+      "muted": "#B0B2A8",
+      "accent": "#EFEEE7",
+      "surface": "#272925",
+      "secondary": "#383B34",
+      "line": 1.8
+    },
+    "color-blocks": {
+      "name": "彩色积木",
+      "bg": "#EAF4F4",
+      "ink": "#102436",
+      "muted": "#496170",
+      "accent": "#2FA7C7",
+      "surface": "#BDE4DB",
+      "secondary": "#F1C4AD",
+      "line": 2.8
+    },
+    "sticker-board": {
+      "name": "贴纸学习板",
+      "bg": "#F5F0D8",
+      "ink": "#25211D",
+      "muted": "#61584C",
+      "accent": "#E756BD",
+      "surface": "#F3E768",
+      "secondary": "#B6CBF3",
+      "line": 3
+    }
+  }
+}

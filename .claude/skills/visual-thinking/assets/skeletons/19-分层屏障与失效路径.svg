@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2800" height="2780" viewBox="0 0 2800 2780" role="img" aria-labelledby="title" aria-describedby="desc">
+<title id="title">分层屏障：错误会从哪里穿过？</title>
+<desc id="desc">通用屏障骨架。两组环分别保留同一潜在错误路径；左组共享开口，右组替换一道检查后示意拦截。每环是控制，开口是待查弱点；无失效率数据，不承诺安全。</desc>
+<style data-vt-theme="">:root{--vt-bg:#191A18;--vt-ink:#EFEEE7;--vt-muted:#B0B2A8;--vt-accent:#EFEEE7;--vt-surface:#272925;--vt-secondary:#383B34;--vt-line:1.8;}text{font-family:"PingFang SC","Noto Sans CJK SC","Source Han Sans SC","Microsoft YaHei","Helvetica Neue",sans-serif}</style>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="11" markerHeight="11" orient="auto" markerUnits="userSpaceOnUse"><path d="M2 2L10 6L2 10" fill="none" stroke="var(--vt-ink)" stroke-width="1.5" /></marker></defs>
+<rect width="2800" height="2780" fill="var(--vt-bg)" data-decoration="background" />
+<text x="120" y="160" font-size="76" font-weight="600" fill="var(--vt-ink)" text-anchor="start">分层屏障：错误会从哪里穿过？</text>
+<text x="120" y="239" font-size="40" font-weight="400" fill="var(--vt-muted)" text-anchor="start">Layered barriers and shared failure paths</text>
+<path data-decoration="annotation" d="M120 288H2350" fill="none" stroke="var(--vt-muted)" stroke-width="1.5" />
+<text x="120" y="347" font-size="30" font-weight="400" fill="var(--vt-muted)" text-anchor="start">通用骨架：追踪同一条潜在错误路径，比较沿用与替换一道检查后的变化。</text>
+<path data-decoration="semantic-boundary" d="M300.052 1254.361A460 460 0 1 1 300.052 1445.639" fill="none" stroke="var(--vt-ink)" stroke-width="2.1" />
+<path data-decoration="semantic-boundary" d="M441.884 1284.508A315 315 0 1 1 441.884 1415.492" fill="none" stroke="var(--vt-ink)" stroke-width="2.1" />
+<path data-decoration="semantic-boundary" d="M1600.052 1254.361A460 460 0 1 1 1600.052 1445.639" fill="none" stroke="var(--vt-ink)" stroke-width="2.1" />
+<path data-decoration="semantic-boundary" d="M1741.884 1284.508A315 315 0 1 1 1741.884 1415.492" fill="none" stroke="var(--vt-ink)" stroke-width="2.1" />
+<path data-decoration="semantic-boundary" d="M583.715 1314.655A170 170 0 1 1 583.715 1385.345" fill="none" stroke="var(--vt-ink)" stroke-width="2.1" />
+<circle data-decoration="semantic-boundary" cx="2050" cy="1350" r="170" fill="none" stroke="var(--vt-ink)" stroke-width="2.8" />
+<text x="750" y="747" font-size="35" font-weight="500" fill="var(--vt-ink)" text-anchor="middle">多层可能共享同一盲点</text>
+<text x="750" y="805" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">假设：各层沿用同一错误依据</text>
+<text x="2050" y="747" font-size="35" font-weight="500" fill="var(--vt-ink)" text-anchor="middle">替换一层检查的依据或机制</text>
+<text x="2050" y="805" font-size="27" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">假设新检查能发现此处错误，仍待验证</text>
+<text x="750" y="960" font-size="35" font-weight="400" fill="var(--vt-ink)" text-anchor="middle">检查一</text>
+<text x="750" y="1111" font-size="33" font-weight="400" fill="var(--vt-ink)" text-anchor="middle">检查二</text>
+<text x="2050" y="960" font-size="35" font-weight="400" fill="var(--vt-ink)" text-anchor="middle">检查一</text>
+<text x="2050" y="1111" font-size="33" font-weight="400" fill="var(--vt-ink)" text-anchor="middle">检查二</text>
+<text x="750" y="1246" font-size="31" font-weight="400" fill="var(--vt-ink)" text-anchor="middle">检查三</text>
+<text x="2050" y="1246" font-size="31" font-weight="400" fill="var(--vt-ink)" text-anchor="middle">不同依据的检查</text>
+<path id="missed-error-path" data-edge="" d="M145 1350H620" fill="none" stroke="var(--vt-ink)" stroke-width="2.3" stroke-dasharray="6 10" marker-end="url(#arrow)" />
+<text x="145" y="1288" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="start">同一错误</text>
+<text x="750" y="1352" font-size="43" font-weight="500" fill="var(--vt-ink)" text-anchor="middle">潜在错误</text>
+<text x="750" y="1415" font-size="30" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">仍可能漏过</text>
+<path id="checked-error-path" data-edge="" d="M1440 1350H1860" fill="none" stroke="var(--vt-ink)" stroke-width="2.3" stroke-dasharray="6 10" />
+<path data-decoration="annotation" d="M1860 1324V1376" fill="none" stroke="var(--vt-ink)" stroke-width="2.6" />
+<text x="1440" y="1288" font-size="28" font-weight="400" fill="var(--vt-muted)" text-anchor="start">同一错误</text>
+<text x="2050" y="1352" font-size="42" font-weight="500" fill="var(--vt-ink)" text-anchor="middle">待决定</text>
+<text x="2050" y="1415" font-size="30" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">修正／继续</text>
+<text x="750" y="1915" font-size="31" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">检查名称不同，仍可能依赖同一错误输入。</text>
+<text x="2050" y="1915" font-size="30" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">这一层能否截住这条具体的错误路径？</text>
+<text x="1400" y="2020" font-size="29" font-weight="400" fill="var(--vt-muted)" text-anchor="middle">环是检查，开口是示意弱点；虚线是本例追踪的错误路径。[5,6]</text>
+<path data-decoration="annotation" d="M120 2310H2680" fill="none" stroke="var(--vt-muted)" stroke-width="1.5" />
+<text x="2680" y="2390" font-size="44" font-weight="500" fill="var(--vt-ink)" text-anchor="end">如果这一层失效，下一层靠什么发现或补救？</text>
+<text x="2680" y="2453" font-size="30" font-weight="400" fill="var(--vt-muted)" text-anchor="end">关注不同控制的作用与共同依赖，不由圈数推算可靠性。</text>
+<text x="120" y="2550" font-size="25" font-weight="400" fill="var(--vt-muted)" text-anchor="start">[5] Reason (2000). Human error: models and management. BMJ · doi:10.1136/bmj.320.7237.768</text>
+<text x="120" y="2596" font-size="25" font-weight="400" fill="var(--vt-muted)" text-anchor="start">[6] NIST CSRC. defense-in-depth. csrc.nist.gov/glossary/term/defense_in_depth</text>
+<text x="120" y="2670" font-size="24" font-weight="400" fill="var(--vt-muted)" text-anchor="start">同心开口为本图自主隐喻，非Reason原图；弱点、路径与替换均为示意，不表示失效概率或保证防护有效。</text>
+</svg>
