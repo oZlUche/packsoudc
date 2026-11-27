@@ -15,7 +15,7 @@ static func _flow() -> GameFlow:
 
 
 static func frame_expedition_page(t: TestCase, root: Window) -> void:
-	t.begin("264 §二 · 出征页：第一个页签、默认选中；碑在左、上回出征 / 军需两块木牌与【开始探索】在右；回主菜单在右下（280）；单选；Esc 别页回出征、出征回主菜单")
+	t.begin("264 §二 · 出征页：第一个页签、默认选中；碑在左、上回出征 / 军需两块木牌与【开始探索】在右；单选；Esc 别页回出征、出征呼出系统菜单（作者 11-27，右下回主菜单删了）")
 	var f := _flow()
 	var screen = Records._screen(f, root)
 	t.eq(screen._tab_btns.keys()[0], "expedition", "出征是第一个页签")
@@ -33,9 +33,7 @@ static func frame_expedition_page(t: TestCase, root: Window) -> void:
 	var left: Control = (screen._tab_btns["expedition"] as Button).get_parent()
 	var keys: Array = left.find_children("*", "Button", true, false).filter(func(b): return (b as Button).is_visible_in_tree()).map(func(b): return (b as Button).text)
 	t.check(not keys.has("再来一局") and not keys.has("开始探索") and not keys.has("回主菜单"), "左列只剩页签（%s）" % [keys])
-	var menu: Button = screen.get_node("MainMenuButton")
-	var corner: Vector2 = root.get_visible_rect().size - Vector2(screen.MARGIN, screen.MARGIN)
-	t.check(menu.text == "回主菜单" and menu.get_global_rect().end.distance_to(corner) < 2.0, "280 B：回主菜单钉在右下（%s）" % [menu.get_global_rect()])
+	t.check(screen.get_node_or_null("MainMenuButton") == null, "作者 11-27：右下「回主菜单」删了")
 	t.check(not screen._right.visible, "出征页收起右半边（碑 + 木牌要整个中列）")
 	var full: Vector2 = root.get_visible_rect().size
 	t.check(page.get_combined_minimum_size().x <= screen.middle_width(full), "碑 + 木牌放得进中列（%.0f ≤ %.0f）" % [page.get_combined_minimum_size().x, screen.middle_width(full)])
@@ -69,8 +67,18 @@ static func frame_expedition_page(t: TestCase, root: Window) -> void:
 	screen.free()
 	var g := _flow()
 	var s2 = Records._screen(g, root)
-	s2.escape()
-	t.eq(g.screen, GameFlow.Screen.MAIN_MENU, "出征页 Esc：回主菜单")
+	t.check(s2.escape() and s2.system_menu_open(), "作者 11-27：出征页 Esc 呼出系统菜单，不直接回主菜单")
+	var sys_keys: Array = (s2.get_node("SystemMenu") as Control).find_children("*", "ScrollKey", true, false).map(func(b): return (b as Button).text)
+	t.eq(sys_keys, ["返回主菜单", "设置", "百科"], "系统菜单三项")
+	t.eq(Bare.audit(s2.get_node("SystemMenu"), "system_menu"), [] as Array[String], "系统菜单没有裸字")
+	s2.system_settings()
+	t.check(s2.system_settings_open() and s2.escape() and not s2.system_settings_open() and s2.system_menu_open(), "设置嵌在系统菜单里，Esc 回系统菜单")
+	s2.system_encyclopedia()
+	t.check(s2.system_encyclopedia_open() and s2.escape() and not s2.system_encyclopedia_open() and s2.system_menu_open(), "百科嵌在系统菜单里，Esc 回系统菜单")
+	t.check(s2.escape() and not s2.system_menu_open(), "再 Esc 关掉系统菜单")
+	s2.toggle_system_menu()
+	((s2.get_node("SystemMenu") as Control).find_children("*", "ScrollKey", true, false)[0] as Button).pressed.emit()
+	t.eq(g.screen, GameFlow.Screen.MAIN_MENU, "【返回主菜单】回主菜单")
 	s2.free()
 	Records._cleanup()
 
