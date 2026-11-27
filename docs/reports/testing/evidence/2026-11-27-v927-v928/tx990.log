@@ -1,0 +1,15 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+TX990 zh god_brute_linger【余怒】怒气消散后，重新施加原本层数 33% 的怒气
+TX990 zh god_brute_persist【怒意延绵】你的怒气持续时间减半，但每次受到伤害都会重置
+TX990 zh god_sun_stars【众星】每经过一次变换，点亮一颗【星辰】，整局结算时每颗换 2 枚钱
+TX990 en god_brute_linger【Smoldering Rage】When Rage fades, regain 33% of those stacks
+TX990 en god_brute_persist【Lingering Wrath】Your Rage lasts half as long, but every hit you take resets it
+TX990 en god_sun_stars【Myriad Stars】Each Day/Night change lights a Star; when the run is settled each Star is worth 2 coins
+TX990 重名 zh「甄选」：god_earth_select / god_earth_select_0
+TX990 重名 en「pick of the lode」：god_earth_select / god_earth_select_0
+TX990 重名 zh「甄选」：god_earth_select_0 / god_earth_select_1
+TX990 重名 en「pick of the lode」：god_earth_select_0 / god_earth_select_1
+TX990 重名 zh「甄选」：god_earth_select_1 / god_earth_select_2
+TX990 重名 en「pick of the lode」：god_earth_select_1 / god_earth_select_2
+TX990 查了 203 张牌的名字（英文忽略大小写、ou/o 拼法）
