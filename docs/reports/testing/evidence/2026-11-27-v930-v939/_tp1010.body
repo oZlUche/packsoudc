@@ -1,0 +1,185 @@
+extends SceneTree
+## 游戏测试 v9.36（PR #1010）：道具悬浮窗紧贴外框、子窗紧贴父窗；钉住后从道具横移 / 竖移进窗不收、离开当场收；靠右 / 下边翻转仍贴边；子窗链来回不误收。参数 <outdir>
+const TAG := "TP1010"
+##HEAD##
+var _q: Array = []
+var _bad := 0
+var _v: InventoryView = null
+var _tip: HoverTip = null
+var _log := []
+var _cases: Array = []
+var _ci := 0
+
+
+func _dismiss() -> bool:
+	for n in root.find_children("*", "Button", true, false):
+		var b := n as Button
+		if b.is_visible_in_tree() and (b.text == "知道了" or b.text.to_lower() == "got it"): _click(b); return true
+	return false
+
+
+func _cg(c: Vector2i) -> Vector2:
+	return _v.get_global_transform() * (_v.cell_origin_px(c) + Vector2.ONE * _v.cell_px * 0.5)
+
+
+func _item_rect(it: ItemInstance) -> Rect2:
+	var r := _v.item_rect(it.uid)
+	return Rect2(_v.get_global_transform() * r.position, r.size * _v.get_global_transform().get_scale())
+
+
+## 一条路：每帧挪一步，每步记窗还在不在、开着几扇
+func _path(a: Vector2, b: Vector2, step_px: float, tag: String) -> Array:
+	var n := maxi(1, int(a.distance_to(b) / step_px))
+	var out := []
+	for i in n + 1:
+		var p := a.lerp(b, float(i) / n)
+		out.append([func():
+			_hover_at(p)
+			_log.append([tag, p, _tip.is_showing(), _tip.windows().size()]), 1])
+	return out
+
+
+func _summ(tag: String, want_windows: int) -> String:
+	var closed := 0
+	var fewer := 0
+	var n := 0
+	for r in _log:
+		if r[0] != tag: continue
+		n += 1
+		if not r[2]: closed += 1
+		elif r[3] < want_windows: fewer += 1
+	if closed > 0 or fewer > 0: _bad += 1
+	return "%s：%d 步，窗收掉 %d 步，少了子窗 %d 步" % [tag, n, closed, fewer]
+
+
+static func _gap(a: Rect2, w: Rect2) -> String:
+	# 窗在哪一边、离外框几像素
+	if w.position.x >= a.end.x - 0.5: return "右边，缝 %.1f" % (w.position.x - a.end.x)
+	if w.end.x <= a.position.x + 0.5: return "左边，缝 %.1f" % (a.position.x - w.end.x)
+	if w.position.y >= a.end.y - 0.5: return "下边，缝 %.1f" % (w.position.y - a.end.y)
+	if w.end.y <= a.position.y + 0.5: return "上边，缝 %.1f" % (a.position.y - w.end.y)
+	return "压着外框"
+
+
+func _process(_d: float) -> bool:
+	_f += 1
+	if _f % 300 == 0: print("%s ♥ f %d st %d" % [TAG, _f, _st])
+	if _flow == null:
+		_flow = _game.flow
+		return false
+	if _f > 12000: L("超时 st %d" % _st); shot("timeout"); quit(1); return true
+	if _wait > 0: _wait -= 1; return false
+	if _st < 3:
+		if _boot(): _st = 3
+		return false
+	match _st:
+		1000:
+			if _q.is_empty(): return false
+			var a: Array = _q.pop_front()
+			(a[0] as Callable).call()
+			_wait = int(a[1])
+		3:
+			for id in ["steel_greatsword", "kite_shield", "knight_plate", "crossbow", "knife"]: _put(id)
+			_flow.save_meta(); _flow.meta.changed.emit()
+			_tab("warehouse"); _wait = 40; _st = 4
+		4:
+			if _dismiss(): _wait = 30; return false
+			for n in root.find_children("*", "InventoryView", true, false):
+				var v := n as InventoryView
+				if v.is_visible_in_tree() and v.inventory != null and v.inventory.items().size() >= 3 and _v == null: _v = v
+			_tip = HoverTip.host_for(_v)
+			var g: GridInventory = _v.inventory
+			# 挑三件：最靠左上、最靠右、最靠下
+			var left: ItemInstance = null; var right: ItemInstance = null; var low: ItemInstance = null
+			for it in g.items():
+				var i := it as ItemInstance
+				if left == null or i.origin.x + i.origin.y < left.origin.x + left.origin.y: left = i
+				if right == null or i.origin.x > right.origin.x: right = i
+				if low == null or i.origin.y > low.origin.y: low = i
+			# 右下角放一把小刀（窗该往上、往左翻）
+			var corner: ItemInstance = null
+			for it in g.items():
+				if (it as ItemInstance).def.id == &"knife" and corner == null and it != right: corner = it
+			if corner != null:
+				g.remove(corner.uid)
+				L("把一把小刀挪到右下角 (9, 6)：%s" % str(g.place(corner, Vector2i(9, 6), 0)))
+			_cases = [["左上", left], ["最右", right], ["最下", low], ["右下角", corner]]
+			L("仓库 %s，%d 件；挑 %s" % [str(g.size), g.items().size(), str(_cases.map(func(c): return "%s %s %s" % [c[0], Names.of(c[1].def), str(c[1].origin)]))])
+			_st = 5
+		5:
+			if _ci >= _cases.size(): _st = 20; return false
+			var c: Array = _cases[_ci]
+			var it: ItemInstance = c[1]
+			var cell: Vector2i = it.origin + it.def.shape.cells_rotated(it.rotation)[0]
+			var p := _cg(cell)
+			_log.clear()
+			_q = [[func(): _hover_at(Vector2(5, 5)), 20], [func(): _hover_at(p), 100], [func():
+				var w := _tip.windows()
+				var ar := _item_rect(it)
+				var wr: Rect2 = w[0].global_rect() if not w.is_empty() else Rect2()
+				L("【%s】%s：钉住 %s；外框 %s；窗 %s；窗在 %s" % [c[0], Names.of(it.def), str(_tip.is_pinned()), str(ar), str(wr), _gap(ar, wr)])
+				if not _tip.is_pinned(): _bad += 1
+				if not _gap(ar, wr).contains("缝 0.0") and not _gap(ar, wr).contains("缝 -0.0"): _bad += 1; L("BAD 窗没贴着外框")
+				shot("pinned_%d" % _ci)
+				# 从格子中心沿直线挪到窗中心（横移 / 竖移看窗在哪边）
+				var target := wr.get_center()
+				var straight := Vector2(target.x, p.y) if (wr.position.x >= ar.end.x - 1 or wr.end.x <= ar.position.x + 1) else Vector2(p.x, target.y)
+				var q2 := _path(p, straight, 3.0, "move_in")
+				q2.append([func():
+					L("　　%s" % _summ("move_in", 1))
+					_log.clear(), 1])
+				# 再出来：离开窗和外框，看当场收
+				var away := Vector2(300, 800)     # 左边筛选栏底下的空处，不压任何道具
+				q2.append([func(): _hover_at(straight), 2])
+				q2.append([func(): _hover_at(away), 1])
+				q2.append([func(): L("　　离开窗、外框后 1 帧：窗 %s" % ("还开着" if _tip.is_showing() else "收了")); set_meta("one", _tip.is_showing()), 3])
+				q2.append([func():
+					L("　　3 帧后：窗 %s" % ("还开着" if _tip.is_showing() else "收了"))
+					if _tip.is_showing(): _bad += 1
+					_ci += 1; _st = 5, 5])
+				_q = q2 + _q, 1]]
+			_st = 1000
+		20:
+			# 子窗：钉住左上那件，开第一个关键词的子窗，来回挪
+			var it: ItemInstance = _cases[0][1]
+			var best: ItemInstance = null
+			for x in _v.inventory.items():
+				if best == null and (x as ItemInstance).def.id in [&"steel_greatsword", &"crossbow", &"kite_shield"]: best = x
+			if best != null: it = best
+			var p := _cg(it.origin + it.def.shape.cells_rotated(it.rotation)[0])
+			_log.clear()
+			_q = [[func(): _hover_at(Vector2(5, 5)), 20], [func(): _hover_at(p), 100], [func():
+				var w := _tip.windows()
+				if w.is_empty() or w[0].terms.is_empty(): L("（%s 的窗没有关键词）" % Names.of(it.def)); _st = 99; return
+				var k: String = w[0].terms.keys()[0]
+				var ch := _tip.open_child(w[0], "term:" + k)
+				if ch != null: _tip.pin(ch)     # 真玩是停在词上开子窗、停满钉住；这里直接钉住
+				L("子窗：%s 的关键词 %s → %s" % [Names.of(it.def), k, "开了" if ch != null else "没开"])
+				set_meta("p", p), 30],
+				[func():
+					var w := _tip.windows()
+					if w.size() < 2: L("子窗没开"); _bad += 1; _st = 99; return
+					var pr: Rect2 = w[0].global_rect(); var cr: Rect2 = w[1].global_rect()
+					L("　　父窗 %s；子窗 %s；子窗在父窗 %s" % [str(pr), str(cr), _gap(pr, cr)])
+					if not _gap(pr, cr).contains("缝 0.0") and not _gap(pr, cr).contains("缝 -0.0"): _bad += 1; L("BAD 子窗没贴着父窗")
+					shot("child")
+					var pin_in := Vector2(clampf(cr.get_center().x, pr.position.x + 4, pr.end.x - 4), clampf(cr.get_center().y, pr.position.y + 4, pr.end.y - 4))
+					var side := Vector2(pr.get_center().x, clampf(p.y, pr.position.y + 4, pr.end.y - 4))
+					var path := _path(p, side, 3.0, "chain")
+					path += _path(side, pr.get_center(), 3.0, "chain")
+					path += _path(pr.get_center(), pin_in, 3.0, "chain")
+					path += _path(pin_in, cr.get_center(), 3.0, "chain")
+					path += _path(cr.get_center(), pin_in, 3.0, "chain")
+					path += _path(pin_in, cr.get_center(), 3.0, "chain")
+					path.append([func():
+						L("　　道具 → 父窗 → 子窗 → 父窗 → 子窗：%s" % _summ("chain", 2))
+						_hover_at(Vector2(5, 5)), 3])
+					path.append([func():
+						L("　　离开整串 3 帧后：窗 %s" % ("还开着" if _tip.is_showing() else "收了"))
+						if _tip.is_showing(): _bad += 1
+						_st = 99, 3])
+					_q = path + _q, 1]]
+			_st = 1000
+		99:
+			L("完 bad=%d" % _bad); quit(0); return true
+	return false

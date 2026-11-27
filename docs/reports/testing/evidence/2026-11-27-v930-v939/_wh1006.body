@@ -1,0 +1,117 @@
+extends SceneTree
+## 游戏测试 v9.30（PR #1006）：36 件新图在仓库、悬浮窗、食堂食材仓库里怎么显示。参数 <outdir>
+const TAG := "WH1006"
+const D383 := preload("res://tests/ui/test_departure_383.gd")
+##HEAD##
+const IDS := ["beast_king_pact", "beast_king_pact_spent", "rally_horn", "rally_horn_spent", "spare_mainspring", "spare_mainspring_spent", "beast_haunch", "beast_ribs", "fat_fowl", "fat_fowl_leg", "fowl_leg", "fowl_wing", "game_meat", "meat_scrap", "prime_beast_leg", "prime_game_meat", "whole_fowl", "big_pumpkin", "bitter_endive", "black_bean", "cabbage", "coarse_wheat_bundle", "fragrant_root", "golden_wheat", "honey_pomelo", "honeydew", "jade_yam", "long_scallion", "mountain_pear", "mountain_yam", "red_berry_cluster", "rice_sack", "sour_wheat", "turnip", "wild_berry", "wild_scallion"]
+const HOVER := ["studded_satchel", "beast_king_pact", "beast_king_pact_spent", "rally_horn", "rally_horn_spent", "spare_mainspring", "spare_mainspring_spent", "whole_fowl", "big_pumpkin", "rice_sack"]
+var _insts := []
+var _i := 0
+
+
+func _sub(key: String) -> void:
+	_tab("logistics")
+	_click(_ms()._sub_btns[key])
+
+
+func _view_of(inst: ItemInstance) -> InventoryView:
+	for n in root.find_children("*", "InventoryView", true, false):
+		var v := n as InventoryView
+		if v.is_visible_in_tree() and v.inventory != null and v.inventory.get_item(inst.uid) != null: return v
+	return null
+
+
+func _assist() -> void:
+	var bk := _flow.meta.commissions
+	for f in Commissions.factions():
+		bk.arrived[String(f.id)] = 0
+	for id in Commissions.FEATURES:
+		bk.grants[String(id)] = true
+	D383._two_menus(_flow)
+	_flow.sync_commissions(); _flow.save_meta(); _flow.meta.changed.emit()
+
+
+func _process(_d: float) -> bool:
+	_f += 1
+	if _flow == null:
+		_flow = _game.flow
+		return false
+	if _f > 9000: L("超时 st %d" % _st); shot("timeout"); quit(1); return true
+	if _wait > 0: _wait -= 1; return false
+	if _st < 3:
+		if _boot(): _st = 3
+		return false
+	match _st:
+		3:
+			_assist()
+			var defs := []
+			for id in IDS + ["studded_satchel"]: defs.append(_flow.items.get_def(StringName(id)))
+			L("测试辅助：仓库放 36 件：%s" % str(_flow.meta.grant_lossless(defs)))
+			for it in _flow.meta.warehouse.items():
+				if String((it as ItemInstance).def.id) in HOVER: _insts.append(it)
+			var seen := []
+			for it in _flow.meta.warehouse.items(): seen.append(String((it as ItemInstance).def.id))
+			var miss := []
+			for id in IDS:
+				if not (id in seen): miss.append(id)
+			L("仓库里没进去的：%s" % str(miss))
+			_flow.save_meta(); _flow.meta.changed.emit()
+			_tab("warehouse"); _wait = 40; _st = 40
+		40:
+			L("仓库排版：%s" % _overflow(_ms()))
+			shot("warehouse_all"); _st = 4
+		4:
+			if _i >= _insts.size(): _st = 50; return false
+			var inst: ItemInstance = _insts[_i]
+			var v := _view_of(inst)
+			if v == null: L("%s：仓库页上没看到（可能在别的页）" % Names.of(inst.def)); _i += 1; return false
+			var c0: Vector2i = inst.cells()[0]
+			var at := v.get_global_transform() * (v.cell_origin_px(inst.origin + c0) + Vector2.ONE * v.cell_px * 0.5)
+			_hover_at(Vector2(5, 5)); set_meta("at", at); _wait = 30; _st = 41
+		41:
+			_hover_at(get_meta("at")); _wait = 50; _st = 5
+		5:
+			var inst: ItemInstance = _insts[_i]
+			var v := _view_of(inst)
+			var tip := HoverTip.host_for(v) if v != null else null
+			var txt := _labels_under(tip).replace("\n", " / ") if tip != null else "-"
+			var tex := ItemPainter.art_of(inst.def, v.cell_px)
+			L("%s（%s）悬停：悬浮窗 %s；排版 %s；图 %s，格 %.0f" % [Names.of(inst.def), String(inst.def.id), "开着" if tip != null and tip.visible else "-", _overflow(tip) if tip != null else "-", ("%s %s" % [tex.resource_path.get_file() if tex != null else "（没图）", str(tex.get_size()) if tex != null else ""]), v.cell_px])
+			L("　　整个悬浮窗：%s" % txt.left(400))
+			shot("tip_%s" % String(inst.def.id))
+			_i += 1; _st = 4
+		50:
+			_hover_at(Vector2(5, 5))
+			var done := false
+			for n in root.find_children("*", "", true, false):
+				if not done and n.has_method("show_page") and String(n.get_script().resource_path if n.get_script() != null else "").ends_with("warehouse_pages.gd"):
+					L("仓库翻到第 2 页：%s" % str(n.show_page(1))); done = true
+			_wait = 30; _st = 51
+		51:
+			shot("warehouse_page2"); _st = 6
+		6:
+			_hover_at(Vector2(5, 5))
+			var n := 0
+			for id in IDS.slice(6):
+				var d := _flow.items.get_def(StringName(id))
+				if d != null and d.tags.has(&"ingredient"):
+					_put(id, _flow.meta.canteen); n += 1
+			L("食材仓库放了 %d 件（带 ingredient 标签的）：%s" % [n, str(_ids(_flow.meta.canteen.store))])
+			_flow.save_meta(); _flow.meta.changed.emit()
+			if not _ms()._sub_btns.has("canteen"):
+				L("后勤还没有「食堂」小键：回主菜单再继续")
+				_flow.to_main_menu(); _wait = 30; _st = 7; return false
+			_tab("logistics"); _wait = 30; _st = 71
+		71:
+			_click(_ms()._sub_btns["canteen"]); _wait = 30; _st = 9
+		7:
+			_flow.continue_game(); _wait = 40; _st = 8
+		8:
+			if _flow.screen != GameFlow.Screen.META: return false
+			_tab("logistics"); _wait = 30; _st = 71
+		9:
+			L("食堂排版：%s" % _overflow(_ms().canteen_panel()))
+			shot("canteen_store"); _st = 99
+		99:
+			L("完 err=0"); quit(0); return true
+	return false

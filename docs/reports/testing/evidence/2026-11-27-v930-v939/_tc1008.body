@@ -1,0 +1,90 @@
+extends SceneTree
+## 游戏测试 v9.31（PR #1008）：序章地图教程第一步整屏拖地图说明，后四步照旧；背包教程 Q / E；百科三页。参数 <outdir>
+const TAG := "TC1008"
+##HEAD##
+var _n := 0
+var _bag_n := 0
+
+
+func _ev() -> void:
+	if bool(_flow.last_payload.get("briefing", false)): _flow.close_briefing(); return
+	var top = _game.overlay() if _game.overlay() != null else _game.base()
+	if top != null and top.has_method("choose_event"): top.choose_event(0)
+	elif top != null and top.has_method("proceed"): top.proceed()
+	else: _flow.resume()
+
+
+func _coach() -> CoachOverlay:
+	for c in root.find_children("*", "CoachOverlay", true, false):
+		if (c as Control).is_visible_in_tree(): return c
+	return null
+
+
+func _process(_d: float) -> bool:
+	_f += 1
+	if _flow == null:
+		_flow = _game.flow
+		return false
+	if _f > 8000: L("超时 st %d 屏 %d" % [_st, _flow.screen]); shot("timeout"); quit(1); return true
+	if _wait > 0: _wait -= 1; return false
+	match _st:
+		0:
+			if _f < 60: return false
+			_flow.start_new_game(); _st = 1
+		1:
+			var b = _game.base()
+			if b != null and b.has_method("tutorial_ask_open") and b.tutorial_ask_open():
+				b.accept_tutorial(); _wait = 120; _st = 2
+			elif _f > 300:
+				_flow.accept_tutorial(); _wait = 120; _st = 2
+		2:
+			if _flow.screen == GameFlow.Screen.EVENT: _ev(); _wait = 20; return false
+			if _flow.screen != GameFlow.Screen.MAP or _flow.run == null: return false
+			var c := _coach()
+			if c == null:
+				if _n > 0: _st = 3; return false
+				return false
+			var s := c.step()
+			L("地图教程第 %d 步：目标 %s；洞 %s；字「%s」；排版 %s" % [c.index + 1, String(s.get("target", "")), str(c.hole()), c.line_text().replace("\n", " "), _overflow(c)])
+			shot("map_coach_%d" % (c.index + 1))
+			_n += 1
+			if _n > 8: _st = 3; return false
+			c.next(); _wait = 20
+		3:
+			L("地图教程共看了 %d 步" % _n)
+			_game.base().toggle_bag(); _wait = 60; _st = 4
+		4:
+			var c := _coach()
+			if c == null:
+				L("背包教程：%s" % ("看完 %d 步" % _bag_n if _bag_n > 0 else "没出来"))
+				_st = 5; return false
+			var s := c.step()
+			L("背包教程第 %d 步：目标 %s；字「%s」；排版 %s" % [c.index + 1, String(s.get("target", "")), c.line_text().replace("\n", " "), _overflow(c)])
+			if c.line_text().contains("Q") or c.line_text().contains("E "): shot("bag_coach_%d" % (c.index + 1))
+			_bag_n += 1
+			if _bag_n > 8: _st = 5; return false
+			c.next(); _wait = 20
+		5:
+			_game.base().toggle_bag(); _wait = 20
+			_flow.show_encyclopedia("drag_and_rotate"); _wait = 60; _st = 6
+		6:
+			if _flow.screen != GameFlow.Screen.ENCYCLOPEDIA: L("百科没开（屏 %d）" % _flow.screen); _st = 99; return false
+			var es = _game.overlay() if _game.overlay() != null else _game.base()
+			var pages := ["drag_and_rotate", "keys", "map_and_steps"]
+			if _n2 >= pages.size(): _st = 99; return false
+			var pid: String = pages[_n2]
+			L("百科页 %s：打开 %s" % [pid, str(es.open_page(pid)) if es != null and es.has_method("open_page") else "（没有 open_page）"])
+			_n2 += 1; _wait = 30; _st = 7
+		7:
+			var es = _game.overlay() if _game.overlay() != null else _game.base()
+			var txt := _labels_under(es)
+			var i := txt.find("Q")
+			L("　　页上的字（含 Q 那段）：%s" % txt.substr(maxi(0, i - 60), 360).replace("\n", " "))
+			L("　　R 键出现：%s；排版 %s" % [str(txt.contains(" R ") or txt.contains("按 R") or txt.contains("press R")), _overflow(es)])
+			shot("help_%d" % _n2)
+			_st = 6
+		99:
+			L("完 err=0"); quit(0); return true
+	return false
+
+var _n2 := 0

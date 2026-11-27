@@ -1,0 +1,4 @@
+共 1 条
+    1  UNUSED_PRIVATE_CLASS_VARIABLE
+res://tests/ui/test_status_slate_1127.gd:21  UNUSED_PRIVATE_CLASS_VARIABLE  The class variable "_tip" is declared but never used in the class.
+EXIT 0

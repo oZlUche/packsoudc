@@ -1,0 +1,58 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+OpenGL API 4.5 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.4 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 20.1.2, 256 bits)
+ALSA lib confmisc.c:855:(parse_card) cannot find card '0'
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) error evaluating strings
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) error evaluating name
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5731:(snd_config_expand) Evaluate error: No such file or directory
+ALSA lib pcm.c:2721:(snd_pcm_open_noupdate) Unknown PCM default
+ERROR: Condition "status < 0" is true. Returning: ERR_CANT_OPEN
+   at: init_output_device (drivers/alsa/audio_driver_alsa.cpp:97)
+WARNING: All audio drivers failed, falling back to the dummy driver.
+     at: initialize (servers/audio/audio_server.cpp:258)
+
+BX1011 框选键 [4194325]
+BX1011 ♥ f 300 st 4 屏 9
+BX1011 仓库棋盘 (10, 8)，14 件，空格 58 个
+BX1011 wh_box：从空格 (6, 1) 拉到 (0, 0)：选中 11 件 ["制式短剑", "伤药", "纱布", "口粮", "匕首", "纱布", "伤药", "匕首", "纱布", "纱布", "干草药束"]（框里该有 11 件）；在拖 false；对
+BX1011 悬停选中的 制式短剑：悬浮窗 开着；选中还在 11 件
+BX1011 整组 11 件，平移 (2, 0) 能放下
+BX1011 按住选中的一件拖开：在拖 true，整组 true，朝向 0
+BX1011 　　整组拖着按 Q：朝向 0（应不变 0）
+BX1011 　　再按 E：朝向 0
+BX1011 　　拖着时悬浮窗 开着
+BX1011 整组放下：每件都挪了 (2, 0)：否；{ 1: (0, 0), 2: (1, 0), 3: (2, 0), 4: (3, 0), 5: (4, 0), 6: (5, 0), 7: (6, 0), 15: (1, 1), 16: (2, 1), 17: (3, 1), 18: (5, 1) }；还选中 11 件
+BX1011 整组拖到压着别人的地方（平移 (7, 0)）：弹回原位；件数 14 → 14
+BX1011 点一下空格：选中 0 件（应 0）
+BX1011 ♥ f 600 st 1000 屏 9
+BX1011 快速出售勾选模式下拉框：框到 11 件，勾上 11 件（全勾上 true）；出售条 已选 11 件 · / [全选] / [出售] / [取消]
+BX1011 ♥ f 900 st 13 屏 2
+BX1011 背包棋盘 (7, 6)，5 件；包里的空处 14 格；框选开着 true
+BX1011 不按 Shift 从包的空处 (3, 0) 拖：拿起 皮革包（是包 false）；框 false
+BX1011 按住 Shift 从包的空处 (3, 0) 拉到 (6, 5)：选中 0 件 []（框里该有 0 件，包不算）；底下地图平移 (0.0, 0.0)
+BX1011 完 bad=3
+ERROR: Texture with GL ID of 76: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 77: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 78: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 79: leaked 5460 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+ERROR: Parameter "RenderingServer::get_singleton()" is null.
+   at: ~CompressedTexture2D (scene/resources/compressed_texture.cpp:464)
+WARNING: 10047 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 4922 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+ERROR: 4 RID allocations of type 'N5GLES37TextureE' were leaked at exit.
