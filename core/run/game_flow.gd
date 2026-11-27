@@ -977,12 +977,14 @@ func _output_rarity(r: SmithRecipeDef) -> int:
 
 
 ## 打一张配方；返回空串 = 打了（存盘），否则是原因。354：[param dust] 见 [method Smithy.can_forge]
-func forge(id: StringName, dust: Dictionary = {}) -> String:
+func forge(id: StringName, dust: Dictionary = {}, picks: Dictionary = {}) -> String:     # 作者 2026-11-27：picks = 玩家挑的料（键 → uid）
 	var r := SmithRecipeDef.find(smith_recipes, id)
 	var why := Smithy.can_forge(meta, r, items, dust)
+	if why == "" and not picks.is_empty() and not Smithy.picks_ok(meta, r, picks, dust):
+		why = UiText.t("smithy.missing")
 	var made: ItemInstance = null
 	if why == "":
-		made = Smithy.forge(meta, r, items, dust)
+		made = Smithy.forge(meta, r, items, dust, picks)
 		if made == null:
 			why = UiText.t("smithy.full")
 	if why == "":
@@ -1373,11 +1375,11 @@ func sync_commissions() -> Array[StringName]:
 
 
 ## 342 B2：委托卡上的【办理】（营地当场的那一步）。返回 [method Commissions.credit] 的结果，办成了存档
-func report_commission(id: StringName) -> Dictionary:
+func report_commission(id: StringName, uids: Array = []) -> Dictionary:     # 作者 2026-11-27：交货给了 uids 就只交挑的那几件
 	var d := Commissions.def(id)
 	if not commissions_visible() or d == null:
 		return {"ok": false, "step": false, "done": false}
-	var got := Commissions.report(meta, d, items)
+	var got := Commissions.report(meta, d, items, uids)
 	if bool(got["ok"]):
 		sync_commissions()
 		save_meta()

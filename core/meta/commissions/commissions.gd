@@ -440,12 +440,14 @@ static func auto_take(book: CommissionBook) -> Array[StringName]:
 
 ## 342 B2：营地当场办 —— 停在 `camp_report` 那一步：卡上的【完成】，记一次并当场结案；停在 `hand_in`：【交货】，
 ## 把仓库里合格的交上去（够几件交几件），交够直接结案。返回 [method credit] 的结果（交货另有 `handed` = 交了几件）
-static func report(meta: MetaState, d: CommissionDef, items: ItemDatabase = null) -> Dictionary:
+## 作者 2026-11-27：交货由玩家挑 —— [param uids] 给了就只交这几件（不合格 / 锁着的 / 超出还差件数的跳过）；
+## 空 = 照 [method hand_in_picks] 的默认挑法（测试、旧调用）
+static func report(meta: MetaState, d: CommissionDef, items: ItemDatabase = null, uids: Array = []) -> Dictionary:
 	var s := current_stage(meta.commissions, d.id) if meta != null and d != null else -1
 	if s < 0 or s >= d.stages.size() or not CAMP_GOALS.has(d.stages[s].goal):
 		return {"ok": false, "step": false, "done": false}
 	if d.stages[s].goal == &"hand_in":
-		return _hand_in(meta, d, s, items)
+		return _hand_in(meta, d, s, items, uids)
 	var r := credit(meta, d, s, "camp", items)
 	if bool(r.get("ready", false)):
 		var rcs := meta.commissions.receipts
@@ -487,8 +489,8 @@ static func hand_in_fits(stage: CommissionStage, item: ItemDef) -> bool:
 	return SmithRecipeDef.slot_fits({"material": String(stage.params.get("material", "")), "min": int(stage.params.get("min", 0))}, item)
 
 
-## 342 B2：交货会交仓库里哪几件：合格、没锁的，稀有度低的先交，最多交到这一步还差的件数
-static func hand_in_picks(meta: MetaState, d: CommissionDef, stage: int) -> Array[ItemInstance]:
+## 作者 2026-11-27：交货能挑的 —— 仓库里合格、没锁的全部，价值低的在前（同价稀有度低的在前）
+static func hand_in_choices(meta: MetaState, d: CommissionDef, stage: int) -> Array[ItemInstance]:
 	var out: Array[ItemInstance] = []
 	if meta == null or meta.warehouse == null or d == null or stage < 0 or stage >= d.stages.size():
 		return out
@@ -497,14 +499,43 @@ static func hand_in_picks(meta: MetaState, d: CommissionDef, stage: int) -> Arra
 		var it := inst as ItemInstance
 		if not it.is_locked_by_player() and hand_in_fits(st, it.def):
 			out.append(it)
-	out.sort_custom(func(a: ItemInstance, b: ItemInstance) -> bool: return a.def.rarity < b.def.rarity)
-	var need := maxi(1, st.count) - int(meta.commissions.entry(d.id).get("progress", 0))
-	return out.slice(0, maxi(0, need))
+	out.sort_custom(func(a: ItemInstance, b: ItemInstance) -> bool:
+		var va := ItemValue.of_instance(a)
+		var vb := ItemValue.of_instance(b)
+		if va != vb:
+			return va < vb
+		if a.def.rarity != b.def.rarity:
+			return a.def.rarity < b.def.rarity
+		return a.uid < b.uid)
+	return out
 
 
-static func _hand_in(meta: MetaState, d: CommissionDef, stage: int, items: ItemDatabase) -> Dictionary:
+## 这一步还差几件
+static func hand_in_need(meta: MetaState, d: CommissionDef, stage: int) -> int:
+	if meta == null or d == null or stage < 0 or stage >= d.stages.size():
+		return 0
+	return maxi(0, maxi(1, d.stages[stage].count) - int(meta.commissions.entry(d.id).get("progress", 0)))
+
+
+## 342 B2：默认挑法（交货窗的【填满】、炼金的保护）：能挑的里价值最低的几件，最多到还差的件数
+static func hand_in_picks(meta: MetaState, d: CommissionDef, stage: int) -> Array[ItemInstance]:
+	return hand_in_choices(meta, d, stage).slice(0, hand_in_need(meta, d, stage))
+
+
+static func _hand_in(meta: MetaState, d: CommissionDef, stage: int, items: ItemDatabase, uids: Array = []) -> Dictionary:
 	var out := {"ok": false, "step": false, "done": false, "handed": 0}
-	for it in hand_in_picks(meta, d, stage):
+	var picks := hand_in_picks(meta, d, stage)
+	if not uids.is_empty():
+		var want := {}
+		for u in uids:
+			want[int(u)] = true
+		picks = []
+		for it in hand_in_choices(meta, d, stage):
+			if want.has(it.uid) and picks.size() < hand_in_need(meta, d, stage):
+				picks.append(it)
+		if picks.is_empty():
+			return out
+	for it in picks:
 		if meta.warehouse.remove(it.uid) == null:
 			continue
 		var r := credit(meta, d, stage, "uid:%d" % it.uid, items)

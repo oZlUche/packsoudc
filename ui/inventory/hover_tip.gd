@@ -5,7 +5,9 @@
 ## - 钉住：作者 2026-10-17 —— 悬浮窗出来后，鼠标还停在**叫出它的源**上（道具 / 关键词 / 地图点）或在窗里，先等 [constant PIN_DELAY_SEC] 秒（193），再满 [constant PIN_SEC] 秒就钉 ——
 ##   一道黄铜线从左上角沿外框**顺时针**走一圈，走完即钉；源和窗都离开了归零。钉住后右上角一颗钉子，窗不再动；源换了也不换窗。
 ## - 关键词：钉住的窗里带下划线的词（`[url=term:<id>]`，[method Glossary.mark]）停 [constant TERM_SEC] 秒开**子窗**（同样可钉、可再开），深度封顶 [constant MAX_DEPTH]。
-## - 收起：离开钉住的窗与它所有子窗 [constant AWAY_SEC] 秒、按 Esc、点窗外（开始拖拽也是先点下去）→ 整串收掉。
+## - 收起：鼠标离开源与钉住的窗及它所有子窗 → 整串收掉；按 Esc、点窗外（开始拖拽也是先点下去）也收。
+##   作者 2026-11-27：贴着物件摆的窗（道具 / 图鉴格 / 配方格）**当场收**，不再等 —— 窗紧贴物件外框（[constant ANCHOR_GAP] 0）、子窗紧贴父窗（[constant CHILD_GAP] 0），
+##   物件的整个外框也算「在源上」（异形道具凹进去那块），所以鼠标从道具挪进窗路上不会落空；只有照鼠标摆的文字窗（地图点、HUD）离鼠标有缝，仍留 [constant AWAY_SEC] 秒。
 ## - 193：源每帧核对（[method tick]）—— 道具窗的视图藏了 / 释放了、道具不在了就整串收；鼠标在不在那一格每帧重算，不只信鼠标事件
 ## 087 的词条侧窗取消：词条只以下划线关键词存在，`terms` 是 `{id: {"name", "text"}}`（[method ItemTooltip.describe_full]）供子窗查。
 ##
@@ -430,8 +432,10 @@ var _on_source := false
 var _last_at := Vector2.ZERO
 ## 作者 10-26：道具窗贴着被指的那件的外框摆（全局坐标；空 = 没有物件可贴，照鼠标摆）
 var _anchor := Rect2()
-## 道具窗离被指那件的外框多远
-const ANCHOR_GAP := 6.0
+## 道具窗离被指那件的外框多远。作者 2026-11-27：0 = 紧贴，鼠标从道具挪进窗中间没有缝（原来 6 像素，要靠 [constant AWAY_SEC] 的等待接过去）
+const ANCHOR_GAP := 0.0
+## 子窗离父窗多远（同上，紧贴）
+const CHILD_GAP := 0.0
 var _refit_queued := false
 
 
@@ -968,13 +972,16 @@ func tick(delta: float, mouse: Vector2) -> void:
 		_panel.queue_redraw()
 		return
 	var open := windows()
-	var inside := _on_source
+	var inside := _on_source or (_anchor.has_area() and _anchor.has_point(mouse))     # 外框也算：异形道具凹进去那块不落空
 	for w in open:
 		if w.global_rect().has_point(mouse):
 			inside = true
 	if inside:
 		_away = 0.0
 	else:
+		if _anchor.has_area():
+			hide_tip()     # 作者 2026-11-27：贴着物件摆的窗，离开物件与窗当场收
+			return
 		_away += delta
 		if _away >= AWAY_SEC:
 			hide_tip()
@@ -1306,9 +1313,9 @@ func _place_child(w: TipWindow, parent: TipWindow) -> void:
 	var lo := -global_position
 	var hi := lo + (get_viewport_rect().size if is_inside_tree() else size)
 	var s := w.size
-	var p := Vector2(parent.position.x + parent.size.x + 6, parent.position.y)
+	var p := Vector2(parent.position.x + parent.size.x + CHILD_GAP, parent.position.y)
 	if p.x + s.x > hi.x:
-		p = Vector2(parent.position.x, parent.position.y + parent.size.y + 6)
+		p = Vector2(parent.position.x, parent.position.y + parent.size.y + CHILD_GAP)
 	p.x = clampf(p.x, lo.x, maxf(lo.x, hi.x - s.x))
 	p.y = clampf(p.y, lo.y, maxf(lo.y, hi.y - s.y))
 	w.position = p

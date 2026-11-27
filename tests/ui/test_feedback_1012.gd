@@ -177,7 +177,7 @@ static func run_window_and_nameplate_art(t: TestCase) -> void:
 
 
 static func frame_tip_pin_on_source(t: TestCase, root: Window) -> void:
-	t.begin("作者 2026-10-17 · 钉住看源：悬浮窗出来后鼠标还停在道具 / 关键词 / 别的源上满 0.6 秒就钉，不必先移进窗；钉住后在源上不算离开，源离开窗还留着，离开 0.4 秒才收")
+	t.begin("作者 2026-10-17 · 钉住看源：悬浮窗出来后鼠标还停在道具 / 关键词 / 别的源上满 0.6 秒就钉，不必先移进窗；钉住后在源上不算离开，源离开窗还留着；道具窗离开当场收、文字窗离开 0.4 秒才收")
 	var c := TestSupport.load_content()
 	var host := Control.new()
 	host.size = Vector2(1600, 900)
@@ -207,10 +207,8 @@ static func frame_tip_pin_on_source(t: TestCase, root: Window) -> void:
 	empty.position = Vector2(200, 160)
 	view.gui_input.emit(empty)
 	var far := Vector2(5, 880)
-	tip.tick(0.2, far)
-	t.check(tip.is_showing(), "离开道具 0.2 秒：钉住的窗还在")
-	tip.tick(0.25, far)
-	t.check(not tip.is_showing(), "源和窗都离开 0.4 秒：收")
+	tip.tick(0.01, far)
+	t.check(not tip.is_showing(), "源和窗都离开：道具窗当场收（作者 2026-11-27，原来等 0.4 秒）")
 
 	# 关键词：停在开子窗的词上也走子窗的钉住进度
 	view.gui_input.emit(on)
