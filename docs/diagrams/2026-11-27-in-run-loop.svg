@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1670" height="1350" viewBox="0 0 1670 1350" role="img" aria-labelledby="title" aria-describedby="desc">
+  <title id="title">背包搜打撤 · 局内循环</title>
+  <desc id="desc">走图按行动点推进倒计时和侵蚀，然后处理节点。搜索可产出物品或触发自动战斗。战利品进背包后，当前摆法影响下一战，负重影响后续移动。满足撤离条件或发生战败时进入结算。</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M2 2L10 6L2 10" fill="none" stroke="#EFEEE7" stroke-width="1.4"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: "Microsoft YaHei", "Noto Sans CJK SC", "PingFang SC", sans-serif; fill: #EFEEE7 }
+    .title { font-size: 54px; font-weight: 600 }
+    .subtitle { font-size: 24px; fill: #B0B2A8 }
+    .heading { font-size: 27px; font-weight: 600 }
+    .detail { font-size: 21px; fill: #DFE0D7 }
+    .note { font-size: 18px; fill: #B0B2A8 }
+    .source { font-size: 17px; fill: #B0B2A8 }
+    .node { fill: #272925; stroke: #686E63; stroke-width: 1.5 }
+    .edge { fill: none; stroke: #EFEEE7; stroke-width: 1.8; marker-end: url(#arrow) }
+  </style>
+  <rect data-decoration="background" width="1670" height="1350" fill="#191A18"/>
+  <text class="title" x="75" y="96">背包搜打撤 · 局内循环</text>
+  <text class="subtitle" x="77" y="138">The in-run loop</text>
+
+  <path class="edge" id="map-to-travel" data-edge="" data-from="map" data-to="travel" d="M820 325V405"/>
+  <path class="edge" id="travel-to-node" data-edge="" data-from="travel" data-to="node" d="M820 560V626"/>
+  <path class="edge" id="node-to-search" data-edge="" data-from="node" data-to="search" d="M1005 666H1169"/>
+  <path class="edge" id="node-to-exit" data-edge="" data-from="node" data-to="exit" d="M635 671H292Q280 671 280 683V789"/>
+  <path class="edge" id="node-to-battle" data-edge="" data-from="node" data-to="battle" d="M820 705V789"/>
+  <path class="edge" id="search-to-battle" data-edge="" data-from="search" data-to="battle" d="M1170 697H1137Q1125 697 1125 709V827Q1125 839 1113 839H1076"/>
+  <path class="edge" id="search-to-loot" data-edge="" data-from="search" data-to="loot" d="M1382 727V789"/>
+  <path class="edge" id="battle-to-loot" data-edge="" data-from="battle" data-to="loot" d="M1075 872H1169"/>
+  <path class="edge" id="loot-to-bag" data-edge="" data-from="loot" data-to="bag" d="M1382 925V1024"/>
+  <path class="edge" id="bag-to-map" data-edge="" data-from="bag" data-to="map" d="M1595 1098H1621Q1633 1098 1633 1086V284Q1633 272 1621 272H1076"/>
+  <path class="edge" id="bag-to-battle" data-edge="" data-from="bag" data-to="battle" d="M1170 1062H1124Q1112 1062 1112 1050V914Q1112 902 1100 902H1076"/>
+  <path class="edge" id="exit-to-success" data-edge="" data-from="exit" data-to="success" d="M280 925V1024"/>
+  <path class="edge" id="battle-to-defeat" data-edge="" data-from="battle" data-to="defeat" d="M820 925V1024"/>
+  <path class="edge" id="loot-to-search" data-edge="" data-from="loot" data-to="search" d="M1595 850H1599Q1611 850 1611 838V673Q1611 661 1599 661H1596"/>
+  <path class="edge" id="node-to-map" data-edge="" data-from="node" data-to="map" d="M635 648H437Q425 648 425 636V284Q425 272 437 272H564"/>
+  <text class="note" x="1076" y="651">到搜索点</text>
+  <text class="note" x="451" y="696">到撤离点</text>
+  <text class="note" x="840" y="751">遇敌</text>
+  <text class="note" x="1110" y="757" text-anchor="end">搜索遇敌</text>
+  <text class="note" x="1401" y="761">揭示后拾取</text>
+  <text class="note" x="1122" y="862" text-anchor="middle">打赢</text>
+  <text class="note" x="1403" y="976">拿取 / 摆放</text>
+  <text class="note" x="1311" y="253" text-anchor="middle">处理完节点，回地图继续走</text>
+  <text class="note" x="1100" y="1002" text-anchor="end">下一战读棋盘</text>
+  <text class="note" x="296" y="978">通过检查</text>
+  <text class="note" x="839" y="978">体力耗尽或致命败仗</text>
+  <text class="note" x="407" y="478" text-anchor="end">节点处理完</text>
+  <text class="note" x="407" y="506" text-anchor="end">回地图</text>
+
+  <g text-anchor="middle">
+    <rect class="node" id="map" data-node="" x="565" y="222" width="510" height="103" rx="12"/>
+    <text class="heading" x="820" y="265" data-in-node="map" data-padding="10">地图 · 选下一步</text>
+    <text class="detail" x="820" y="298" data-in-node="map" data-padding="10">选相邻可达节点，也可先整理当前背包</text>
+
+    <rect class="node" id="travel" data-node="" x="490" y="406" width="660" height="154" rx="12"/>
+    <text class="heading" x="820" y="449" data-in-node="travel" data-padding="10">走图 · 结算这一步</text>
+    <text class="detail" x="820" y="482" data-in-node="travel" data-padding="10">行动点按路段和负重结算，原地耗时也记行动点</text>
+    <text class="detail" x="820" y="511" data-in-node="travel" data-padding="10">倒计时按行动点扣，归零即战败</text>
+    <text class="detail" x="820" y="540" data-in-node="travel" data-padding="10">侵蚀由外向内推进，先结算受侵蚀区域再处理节点</text>
+
+    <rect class="node" id="node" data-node="" x="635" y="627" width="370" height="78" rx="12"/>
+    <text class="heading" x="820" y="676" data-in-node="node" data-padding="10">按节点处理</text>
+
+    <rect class="node" id="search" data-node="" x="1170" y="597" width="425" height="130" rx="12"/>
+    <text class="heading" x="1382.5" y="636" data-in-node="search" data-padding="10">搜刮 · 搜索点或宝箱</text>
+    <text class="detail" x="1382.5" y="673" data-in-node="search" data-padding="10">搜索逐次出收获，也可能遇敌</text>
+    <text class="detail" x="1382.5" y="702" data-in-node="search" data-padding="10">宝箱开锁后搜一次</text>
+
+    <rect class="node" id="exit" data-node="" x="75" y="790" width="410" height="135" rx="12"/>
+    <text class="heading" x="280" y="833" data-in-node="exit" data-padding="10">撤离 · 确认出口</text>
+    <text class="detail" x="280" y="866" data-in-node="exit" data-padding="10">人在撤离点、出口开放、付得起费用</text>
+    <text class="detail" x="280" y="895" data-in-node="exit" data-padding="10">启用半程关点时关闭最近的免费出口</text>
+
+    <rect class="node" id="battle" data-node="" x="565" y="790" width="510" height="135" rx="12"/>
+    <text class="heading" x="820" y="833" data-in-node="battle" data-padding="10">战前准备 → 自动战斗</text>
+    <text class="detail" x="820" y="866" data-in-node="battle" data-padding="10">开战时编译当前棋盘，模拟后播放回放</text>
+    <text class="detail" x="820" y="895" data-in-node="battle" data-padding="10">体力在有代价的败仗后扣，耗尽即战败</text>
+
+    <rect class="node" id="loot" data-node="" x="1170" y="790" width="425" height="135" rx="12"/>
+    <text class="heading" x="1382.5" y="829" data-in-node="loot" data-padding="10">拾取 · 收获箱或战利品</text>
+    <text class="detail" x="1382.5" y="866" data-in-node="loot" data-padding="10">拿进作战区，或先放在当前节点的地上</text>
+    <text class="detail" x="1382.5" y="895" data-in-node="loot" data-padding="10">搜索遭遇战打赢后可回到搜索</text>
+
+    <rect class="node" id="success" data-node="" x="75" y="1025" width="410" height="93" rx="12"/>
+    <text class="heading" x="280" y="1082" data-in-node="success" data-padding="10">撤离成功 → 结算</text>
+
+    <rect class="node" id="defeat" data-node="" x="565" y="1025" width="510" height="93" rx="12"/>
+    <text class="heading" x="820" y="1082" data-in-node="defeat" data-padding="10">战败 → 结算</text>
+
+    <rect class="node" id="bag" data-node="" x="1170" y="1025" width="425" height="148" rx="12"/>
+    <text class="heading" x="1382.5" y="1064" data-in-node="bag" data-padding="10">整理背包 · 决定带什么</text>
+    <text class="detail" x="1382.5" y="1101" data-in-node="bag" data-padding="10">挪放物品，放不下可留在地上</text>
+    <text class="detail" x="1382.5" y="1130" data-in-node="bag" data-padding="10">棋盘摆法供下一战编译，负重影响走图</text>
+  </g>
+
+  <text class="note" x="1167" y="443">侵蚀点仍可通行，原地耗时也结算。</text>
+  <text class="note" x="1167" y="472">按配置可扣体力或金币，</text>
+  <text class="note" x="1167" y="501">走进深层侵蚀区可累积道具侵蚀。</text><text class="note" x="1167" y="530">道具侵蚀满层损毁，体力耗尽会战败。</text>
+  <text class="note" x="75" y="1160">满足配置时，首领战赢了并处理完掉落即可撤离。</text>
+  <text class="note" x="565" y="1155">可继续的败仗处理完后回地图。</text>
+  <text class="note" x="565" y="1183">搜索遭遇打输会结束搜索，不扣体力。</text>
+  <text class="source" x="75" y="1282">依据 7a8993c5 的 RunState、MapTravel、NodeEvents、SearchSession、GameFlow、CountdownModule 和 ErosionField。</text>
+</svg>
