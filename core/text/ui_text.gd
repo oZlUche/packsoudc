@@ -1157,9 +1157,10 @@ const TEXT := {
 	"hud.erosion_total": {"zh": "侵蚀：全图", "en": "Erosion: whole map"},
 	"hud.erosion_soon": {"zh": "侵蚀：%d 步后开始", "en": "Erosion: starts in %d steps"},
 	"hud.erosion_band": {"zh": "侵蚀 %d 档（下一档 %d 步）", "en": "Erosion band %d (next in %d steps)"},
-	"hud.buff_left": {"zh": "（剩 %d 步）", "en": " (%d steps left)"},
-	"hud.buffs": {"zh": "状态：%s", "en": "Status: %s"},
 	"hud.buff_sep": {"zh": "、", "en": ", "},
+	"hud.slate_status": {"zh": "状态", "en": "Status"},     # 作者 11-27（85 A）：左上石板的两节
+	"hud.slate_commissions": {"zh": "委托", "en": "Commissions"},
+	"hud.slate_left": {"zh": "剩 %d 步", "en": "%d steps left"},
 	"hud.belt_used": {"zh": "用了「%s」", "en": "Used %s"},
 	"hud.you": {"zh": "你", "en": "You"},
 	"hud.legend": {"zh": "图例", "en": "Legend"},
