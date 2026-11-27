@@ -27,8 +27,8 @@ seconds = 1.1
 
 [sub_resource type="Resource" id="Resource_21n3l"]
 script = ExtResource("6_bww1b")
-amount = 5.0
-metadata/part_ref = &"resource_5"
+amount = 6.0
+metadata/part_ref = &"resource_6"
 
 [sub_resource type="Resource" id="Resource_41fta"]
 script = ExtResource("8_3b0r8")
@@ -89,7 +89,7 @@ metadata/part_ref = &"always"
 
 [sub_resource type="Resource" id="Resource_nswee"]
 script = ExtResource("8_3b0r8")
-amount = 3.0
+amount = 4.0
 damage_stat = &""
 per_target_stack = &"bleed"
 
@@ -114,7 +114,7 @@ effects = Array[ExtResource("7_ci0hl")]([SubResource("Resource_nswee"), SubResou
 [sub_resource type="Resource" id="Resource_6y3j5"]
 script = ExtResource("16_kb54g")
 base_stats = {
-"damage": 15
+"damage": 18
 }
 rules = Array[ExtResource("3_y4rgw")]([SubResource("Resource_qwqxm"), SubResource("Resource_w1b81")])
 

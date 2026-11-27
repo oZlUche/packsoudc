@@ -94,7 +94,7 @@ static func run_organs(t: TestCase) -> void:
 	lv.taken[BruteRagePerk.EAT_UP] = 1
 	var heart := run.items.get_def(&"wolf_heart")
 	t.check(BruteRagePerk.is_organ(heart) and not BruteRagePerk.is_organ(run.items.get_def(&"wolf_shank")), "狼心是器官，狼腿肉不是")
-	t.eq(BruteRagePerk.eat_tip(run, run.items.get_def(&"bear_liver")), "战斗中每秒回复生命 +3，急速 -4%", "进食提示：好处在前、坏处在后")
+	t.eq(BruteRagePerk.eat_tip(run, run.items.get_def(&"bear_liver")), "战斗中每秒回复生命 +5.4，急速 -4%", "进食提示：好处在前、坏处在后")
 	t.eq(BruteRagePerk.eat_tip(run, run.items.get_def(&"toad_leg")), "生命上限 +8", "肉的提示写生命上限")
 	var hp0 := float(run.effective_baseline().base_stats.get(&"max_hp", 0.0))
 	var st0 := float(run.effective_baseline().base_stats.get(&"max_stamina", 0.0))
@@ -109,7 +109,7 @@ static func run_organs(t: TestCase) -> void:
 	t.check(is_equal_approx(float(tot.get(&"haste", 0.0)), 4.0), "蛇胆 +8、熊肝 -4：急速 +4%")
 	var base := run.effective_baseline().base_stats
 	t.check(is_equal_approx(float(base.get(&"max_hp", 0.0)), hp0 - 20.0), "蛇胆：生命上限 -20")
-	t.check(is_equal_approx(float(base.get(&"regen_hp", 0.0)), rg0 + 3.0), "熊肝：每秒回复 +3")
+	t.check(is_equal_approx(float(base.get(&"regen_hp", 0.0)), rg0 + 5.4), "熊肝：每秒回复 +5.4（402）")
 	t.check(is_equal_approx(float(base.get(&"max_stamina", 0.0)), st0), "器官不给升级的一半耐力")
 	var inp := CompileInput.new()
 	OrganTraits.apply(inp, run)

@@ -24,7 +24,7 @@
   "material": "metal",
   "combat": {
     "base_stats": {
-      "damage": 64
+      "damage": 77
     },
     "rules": [
       {
@@ -36,7 +36,7 @@
         "costs": [
           {
             "type": "resource",
-            "amount": 15.0
+            "amount": 18.0
           }
         ],
         "effects": [

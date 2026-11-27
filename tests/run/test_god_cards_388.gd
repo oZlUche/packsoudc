@@ -296,13 +296,13 @@ static func run_brute_cards(t: TestCase) -> void:
 	t.check(is_equal_approx(e.damage_per, 3.0), "急躁两张 0.5×2 + 破甲升级每层 2%% = 每层 3%%（%s）" % e.damage_per)
 	t.check(is_equal_approx(e.armor_per, 4.0), "破甲升级：对护甲增效 4%")
 	t.check(is_equal_approx(e.duration_sec, 5.0), "记仇两张：4 + 0.5×2 = 5 秒")
-	t.check(is_equal_approx(e.regen_per, 0.1), "不灭：每 10 层 1 点 = 每层 0.1")
+	t.check(is_equal_approx(e.regen_per, 0.18), "不灭：每 10 层 1.8 点 = 每层 0.18（402）")
 	var regen_card := LevelModule.god_card_of(lv.card_def(&"god_brute_regen"))
 	t.check(regen_card != null and regen_card.values.has("step") and float(regen_card.values["step"]) == 0.0, "不灭的开关 step 默认关（按层平摊）")
 	if regen_card != null:
 		regen_card.values["step"] = 1
 		var stepped := perk.effect_for(lv)
-		t.check(stepped.regen_step == 10 and is_equal_approx(stepped.regen_step_amount, 1.0) and stepped.regen_per == 0.0, "开：每满 10 层才 +1")
+		t.check(stepped.regen_step == 10 and is_equal_approx(stepped.regen_step_amount, 1.8) and stepped.regen_per == 0.0, "开：每满 10 层才 +1.8")
 		regen_card.values["step"] = 0
 	var hate_up := LevelModule.god_card_of(lv.card_def(&"god_brute_hate_up"))
 	t.check(hate_up != null and float(hate_up.values.get("halving", -1)) == 0.0, "恨意升级的开关 halving 默认关")
@@ -511,7 +511,7 @@ static func run_skill_cards(t: TestCase) -> void:
 	var fists := bare.items.filter(func(it: CompiledItem) -> bool: return it.def_id == SkillMomentumPerk.FIST_ID)
 	t.eq(fists.size(), 1, "没武器：有一只拳头")
 	if fists.size() == 1:
-		t.check(is_equal_approx(StatMath.to_float(bare.stats_of((fists[0] as CompiledItem).source_uid).total_of(BattleStats.DAMAGE)), 5.0), "拳头伤害 5")
+		t.check(is_equal_approx(StatMath.to_float(bare.stats_of((fists[0] as CompiledItem).source_uid).total_of(BattleStats.DAMAGE)), 6.0), "拳头伤害 6（402）")
 		var fight := BattleSim.run(bare, FX._spec(5000.0, []), RandomNumberGenerator.new(), 5.0)
 		var punches := 0
 		for raw in fight.log:
@@ -848,7 +848,7 @@ static func run_exclusive_1126(t: TestCase) -> void:
 	lv.taken["god_skill_fist_intent"] = 1
 	var fist := SkillMomentumPerk.fist_def(lv)
 	var bs := fist.combat.base_stats
-	t.check(is_equal_approx(float(bs["damage"]), 7.0), "拳锋两张：伤害 5 + 2")
+	t.check(is_equal_approx(float(bs["damage"]), 8.0), "拳锋两张：伤害 6 + 2")
 	t.check(is_equal_approx(float(bs["crit_chance"]), 0.12) and is_equal_approx(float(bs["crit_damage"]), 1.54), "拳意：暴击率 10% + 2%、暴击伤害 150% + 4%")
 	var cd := (fist.combat.rules[0].cadence as CooldownCadence).seconds
 	t.check(is_equal_approx(cd, 1.0 / 1.1), "拳影：每秒 1.1 下（冷却 %.3f 秒）" % cd)

@@ -24,7 +24,7 @@
   "material": "metal",
   "combat": {
     "base_stats": {
-      "damage": 15
+      "damage": 18
     },
     "rules": [
       {
@@ -34,7 +34,7 @@
           "seconds": 1.1
         },
         "costs": [
-          "@resource_5"
+          "@resource_6"
         ],
         "effects": [
           "@deal_damage",
@@ -52,7 +52,7 @@
         "effects": [
           {
             "type": "deal_damage",
-            "amount": 3.0,
+            "amount": 4.0,
             "damage_stat": "",
             "per_target_stack": "bleed"
           },

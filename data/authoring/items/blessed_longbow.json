@@ -43,7 +43,7 @@
   ],
   "combat": {
     "base_stats": {
-      "damage": 12.0
+      "damage": 14.0
     },
     "rules": [
       {
@@ -56,7 +56,7 @@
         "costs": [
           {
             "type": "resource",
-            "amount": 5.0
+            "amount": 6.0
           }
         ],
         "effects": [

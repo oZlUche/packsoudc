@@ -8,7 +8,7 @@
     {
       "type": "god_card",
       "values": {
-        "damage": 5,
+        "damage": 6,
         "stamina": 1,
         "sec": 1
       }

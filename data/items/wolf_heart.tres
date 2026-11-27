@@ -15,7 +15,7 @@ script = ExtResource("6_eav32")
 [sub_resource type="Resource" id="Resource_muhj2"]
 script = ExtResource("8_8m6mc")
 base_stats = {
-"regen_hp": 1
+"regen_hp": 1.8
 }
 
 [resource]

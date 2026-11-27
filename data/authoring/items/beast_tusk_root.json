@@ -22,7 +22,7 @@
   "material": "flesh",
   "wild": {
     "base_stats": {
-      "damage": 14
+      "damage": 17
     },
     "rules": [
       {
@@ -34,7 +34,7 @@
         "costs": [
           {
             "type": "resource",
-            "amount": 6.0
+            "amount": 7.0
           }
         ],
         "effects": [

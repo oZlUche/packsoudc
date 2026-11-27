@@ -34,7 +34,8 @@
             "stacks": 2
           },
           {
-            "type": "change_resource"
+            "type": "change_resource",
+            "amount": 9.0
           }
         ]
       }

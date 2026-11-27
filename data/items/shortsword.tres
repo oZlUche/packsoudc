@@ -22,8 +22,8 @@ metadata/part_ref = &"cooldown_1s"
 
 [sub_resource type="Resource" id="Resource_f8sqo"]
 script = ExtResource("6_eyy7r")
-amount = 4.0
-metadata/part_ref = &"resource_4"
+amount = 5.0
+metadata/part_ref = &"resource_5"
 
 [sub_resource type="Resource" id="Resource_6atu8"]
 script = ExtResource("8_024jc")
@@ -43,7 +43,7 @@ effects = Array[ExtResource("7_arlqb")]([SubResource("Resource_6atu8")])
 [sub_resource type="Resource" id="Resource_7ogsb"]
 script = ExtResource("10_4o06l")
 base_stats = {
-"damage": 7
+"damage": 8
 }
 rules = Array[ExtResource("3_rb48m")]([SubResource("Resource_5adj7")])
 

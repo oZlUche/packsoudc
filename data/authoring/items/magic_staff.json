@@ -23,7 +23,7 @@
   "material": "wood",
   "combat": {
     "base_stats": {
-      "damage": 6
+      "damage": 7
     },
     "rules": [
       {
@@ -33,7 +33,7 @@
           "seconds": 1.2
         },
         "costs": [
-          "@resource_5"
+          "@resource_6"
         ],
         "free_when_loaded": true,
         "effects": [

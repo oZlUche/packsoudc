@@ -16,22 +16,24 @@ var persist_share: float = 0.3
 ## 155：一场普通战斗打多久（秒）。可叠层的永续 buff（流血、中毒，每击一层）层数随时间线性涨，
 ## 一层平均待 fight_sec ÷ 2（第 k 秒 k 层，平均一半）
 var fight_sec: float = 12.0
-## 每格基准 DPS：默认战斗力 = 它 × (格数 + [member handle_cells])；推荐稀有度的预算比也除以它
-var per_cell_dps: float = 2.0
+## 每格基准 DPS：默认战斗力 = 它 × (格数 + [member handle_cells])；推荐稀有度的预算比也除以它。
+## 402：武器伤害 ×1.2、回复 ×1.8 后，按「每秒伤害」计的系数（它、预填耐力、对手 DPS、护甲 / 格挡折算）×1.2，
+## 治疗折算 0.5 × 1.2 ÷ 1.8 ≈ 0.333，推荐稀有度和价格不跟着数值涨
+var per_cell_dps: float = 2.4
 ## 155：把手格 —— 任何能打的东西都得有个把手，一格的武器不该只给一格的预算。默认战斗力按「格数 + 它」算
 var handle_cells: float = 1.0
 ## 新建武器预填的冷却（秒）；伤害按默认战斗力反算
 var default_cooldown: float = 2.0
 ## 新建武器预填的每次耐力消耗 = 它 × 格数
-var stamina_per_cell: float = 2.0
+var stamina_per_cell: float = 2.4
 ## 一点治疗 / 护甲抵几点伤害
-var heal_weight: float = 0.5
+var heal_weight: float = 0.333
 ## 一点耐力（回复、省下的消耗）抵几点伤害
 var stamina_weight: float = 0.125
 ## 假定对手生命（按最大 / 当前 / 已损失生命比例的伤害按它算）
 var assumed_hp: float = 100.0
 ## 假定对手 DPS（反伤、对手身上增益的价值按它算）
-var opponent_dps: float = 10.0
+var opponent_dps: float = 12.0
 ## 假定一秒挨几下直接攻击（受击扳机、格挡、反伤按它算）
 var hit_rate: float = 1.0
 ## 假定暴击率（只认暴击的扳机）
@@ -67,8 +69,8 @@ var tiers: Array[float] = [0.9, 1.35, 1.9, 2.8]
 var value_band: Array[float] = [0.8, 0.4]
 ## 作者定（151 补充）：非武器自带的护甲 / 减伤也算价值 —— 道具自带（基础属性）的一点护甲上限、一点格挡各折几点「每秒伤害」。
 ## 和武器同一张预算表比，所以按现有防具 / 盾牌的稀有度定（皮甲 30 护甲、圆盾 5 格挡都落在优良）；388 护甲 ×3.5 后每点 0.5 → 0.143，皮甲 105 折算不变
-var armor_per_point: float = 0.143
-var block_per_point: float = 3.2
+var armor_per_point: float = 0.172
+var block_per_point: float = 3.84
 
 
 ## 读系数表；文件没有、读不了、缺项都用默认。[param problems] 收认不出的键与类型不对的项

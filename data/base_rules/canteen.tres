@@ -116,7 +116,7 @@ entries = {
 },
 "honeydew": {
 "category": "fruit",
-"flat": 3,
+"flat": 5.4,
 "satiety": 0
 },
 "jade_yam": {
@@ -151,7 +151,7 @@ entries = {
 },
 "mountain_pear": {
 "category": "fruit",
-"flat": 1.2,
+"flat": 2.2,
 "satiety": 0
 },
 "mountain_yam": {
@@ -224,7 +224,7 @@ entries = {
 },
 "wild_berry": {
 "category": "fruit",
-"flat": 0.5,
+"flat": 0.9,
 "satiety": 0
 },
 "wild_scallion": {

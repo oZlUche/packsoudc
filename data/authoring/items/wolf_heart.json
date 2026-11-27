@@ -23,7 +23,7 @@
   "material": "flesh",
   "wild": {
     "base_stats": {
-      "regen_hp": 1
+      "regen_hp": 1.8
     }
   },
   "eat_trait": {

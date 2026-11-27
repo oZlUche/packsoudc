@@ -63,7 +63,7 @@ static func run_content(t: TestCase) -> void:
 	var gl := Commissions.faction(r.faction)
 	t.eq(Commissions.nodes_of(gl).filter(func(n: Dictionary) -> bool: return String(n.get("effect", "")).begins_with("canteen_")).map(func(n: Dictionary) -> Array: return [int(n["rep"]), String(n["effect"]), [int(n["value"][0]), int(n["value"][1])]]),
 		[[50, "canteen_pot", [5, 5]], [50, "canteen_store", [8, 8]], [100, "canteen_pot", [6, 6]], [100, "canteen_store", [10, 8]]], "389：50 锅 5×5、仓库 8×8；100 锅 6×6、仓库 10×8")
-	t.eq(float(r.entry(&"wild_berry")["flat"]), 0.5, "野莓每秒 0.5（作者 16:41）")
+	t.eq(float(r.entry(&"wild_berry")["flat"]), 0.9, "野莓每秒 0.9（作者 16:41 定 0.5，402 回复 ×1.8）")
 	var bad := ImportReport.new()
 	ContentImporter.import_canteen_rules({"id": "canteen", "entries": {"x": {"category": "soup", "flat": 1, "pct": 2}}}, ContentImporter.Context.new(), bad)
 	t.check(not bad.ok(), "不认识的类别、固定值百分比都写：导入报错")
@@ -86,7 +86,7 @@ static func run_meal(t: TestCase) -> void:
 	t.eq(float(meal["pct"]["carry"]), 2.0, "负重 +2%")
 	t.eq([float(meal["flat"]["max_stamina"]), float(meal["pct"]["max_stamina"])], [1.0, 5.0], "耐力上限 +1、+5%")
 	t.eq(float(meal["pct"]["regen_stamina"]), 2.5, "耐力回复 +2.5%")
-	t.eq([float(meal["flat"]["regen_hp"]), float(meal["pct"]["regen_hp"])], [1.0, 1.0], "每秒回血 0.5 × 2、生命上限 1%")
+	t.eq([float(meal["flat"]["regen_hp"]), float(meal["pct"]["regen_hp"])], [1.8, 1.0], "每秒回血 0.9 × 2、生命上限 1%")
 	t.eq(Canteen.final_value(60.0, meal, BattleStats.MAX_STAMINA), 64.0, "60 × 1.05 + 1")
 	t.eq(Canteen.line_of(meal, BattleStats.MAX_STAMINA), UiText.t("canteen.line") % [UiText.t("canteen.stat_max_stamina"), "+1" + UiText.t("tip.list_sep") + "+5%"], "纸条一行")
 	var many: Array = []
@@ -405,7 +405,7 @@ static func run_flow(t: TestCase) -> void:
 	t.check(mod != null and mod.has_meal() and mod.satiety == 11, "吃了：饱腹 11")
 	t.eq(f.meta.canteen.pot.item_count(), 0, "锅空了")
 	t.eq(run.buff_context().carry_capacity_bonus, 3, "负重上限 +3")
-	t.eq(run.compile_player().meal_regen_hp, 0.5, "每秒回血 0.5")
+	t.check(is_equal_approx(run.compile_player().meal_regen_hp, 0.9), "每秒回血 0.9")
 	if run.phase == RunState.Phase.PICK_SPAWN and not run.map.entry_ids.is_empty():
 		run.pick_spawn(run.map.entry_ids[0])
 	Support.settle(f)
