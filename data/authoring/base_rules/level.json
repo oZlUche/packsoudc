@@ -180,6 +180,11 @@
       "god": "brute",
       "upgrade_of": "god_brute_eat"
     },
+    "god_brute_exert": {
+      "kind": "god",
+      "god": "brute",
+      "qual": true
+    },
     "god_brute_persist": {
       "kind": "god",
       "god": "brute",

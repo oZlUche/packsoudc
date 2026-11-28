@@ -162,6 +162,11 @@ cards = {
 "kind": "god",
 "upgrade_of": "god_brute_eat"
 },
+"god_brute_exert": {
+"god": "brute",
+"kind": "god",
+"qual": true
+},
 "god_brute_haste": {
 "god": "brute",
 "kind": "god"

@@ -279,3 +279,66 @@ static func run_switches(t: TestCase) -> void:
 	e.regen_step = 5
 	e.regen_step_amount = 1.0
 	t.eq(e.rage_def().mods.filter(func(m): return (m as StatModifier).stat == BattleStats.REGEN_HP).size(), 1, "整段也挂生命回复那一条")
+
+
+## 竭力：一把每秒出手、每次 30 耐力的武器；耐力上限 [param st]、不回耐力
+static func _exert_me(exert: bool, hp: float, st: float, armor: float = 0.0) -> CombatantSpec:
+	var b := GridInventory.new(Vector2i(4, 4), 1, false)
+	var w := Comp._weapon("t_heavy", ["1"], 10.0, 1.0, ["weapon", "melee"])
+	var cost := ResourceCost.new()
+	cost.resource_key = BattleStats.RES_STAMINA
+	cost.amount = 30.0
+	w.combat.rules[0].costs = [cost] as Array[Cost]
+	b.place(ItemInstance.create(w), Vector2i(0, 0), 0)
+	var base := CombatantBaseline.with_hp(hp)
+	base.base_stats["max_stamina"] = st
+	base.base_stats["regen_stamina"] = 0.0
+	if armor > 0.0:
+		base.base_stats["max_armor"] = armor
+	var rule := BruteRagePerk.new().rule_for(null)
+	if exert:
+		(rule.effects[0] as BruteRage).exert = true
+		(rule.trigger as FaithMechanicTrigger).events.append(BattleEvent.BATTLE_START)
+		(rule.trigger as FaithMechanicTrigger).events.append(BattleEvent.EFFECT_RESOLVED)
+	return BattleCompiler.compile_board(b, base, [] as Array[StatModifier], [rule] as Array[AbilityRule])
+
+
+static func _fired(res: BattleResult) -> int:
+	var n := 0
+	for raw in res.log:
+		var e := raw as BattleEvent
+		if e.name == BattleEvent.ITEM_FIRED and e.side == 0:
+			n += 1
+	return n
+
+
+static func _last(res: BattleResult, key: StringName) -> float:
+	var v := -1.0
+	for raw in res.log:
+		var e := raw as BattleEvent
+		if e.name == BattleEvent.RESOURCE_CHANGED and e.side == 0 and String(e.payload.get("key", "")) == String(key):
+			v = StatMath.to_float(e.get_int(&"current"))
+	return v
+
+
+static func run_exert(t: TestCase) -> void:
+	t.begin("作者 11-28 蛮神质变牌【竭力】：耐力不够时用等量生命付这一次（失去的生命：攒怒气，不过护甲）；生命不够付就不出手；耐力够不受影响")
+	var dummy := BattleCompiler.compile_board(GridInventory.new(Vector2i(4, 4), 1, false), CombatantBaseline.with_hp(50000.0))
+	# 耐力够（300 耐力、5 秒 5 次）：不触发
+	var rich := BattleSim.run(_exert_me(true, 100.0, 300.0), dummy, _rng(1), 5.5)
+	t.eq(_mech(rich, BruteRage.EXERT_KEY).size(), 0, "耐力够：一次也没用生命付")
+	# 不拿牌：40 耐力只够出手 1 次
+	var plain := BattleSim.run(_exert_me(false, 100.0, 40.0), dummy, _rng(1), 5.5)
+	t.eq(_fired(plain), 1, "没有竭力：耐力只够 1 次")
+	# 拿牌：第 1 次付耐力，之后每次付 30 生命 —— 100 → 70 → 40 → 10，剩 10 不够付 30，不再出手
+	var r := BattleSim.run(_exert_me(true, 100.0, 40.0), dummy, _rng(1), 5.5)
+	var paid := _mech(r, BruteRage.EXERT_KEY)
+	t.eq(paid.size(), 3, "竭力：用生命付了 3 次")
+	t.eq(_fired(r), 4, "一共出手 4 次（1 次耐力 + 3 次生命）")
+	t.check(is_equal_approx(_last(r, BattleStats.RES_HP), 10.0), "生命 100 → 10（%s），不会把自己打死" % str(_last(r, BattleStats.RES_HP)))
+	t.check(is_equal_approx(_last(r, BattleStats.RES_STAMINA), 10.0), "耐力停在 10，用生命付的那几次不扣耐力")
+	t.eq(int(paid[0].payload.get("count", 0)), 30, "战记写着付了 30 点生命")
+	t.check(int(_gained(r)[0]) >= 40, "失去的 90 点生命照常攒怒气（%d 层，每 2 点 1 层）" % int(_gained(r)[0]))
+	# 护甲不吸收
+	var armored := BattleSim.run(_exert_me(true, 100.0, 40.0, 50.0), dummy, _rng(1), 2.5)
+	t.check(is_equal_approx(_last(armored, BattleStats.RES_HP), 70.0), "有 50 护甲也直接扣生命（%s）" % str(_last(armored, BattleStats.RES_HP)))

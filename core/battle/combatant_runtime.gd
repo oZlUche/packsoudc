@@ -696,6 +696,8 @@ func _on_resource_changed(key: StringName, delta: int, reason: StringName) -> vo
 var dead: bool = false
 ## 396 技巧之神【化刚为巧】：暴击照掷，但不乘暴击伤害（另打一下由 [SkillMomentum] 给）
 var crit_plain: bool = false
+## 蛮神【竭力】（作者 11-28）：耐力不够付这一次时，改扣等量生命（[ResourceCost]）；由 [BruteRage] 开场打开
+var stamina_from_hp: bool = false
 ## 093（蛮神 4 级）：血归零后还能坚持几秒（定点；0 = 没有这条），只用一次；不死期间 undying_until 是到期时刻
 var undying_sec: int = 0
 ## 395：受到的伤害另加百分之几（器官），并进 [method taken_by_type_percent]

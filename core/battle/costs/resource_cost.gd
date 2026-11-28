@@ -33,11 +33,26 @@ func _numbed(ctx: RuleContext, v: int) -> int:
 
 
 func can_pay(ctx: RuleContext) -> bool:
-	return ctx.owner.resources.can_afford(resource_key, _amount_fp(ctx))
+	var v := _amount_fp(ctx)
+	return ctx.owner.resources.can_afford(resource_key, v) or _from_hp(ctx, v)
+
+
+## 蛮神【竭力】：耐力不够、身上的生命比要付的多（不会把自己打死）就用生命付
+func _from_hp(ctx: RuleContext, v: int) -> bool:
+	var me := ctx.owner
+	return resource_key == BattleStats.RES_STAMINA and me.stamina_from_hp and v > 0 \
+		and me.resources.has(BattleStats.RES_HP) and me.resources.current(BattleStats.RES_HP) > v
 
 
 func pay(ctx: RuleContext) -> void:
-	ctx.owner.resources.change(resource_key, -_amount_fp(ctx), BattleEvent.REASON_COST)
+	var v := _amount_fp(ctx)
+	if not ctx.owner.resources.can_afford(resource_key, v) and _from_hp(ctx, v):
+		# 失去的生命，不是受到的伤害：不过护甲、格挡、痛觉残留；怒气由 [BruteRage] 听这一条去攒
+		ctx.owner.resources.change(BattleStats.RES_HP, -v, BattleEvent.REASON_COST)
+		ctx.battle.emit(BattleEvent.EFFECT_RESOLVED, ctx.owner.side, {"effect": SkillMomentum.MECHANIC, "key": BruteRage.EXERT_KEY,
+			"count": roundi(StatMath.to_float(v)), "fp": v, "uid": ctx.runtime.source_uid})
+		return
+	ctx.owner.resources.change(resource_key, -v, BattleEvent.REASON_COST)
 	if resource_key == BattleStats.RES_STAMINA:
 		ctx.owner.halve_on(ctx.battle, BuffDef.HALVE_STAMINA_PAID)     # 用完减半
 

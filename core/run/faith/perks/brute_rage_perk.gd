@@ -40,6 +40,8 @@ const CORNERED_MORE := &"god_brute_cornered_more"
 const IRATE := &"god_brute_irate"
 const EAT := &"god_brute_eat"
 const EAT_UP := &"god_brute_eat_up"
+## 作者 11-28：竭力（质变，升级版未写）
+const EXERT := &"god_brute_exert"
 ## 396：怒意延绵（作者 11-26 移到专属牌）、献祭（基础牌，一次性）
 const PERSIST := &"god_brute_persist"
 ## 作者 11-26 专属牌【血色桂冠】：打赢一场，生命上限或耐力上限（随机一项）+ 基础值的 pct%，整局有效；攒下的记在这两格
@@ -200,7 +202,11 @@ func rule_for(lv: LevelModule) -> AbilityRule:
 	var rule := AbilityRule.new()
 	rule.trigger = trig
 	rule.cadence = cad
-	rule.effects.append(effect_for(lv))
+	var e := effect_for(lv)
+	if e.exert:
+		trig.events.append(BattleEvent.BATTLE_START)
+		trig.events.append(BattleEvent.EFFECT_RESOLVED)
+	rule.effects.append(e)
 	return rule
 
 
@@ -255,6 +261,7 @@ func effect_for(lv: LevelModule) -> BruteRage:
 		e.armor_percent = roundi(lv.god_value(ARMOR, "pct", 50.0))
 		e.armor_dealt = lv.has_card(ARMOR_UP)
 		e.armor_heal_percent = roundi(lv.god_value(ARMOR_UP, "heal"))
+	e.exert = lv.has_card(EXERT)
 	e.linger_percent = lv.god_value(LINGER, "pct")
 	e.lifesteal_percent = lv.god_value(LIFESTEAL, "pct")
 	return e
