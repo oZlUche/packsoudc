@@ -1,0 +1,26 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+JD1032 OK  开局奉大地之神
+JD1032 开局棋盘：bag_leather(值45，包), bag_leather(值45，包), charm_earth(值200，包)
+JD1032 OK  没拿牌：jade_uid = -1
+JD1032 OK  只剩包和信物：不消耗、不出伤害
+JD1032 值：短剑 15、玄武岩 24、传说骨钢大剑 800
+JD1032 OK  挑最贵的那件（传说大剑）
+JD1032 OK  伤害 = 它的价值 800
+JD1032 OK  玩家上锁：跳过，改挑 dense_basalt
+JD1032 OK  标了不参战：跳过
+JD1032 OK  成了基石：跳过
+JD1032 OK  commission_letter（委托 true / 随身 false / 信物 false）值 9999 也跳过
+JD1032 OK  legion_phalera（委托 false / 随身 true / 信物 false）值 9999 也跳过
+JD1032 OK  spyglass（委托 false / 随身 false / 信物 true）值 9999 也跳过
+JD1032 OK  两把一样的短剑：挑 uid 小的 10（另一把 11）
+JD1032 OK  普通道具整件消耗，另一把还在
+JD1032 OK  结晶 5 个：伤害 25（整摞价值 25），剩 2 个
+JD1032 OK  结晶 4 个：伤害 20（整摞价值 20），剩 2 个
+JD1032 OK  结晶 3 个：伤害 15（整摞价值 15），剩 1 个
+JD1032 OK  结晶 2 个：伤害 10（整摞价值 10），剩 1 个
+JD1032 OK  结晶 1 个：伤害 5（整摞价值 5），剩 0 个
+JD1032 SKIP 短剑放不进百宝囊
+JD1032 OK  开打钩子：最贵的大剑消耗了，短剑还在
+JD1032 OK  下一场的伤害换成短剑的价值 15
+JD1032 完 BAD 0
