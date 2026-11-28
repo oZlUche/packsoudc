@@ -301,3 +301,44 @@ static func run_batch_three(t: TestCase) -> void:
 	t.eq(c.stack_count(), n * 2, "个数加起来")
 	t.check(not more_home.has_item(more.uid), "拖过去的那一摞没了")
 	run.dispose()
+
+
+## 拿一件放进背包（放不下返回 null —— 测试只用棋盘上的）
+static func _put(run: RunState, id: StringName) -> ItemInstance:
+	var inst := ItemInstance.create(run.items.get_def(id))
+	return inst if run.board.try_add(inst) else null
+
+
+static func run_jade(t: TestCase) -> void:
+	t.begin("大地之神 · 玉石俱焚（作者 11-28）：开战消耗最高价的道具并打出它的价值；结晶一摞消耗一半；基石、包跳过；没东西不出伤害")
+	var run := G._start(77, &"earth")
+	var lv := LevelModule.of(run)
+	if lv == null or run.active_faith_id() != &"earth":
+		t.check(false, "开局奉大地之神")
+		return
+	t.eq(EarthHeavenPerk.jade_uid(run), -1, "没拿牌：不消耗")
+	lv.taken["god_earth_jade"] = 1
+	t.eq(EarthHeavenPerk.jade_uid(run), -1, "棋盘上只有包和信物：没有能消耗的")
+	t.eq(EarthHeavenPerk.effect_for(lv, run.board, run).jade, 0, "也不出伤害")
+	var cheap := _put(run, &"dense_basalt")
+	var rich := _put(run, &"earth_crystal")
+	if cheap == null or rich == null:
+		t.check(false, "两件都放上了棋盘")
+		run.dispose()
+		return
+	rich.set_stack(5)
+	t.eq(EarthHeavenPerk.jade_uid(run), rich.uid, "挑最贵的：5 个一摞的结晶（%d）比玄武岩（%d）贵" % [ItemValue.of_instance(rich), ItemValue.of_instance(cheap)])
+	t.eq(EarthHeavenPerk.effect_for(lv, run.board, run).jade, ItemValue.of_in(rich, run.board), "伤害 = 整摞的价值")
+	t.check(EarthHeavenPerk.consume_jade(run) != "", "开打：消耗了")
+	t.eq(rich.stack_count(), 2, "5 个消耗一半（向上取整 3 个），剩 2 个")
+	cheap.set_stone(true)
+	rich.set_stack(1)
+	t.eq(EarthHeavenPerk.jade_uid(run), rich.uid, "比结晶贵的玄武岩成了基石：跳过它")
+	EarthHeavenPerk.consume_jade(run)
+	t.check(not run.board.has_item(rich.uid), "只剩 1 个：这 1 个也消耗掉")
+	t.eq(EarthHeavenPerk.jade_uid(run), -1, "剩下的是基石：不消耗")
+	cheap.set_stone(false)
+	t.eq(EarthHeavenPerk.jade_uid(run), cheap.uid, "不是基石了：轮到它")
+	EarthHeavenPerk.consume_jade(run)
+	t.check(not run.board.has_item(cheap.uid), "普通道具整件消耗")
+	run.dispose()

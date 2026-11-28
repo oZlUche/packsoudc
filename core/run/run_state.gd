@@ -1436,7 +1436,8 @@ func _wire_events() -> void:
 	# 082：技能与信力
 	_ensure_skills()
 	hooks.register(&"before_battle", func(me: CombatantSpec, enemy: CombatantSpec, _type: StringName) -> void:
-		skills.prepare_battle(me, enemy))     # 开打前：立了旗的技能改双方的战斗单位
+		skills.prepare_battle(me, enemy)     # 开打前：立了旗的技能改双方的战斗单位
+		EarthHeavenPerk.consume_jade(self))     # 大地之神【玉石俱焚】：伤害已经编进去了，这一下把那件消耗掉
 	faith_power = FaithPower.new()
 	faith_power.setup(self)
 	_wire_faith_power()

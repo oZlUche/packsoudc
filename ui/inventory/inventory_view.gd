@@ -133,6 +133,13 @@ var fuse_marks: Dictionary = {}:
 	set(v):
 		fuse_marks = v
 		queue_redraw()
+## 大地之神【玉石俱焚】：这一场开打会被消耗的那件（-1 = 没有）：描红框、贴「消耗」牌
+var doom_uid := -1:
+	set(v):
+		if doom_uid != v:
+			doom_uid = v
+			queue_redraw()
+const DOOM_COLOR := Color("e0574f")
 var fuse_hot := -1:
 	set(v):
 		fuse_hot = v
@@ -791,6 +798,7 @@ func _draw() -> void:
 	if not framed and not grounded:
 		draw_rect(Rect2(Vector2.ZERO, grid_px), COLOR_BORDER, false, 2.0)
 	_draw_fuse_marks()
+	_draw_doom()
 	_draw_bag_outline(_hover_bag())
 	_draw_selection()     # 402
 
@@ -803,6 +811,16 @@ func _draw_fuse_marks() -> void:
 		var it := inventory.get_item(int(uid))
 		if it != null:
 			draw_fuse_mark(self, item_rect(it.uid), cell_px, int(uid) == fuse_hot)
+
+
+## 玉石俱焚要消耗的那件：红框 + 右下角「消耗」
+func _draw_doom() -> void:
+	var it := inventory.get_item(doom_uid) if inventory != null and doom_uid >= 0 else null
+	if it == null:
+		return
+	var box := item_rect(it.uid)
+	draw_rect(box.grow(-2.0), DOOM_COLOR, false, 3.0)
+	ItemPainter.draw_badge(self, UiText.t("pre.jade_mark"), box)
 
 
 ## 274：按着 Ctrl 停在包上 = 沿包的外缘描一圈（按包的品质色）
