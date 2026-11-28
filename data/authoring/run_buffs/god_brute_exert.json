@@ -1,0 +1,12 @@
+{
+  "id": "god_brute_exert",
+  "display_name": "竭力",
+  "display_names": {
+    "en": "Overexert"
+  },
+  "effects": [
+    {
+      "type": "god_card"
+    }
+  ]
+}

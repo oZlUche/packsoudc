@@ -64,6 +64,9 @@ const STEP := 0.2
 @export var linger_percent: float = 0.0
 ## 嗜血：武器打出伤害的几成回血
 @export var lifesteal_percent: float = 0.0
+## 作者 11-28 质变牌【竭力】：耐力不够时用等量生命付（[member CombatantRuntime.stamina_from_hp]）；付掉的生命算失去的生命，照常攒怒气、让困兽变强
+@export var exert: bool = false
+const EXERT_KEY := "brute_exert"
 
 static var _base_def: BuffDef = null
 var _def: BuffDef = null
@@ -115,6 +118,13 @@ func apply(ctx: RuleContext) -> void:
 			_before(ctx)
 		BattleEvent.DAMAGE:
 			_after(ctx, e)
+		BattleEvent.BATTLE_START:
+			if exert:
+				ctx.owner.stamina_from_hp = true
+		BattleEvent.EFFECT_RESOLVED:
+			if exert and e.side == ctx.owner.side and String(e.payload.get("key", "")) == EXERT_KEY:
+				_gather(ctx, e.get_int(&"fp"))
+				_sync_cornered(ctx)
 		BattleEvent.STATUS_APPLIED:
 			if hate >= 1 and e.side == ctx.owner.side and _is_debuff(ctx.owner, e.get_name(&"buff")):
 				_add(ctx, 1, true)

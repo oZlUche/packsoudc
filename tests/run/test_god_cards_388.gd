@@ -264,7 +264,7 @@ static func run_tutorial_no_opening(t: TestCase) -> void:
 
 
 static func run_brute_cards(t: TestCase) -> void:
-	t.begin("388 第 1 批 · 蛮神的牌：32 张进牌池（11 质变 + 10 升级 + 11 基础，396 改）、拿了几张就把数填进怒气；死斗编进不屈；神罚按牌给次数、升级后精英耗 2 次")
+	t.begin("388 第 1 批 · 蛮神的牌：33 张进牌池（12 质变 + 10 升级 + 11 基础，396 改；11-28 加竭力）、拿了几张就把数填进怒气；死斗编进不屈；神罚按牌给次数、升级后精英耗 2 次")
 	var run := _start(41, &"brute")
 	var lv := LevelModule.of(run)
 	if lv == null or run.active_faith_id() != &"brute":
@@ -279,7 +279,7 @@ static func run_brute_cards(t: TestCase) -> void:
 				quals += 1
 			else:
 				bases += 1
-	t.eq(quals, 20, "质变 10 张 + 升级 10 张（作者 11-26：怒意延绵移到专属牌）")
+	t.eq(quals, 21, "质变 11 张 + 升级 10 张（作者 11-26：怒意延绵移到专属牌；11-28 加竭力，升级版未写）")
 	t.eq(bases, 13, "基础牌 10 张 + 专属牌 3 张（作者 11-26：余怒、怒意延绵、血色桂冠）")
 	t.check(lv.card_text(&"god_brute_break").contains("2%"), "牌面按数写：%s" % lv.card_text(&"god_brute_break"))
 	var perk := BruteRagePerk.new()

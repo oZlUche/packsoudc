@@ -689,6 +689,7 @@ const TEXT := {
 	"log.hunt_stage1": {"zh": "%s拆掉了对手的一截%s", "en": "%s took apart some of the foe's %s"},
 	"log.hunt_stage2": {"zh": "%s把对手的%s拆到了第二档", "en": "%s broke the foe's %s down to the second stage"},
 	"log.brute_strike": {"zh": "%s用 %d 层怒气反击", "en": "%s struck back with %d Rage"},
+	"log.brute_exert": {"zh": "%s竭力，用 %d 点生命代替耐力出手", "en": "%s overexerted, paying %d HP instead of Stamina"},
 	"log.sun_open": {"zh": "%s第 %d 次烈日开始", "en": "%s: Blazing Sun %d begins"},
 	"log.sun_close": {"zh": "%s第 %d 次烈日结束", "en": "%s: Blazing Sun %d ends"},
 	"sun.day": {"zh": "白昼", "en": "Day"},
@@ -1349,6 +1350,7 @@ const TEXT := {
 	"gcard.god_skill_fist_intent": {"zh": "拳头的暴击率 +{crit}%，暴击伤害 +{crit_damage}%", "en": "Fist Crit Chance +{crit}%, Crit Damage +{crit_damage}%"},
 	"gcard.god_skill_finish": {"zh": "每过 {sec} 秒，下次攻击视为清零了连击层数", "en": "Every {sec}s, your next attack counts as a Combo reset"},
 	"gcard.god_brute_eat": {"zh": "吞噬【血肉】获得整局增益", "en": "Devour Raw Flesh for run-long boons"},     # 395 第六节（作者 11-25 19:02）
+	"gcard.god_brute_exert": {"zh": "耐力不够时消耗等量生命值", "en": "When short on Stamina, spend that much HP instead"},     # 作者 11-28
 	"gcard.god_brute_eat_up": {"zh": "可以进食【血肉】，按稀有度和格子获得持续整局的额外生命上限（每格 {per_cell} × (稀有度 + 1)），以及一半的耐力上限", "en": "You can eat Raw Flesh for extra Max Health for the rest of the run ({per_cell} per cell × (rarity + 1)), and half as much Max Stamina"},
 	"gcard.god_brute_duration": {"zh": "怒气持续时间 +{sec} 秒", "en": "Rage lasts {sec} seconds longer"},
 	"gcard.god_brute_persist": {"zh": "你的怒气持续时间减半，但每次受到伤害都会重置", "en": "Your Rage lasts half as long, but every hit you take resets it"},
