@@ -1,0 +1,14 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+EX1036 OK  开局奉蛮神
+EX1036 OK  牌表里有竭力，是质变牌：{ "god": "brute", "kind": "god", "qual": true }
+EX1036 OK  开局就能摆出竭力
+EX1036 牌面 zh：耐力不够时消耗等量生命值
+EX1036 没拿：出手 60、付耐力 60、竭力 0、最低生命 1000000000
+EX1036 拿了：出手 76、付耐力 60、竭力 16（共 129 生命）、最低生命 31
+EX1036 OK  没拿牌：不用生命付
+EX1036 OK  拿了：耐力不够时用生命付，出手更多（60 → 76）
+EX1036 OK  不会把自己打死（最低 31）
+EX1036 OK  战记 zh：13.5s  我竭力，用 5 点生命代替耐力出手
+EX1036 OK  战记 en：13.5s  我 overexerted, paying 5 HP instead of Stamina
+EX1036 完 BAD 0

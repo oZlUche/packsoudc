@@ -1,0 +1,13 @@
+EX1036 测试辅助：万神院到来、声望 100、解锁蛮神神殿
+EX1036 开局屏奉蛮神：true
+EX1036 开局质变窗摆出：[&"god_brute_blood", &"god_brute_pain", &"god_brute_smite"]
+EX1036 测试辅助：把第 1 张换成竭力：["god_brute_exert", "god_brute_pain", "god_brute_smite"]
+EX1036 质变窗文字：Run start: pick a Transformation / Overexert / When short on Stamina, spend that much HP instead / Transform / Lingering Pain / 50% of direct damage taken is dealt over 5 seconds instead / Transform / Divine Wrath / Before battle, slay a normal enemy outright; 2 uses per run / Transform / [Reroll 4] / [Ban 0] / [Skip 4]
+EX1036 　　排版：查了 19 处，没有溢出
+EX1036 进图：奉「brute」；拿了竭力 true
+EX1036 测试辅助：放两把钢双斧、一把伐木斧（[true, true, false]），让耐力不够用
+EX1036 走到相邻的普通战斗点 1
+EX1036 按开战：true
+EX1036 打完（屏 3）：竭力 0 次，共 0 生命；赢了 true
+EX1036 回放战记里竭力的行（0 条）：
+EX1036 完 err=0
