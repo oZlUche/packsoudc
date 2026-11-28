@@ -76,7 +76,7 @@ static func treasure_candidates(rule: DropRule, items: ItemDatabase, rarity: int
 
 ## 掷：返回 {"dropped": [敌人自己掉的 id], "treasure": [珍宝 id], "treasure_missing": 中了却没有可掉的珍宝的次数}
 static func roll(
-	content: Dictionary, rule: DropRule, ctx: LootContext, items: ItemDatabase, rng: RandomNumberGenerator, boss: bool = false, elite: bool = false,
+	content: Dictionary, rule: DropRule, ctx: LootContext, items: ItemDatabase, rng: RandomNumberGenerator, boss: bool = false, _elite: bool = false,
 	regular: bool = false
 ) -> Dictionary:
 	var out := {"dropped": [] as Array[StringName], "treasure": [] as Array[StringName], "treasure_missing": 0}
@@ -88,12 +88,8 @@ static func roll(
 		var pick := rarity_guarantee(rule.boss_rarity, rule, items, carried, rng)
 		if pick != &"":
 			(out["treasure"] as Array[StringName]).append(pick)
-	# 切片 v6.14 D01：精英点保底一件（[member DropRule.elite_rarity]）；360：难度写了稀有度就按难度（作者难度表 H 列）
-	var elite_r := elite_rarity_of(rule, ctx)
-	if elite and elite_r >= 0:
-		var prize := rarity_guarantee(elite_r, rule, items, carried, rng)
-		if prize != &"":
-			(out["treasure"] as Array[StringName]).append(prize)
+	# 404（作者 11-28）：精英点那一件保底不再进战利品，改成打赢后原地留一个精英宝箱（[method NodeEvents._leave_elite_chest]）。
+	# 参数 [param _elite] 留着不挪后面参数的位置
 	# 093（日神 4 级）：必掉额外一件某稀有度的 —— 和 BOSS 保底同一条路，从这一档往低找
 	if ctx != null and ctx.extra_drop_rarity >= 0:
 		var extra := rarity_guarantee(ctx.extra_drop_rarity, rule, items, carried, rng)
@@ -161,7 +157,7 @@ static func roll(
 	return out
 
 
-## 360：这一场精英额外掉落的稀有度（难度优先，没写用掉落规则）；-1 = 不给
+## 360：这一场精英额外奖励的稀有度（难度优先，没写用掉落规则）；-1 = 不给。404 起是精英宝箱的档（也是宝箱里必出那一件的档）
 static func elite_rarity_of(rule: DropRule, ctx: LootContext) -> int:
 	if ctx != null and ctx.elite_rarity >= -1:
 		return ctx.elite_rarity

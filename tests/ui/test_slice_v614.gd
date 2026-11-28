@@ -368,8 +368,8 @@ static func run_elite_prize(t: TestCase) -> void:
 		var content: Dictionary = by_id[nid]["content"]
 		var rng := RandomNumberGenerator.new()
 		rng.seed = 5
-		var got := DropResolver.roll(content, rule, LootContext.new(), items, rng, false, true)
-		t.eq(got["treasure"], [&"poisoned_knife"] as Array[StringName], "%d 号精英：保底涂毒匕首" % nid)
+		var got := DropResolver.rarity_guarantee(rule.elite_rarity, rule, items, DropResolver.carried_ids(content), rng)
+		t.eq(got, &"poisoned_knife", "%d 号精英：宝箱必出涂毒匕首（404）" % nid)
 		var plain := DropResolver.roll(content, rule, LootContext.new(), items, rng, false, false)
 		t.eq((plain["treasure"] as Array).size(), 0, "%d 号当普通仗打：不给" % nid)
 	t.eq(by_id[7]["content"]["search_finds"], [["poison_vial", "round_shield"]], "搜索二不动")

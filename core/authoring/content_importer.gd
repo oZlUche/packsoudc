@@ -2408,6 +2408,8 @@ static func _validate_chest_rules(c: ChestRules, report: ImportReport) -> void:
 	for i in c.floor_by_rarity.size():
 		if c.floor_by_rarity[i] < 0 or c.floor_by_rarity[i] > 5:
 			report.error("chest.floor_by_rarity[%d]" % i, "下限是稀有度 0～5")
+	if c.elite_random_items.x < 0 or c.elite_random_items.y < c.elite_random_items.x:     # 404
+		report.error("chest.elite_random_items", "精英宝箱随机件数 [min, max] 不能为负、min ≤ max")
 	if c.haul_board.x < 1 or c.haul_board.y < 1:
 		report.error("chest.haul_board", "收获容器至少 1×1")
 

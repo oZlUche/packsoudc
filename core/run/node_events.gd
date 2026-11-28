@@ -1039,9 +1039,35 @@ func _settle_won(node: MapNode, type: StringName, content: Dictionary, loot_ctx:
 	# 209：第二段 —— 按包池掷「用哪些包装这些东西」（没有包的魔兽 / 机关不掉包；随机数另起一条）
 	rolled["bags"] = DropResolver.bags_for(rolled, content, enemies, pool, bag_pool, items, _rng_for(node, "loot_bags"), type == &"core")
 	loot_ready.emit(node, DropResolver.corpse_of(content, rolled, items))
+	_leave_elite_chest(node, type, content, ctx)     # 404：战利品屏之后接宝箱
 	_pay_battle_reward(node, content)
 	if type == &"core":
 		boss_defeated.emit(node)
+
+
+## 404（作者 11-28）：打赢精英，原地留一个精英宝箱（档 = 难度的精英稀有度，没写用掉落规则的；-1 = 不留）。
+## 必出的那一件现在就定（挑法同原来的保底，随机数另起一条），开锁后和随机的几件一起出（[method open_chest]）。
+## 留下了就给看开锁画面；不开就走，宝箱留在点上，回来还能开（[method offer_chest]）
+func _leave_elite_chest(node: MapNode, type: StringName, content: Dictionary, ctx: LootContext) -> void:
+	if type != &"elite" or node == null or drop_rule == null or items == null or not ChestPlacer.chest_of(node).is_empty():
+		return
+	var r := DropResolver.elite_rarity_of(drop_rule, ctx)
+	if r < 0:
+		return
+	var prize := DropResolver.rarity_guarantee(r, drop_rule, items, DropResolver.carried_ids(content), _rng_for(node, "elite_chest"))
+	if prize != &"" and not faith_enabled and items.get_def(prize) != null and items.get_def(prize).has_faith():
+		prize = &""     # 377：没信仰的局不出归某位神的东西
+	ChestPlacer.place_elite(node, r, chest_skin, prize)
+	chest_shown.emit(node)
+
+
+## 404：回到留着没开的精英宝箱上：再给看开锁画面。没有等着开的返回 false
+func offer_chest(node: MapNode) -> bool:
+	if over or not ChestPlacer.waiting(node):
+		return false
+	last_handled_id = node.id
+	chest_shown.emit(node)
+	return true
 
 
 ## 360 A12：打赢守卫 —— 首领的增援撤掉，联动道具的失效版另起一件给（一件能卖能炼的贵重品，不带战斗效果）
@@ -1115,7 +1141,7 @@ func pause_search() -> bool:
 	var session := current_search
 	if session == null or not session.active:
 		return false
-	if effective_type(session.node) == &"chest":
+	if effective_type(session.node) == &"chest" or ChestPlacer.is_elite(session.node):
 		session.leave()     # 154：宝箱只开一次，关屏就是拿完走人（不过「再搜 / 走」）
 		return true
 	var def := _search_event(session.node, session, "done" if session.is_exhausted() else "again")
@@ -1185,36 +1211,41 @@ func chest_hold_seconds(node: MapNode) -> float:
 
 
 ## 锁开了：用一份改过的搜索规则开会话并立刻搜一次 —— 只搜一次、不遭遇、能出珍宝、每件不低于下限（作者定：宝箱稀有度 − 1，前两档 0）。
-## 收获走现有的搜索屏；关屏（[method pause_search]）就是拿完走人，点用过。不是没开锁的宝箱、或别的会话开着返回 false
+## 收获走现有的搜索屏；关屏（[method pause_search]）就是拿完走人，点用过。不是没开锁的宝箱、或别的会话开着返回 false。
+## 404：精英宝箱按 [member ChestRules.elite_random_items] 随机几件、不设下限，另加打赢时定好的那一件
 func open_chest(node: MapNode) -> bool:
-	if node == null or over or effective_type(node) != &"chest" or ChestPlacer.is_opened(node):
+	if node == null or over or not ChestPlacer.waiting(node):
 		return false
 	if current_search != null or rules == null or rules.search == null or items == null:
 		return false
-	ChestPlacer.roll_one(node, chest_rules(), chest_skin)
+	var elite := ChestPlacer.is_elite(node)
+	if not elite:
+		ChestPlacer.roll_one(node, chest_rules(), chest_skin)
 	var cr := chest_rules()
 	var rarity := ChestPlacer.rarity_of(node)
 	var rng := _rng_for(node, "chest_open")
-	var span := cr.item_range(rarity)
+	var span := cr.elite_random_items if elite else cr.item_range(rarity)     # 404：精英宝箱用自己的小表
 	var n := rng.randi_range(span.x, maxi(span.x, span.y))
 	var sr := rules.search.duplicate() as SearchRules
 	sr.max_searches = 1
 	sr.encounter_curve = [0.0] as Array[float]
 	sr.items_per_search = Vector2i(n, n)
 	var excl: Array[StringName] = sr.exclude_tags.duplicate()
-	if cr.include_treasure:
+	if (cr.elite_include_treasure if elite else cr.include_treasure):
 		excl.erase(&"treasure")
 	sr.exclude_tags = excl
 	sr.haul_board = cr.haul_board
 	sr.search_floors = []
 	var session := SearchSession.new(node, sr, items, rng, _depth_of(node))
-	var f := cr.floor_of(rarity)
+	var f := 0 if elite else cr.floor_of(rarity)     # 404：精英宝箱随机的几件不设下限
 	var floor_row: Array[int] = []
 	if f > 0:
 		for i in n:
 			floor_row.append(f)
 	session.search_floor = floor_row
 	session.produce = node.produce     # 267：宝箱也按环的产物表加权，不按材料节点过滤
+	if elite and items.get_def(ChestPlacer.prize_of(node)) != null:
+		session.fixed_finds = [ChestPlacer.prize_of(node)] as Array[StringName]     # 404：必出的那一件
 	var bless_rng := _rng_for(node, "bless_chest")
 	var base := rules.search
 	session.substitute = func(ids: Array[StringName]) -> Array[StringName]:

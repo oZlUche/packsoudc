@@ -47,6 +47,8 @@ var bias_mult: float = 1.0
 ## 大地之神【大地共鸣】：材料节点每搜一次多翻几件（只从这个点那一类里抽），翻到的交给 [member bonus_cb]（`func(ids: Array[StringName])`，给经验值）
 var bonus_items: int = 0
 var bonus_cb: Callable = Callable()
+## 404：第一次搜必出的这几件（精英宝箱的保底），排在抽到的后面，不换赐福版
+var fixed_finds: Array[StringName] = []
 
 
 func _init(p_node: MapNode, p_rules: SearchRules, p_items: ItemDatabase, p_rng: RandomNumberGenerator, p_depth: float = 0.0) -> void:
@@ -120,6 +122,8 @@ func search() -> Dictionary:
 					bonus_cb.call(extra)
 			if substitute.is_valid():
 				got = substitute.call(got)
+			if k == 0:
+				got.append_array(fixed_finds)
 			crng = RandomNumberGenerator.new()
 			crng.seed = hash([rng.state, searches_done, "crystal"])
 			got = CrystalRoll.reroll_ids(got, items, crng)

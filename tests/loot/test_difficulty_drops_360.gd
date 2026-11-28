@@ -128,10 +128,9 @@ static func run_elite_extra(t: TestCase) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 11
 	var r := DropResolver.roll(_enemy(["knife"]), rule, ctx, c.items, rng, false, true, false)
-	var treasure: Array = r["treasure"]
-	t.eq(treasure.size(), 1, "精英多一件")
-	if treasure.size() == 1:
-		t.eq(c.items.get_def(treasure[0]).rarity, 3, "那一件是史诗（%s）" % treasure[0])
+	t.eq((r["treasure"] as Array).size(), 0, "404：精英那一件不再进战利品（改成精英宝箱）")
+	var prize := DropResolver.rarity_guarantee(DropResolver.elite_rarity_of(rule, ctx), rule, c.items, [&"knife"] as Array[StringName], rng)
+	t.check(prize != &"" and c.items.get_def(prize).rarity == 3, "宝箱必出的那一件是史诗（%s）" % prize)
 	var plain := DropResolver.roll(_enemy(["knife"]), rule, ctx, c.items, rng, false, false, true)
 	t.eq((plain["treasure"] as Array).size(), 0, "普通战：没有这一件")
 

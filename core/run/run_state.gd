@@ -369,6 +369,10 @@ func _arrived_again(id: int) -> void:
 	# 091（作者定）：商店可以回头再逛 —— 回到走过的商店点就把店再开起来；货架 / 刷新次数 / 卖掉的都记在节点内容里，刷新价不重置
 	if events != null and map.has_node(id) and NodeEvents.effective_type(map.get_node(id)) == &"shop":
 		events.reopen_shop(map.get_node(id))
+		return
+	# 404：精英打赢后留下没开的宝箱 —— 回来再给看开锁画面
+	if events != null and map.has_node(id) and ChestPlacer.is_elite(map.get_node(id)):
+		events.offer_chest(map.get_node(id))
 
 
 ## 134：旅程的进点闸门 —— 人已经挪到点上、步数花了、惩罚结算了，这个点的事发生之前：先过猎手的回合（出现、移动、感知、开打）。

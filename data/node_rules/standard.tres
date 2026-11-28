@@ -1,10 +1,14 @@
 [gd_resource type="Resource" script_class="NodeRules" format=3]
 
-[ext_resource type="Script" path="res://core/run/node_rules.gd" id="1_pbgj0"]
-[ext_resource type="Script" path="res://core/run/search_rules.gd" id="2_edffo"]
+[ext_resource type="Script" path="res://core/run/chest_rules.gd" id="1_edffo"]
+[ext_resource type="Script" path="res://core/run/node_rules.gd" id="2_4xugp"]
+[ext_resource type="Script" path="res://core/run/search_rules.gd" id="3_4tg3c"]
 
-[sub_resource type="Resource" id="Resource_4xugp"]
-script = ExtResource("2_edffo")
+[sub_resource type="Resource" id="Resource_qo1wh"]
+script = ExtResource("1_edffo")
+
+[sub_resource type="Resource" id="Resource_b0ieh"]
+script = ExtResource("3_4tg3c")
 again_event = &"search_again"
 done_event = &"search_done"
 encounter_event = &"search_encounter"
@@ -12,7 +16,7 @@ destroyed_event = &"search_destroyed"
 search_floors = [[0, 0], [1, 0], [1, 1, 0], [2, 1, 1]]
 
 [resource]
-script = ExtResource("1_pbgj0")
+script = ExtResource("2_4xugp")
 id = &"standard"
 display_name = "标准节点规则（占位）"
 random_weights = {
@@ -23,7 +27,8 @@ random_weights = {
 "search": 2,
 "shop": 1
 }
-search = SubResource("Resource_4xugp")
+search = SubResource("Resource_b0ieh")
+chest = SubResource("Resource_qo1wh")
 flee = {
 "chance": 0.5,
 "fail_buff": "",
