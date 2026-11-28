@@ -298,6 +298,8 @@ func _settle_one(f: GameFlow) -> void:
 				_pick(run, s.haul())
 			if not f.close_search():
 				f.resume()
+		GameFlow.Screen.BATTLE:
+			f.resume()     # 404：回放看完接着看战利品（以前走 hide_overlay 收起回放，排着的战利品没拿就走了）
 		GameFlow.Screen.CHEST:
 			if not f.open_chest():
 				f.leave_chest()

@@ -22,6 +22,11 @@ extends Resource
 @export var include_treasure: bool = true
 ## 收获先摆进这么大的容器
 @export var haul_board: Vector2i = Vector2i(6, 4)
+## 404（作者 11-28）：精英宝箱（打赢精英点原地留下的）自己的小表 —— 必出一件和宝箱同档的（打赢时就定好），
+## 另外随机这么多件 [min, max]，按这个点当地的搜索规则掷、不设下限。宝箱的档是难度的精英稀有度（[method DropResolver.elite_rarity_of]）
+@export var elite_random_items: Vector2i = Vector2i(1, 2)
+## 精英宝箱里能开出珍宝
+@export var elite_include_treasure: bool = true
 
 
 ## 按住这一档要几秒

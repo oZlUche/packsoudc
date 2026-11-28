@@ -2258,8 +2258,8 @@ func _reopen_entry() -> Dictionary:
 	var safe := SafeModule.of(run)
 	if here != null and NodeEvents.effective_type(here) == &"safe" and safe != null and safe.is_open():
 		return {"screen": Screen.SAFE, "node": here}     # 092：站在没锁的保险箱上随时能再开
-	if here != null and not here.is_visited() and NodeEvents.effective_type(here) == &"chest" and not ChestPlacer.is_opened(here):
-		return {"screen": Screen.CHEST, "node": here}     # 154：没开锁的宝箱，站着随时能再开
+	if ChestPlacer.waiting(here):
+		return {"screen": Screen.CHEST, "node": here}     # 154：没开锁的宝箱，站着随时能再开（404：精英留下的也算）
 	var altar := AltarModule.of(run)
 	if here != null and altar != null and altar.is_open():
 		return {"screen": Screen.ALTAR, "node": here}     # 093：神坛还开着（这一次没用过）
@@ -2597,7 +2597,8 @@ func _skippable(entry: Dictionary) -> bool:
 			return run.events.current_shop != entry.get("session", null)
 		Screen.CHEST:
 			var chest_node: MapNode = entry.get("node", null)
-			return chest_node == null or chest_node.is_visited() or ChestPlacer.is_opened(chest_node)
+			# 404：精英宝箱排在战利品后面 —— 回放收起来就走开了的，到了别的点不再弹那个点的宝箱（回去还能开）
+			return not ChestPlacer.waiting(chest_node) or run.travel == null or run.travel.current_id != chest_node.id
 		Screen.FORGE:
 			var forge_node: MapNode = entry.get("node", null)
 			return forge_node == null or not NodeEvents.hearth_open(forge_node)

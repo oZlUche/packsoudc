@@ -53,3 +53,29 @@ static func skin_of(node: MapNode) -> StringName:
 ## 锁开过了（开锁后的搜索会话可能还没结束，或者存档时视为离开）
 static func is_opened(node: MapNode) -> bool:
 	return bool(chest_of(node).get("opened", false))
+
+
+## 404：打赢精英点，原地留一个精英宝箱：档 [param rarity]、皮肤跟章节，必出的那一件 [param prize] 打赢时就定好（空 = 这一档没东西可挑）
+static func place_elite(node: MapNode, rarity: int, skin: StringName, prize: StringName) -> void:
+	if node == null:
+		return
+	node.content[KEY] = {"rarity": clampi(rarity, 0, 5), "skin": String(skin if skin != &"" else &"ruins"), "elite": true, "prize": String(prize)}
+
+
+## 404：这是精英打赢后留下的宝箱
+static func is_elite(node: MapNode) -> bool:
+	return bool(chest_of(node).get("elite", false))
+
+
+## 404：精英宝箱里必出的那一件
+static func prize_of(node: MapNode) -> StringName:
+	return StringName(String(chest_of(node).get("prize", "")))
+
+
+## 这个点上有没开锁的宝箱：宝箱点还没用过，或者精英打赢后留下的（点已经用过也算，回来还能开）
+static func waiting(node: MapNode) -> bool:
+	if node == null or is_opened(node):
+		return false
+	if is_elite(node):
+		return true
+	return NodeEvents.effective_type(node) == &"chest" and not node.is_visited()
